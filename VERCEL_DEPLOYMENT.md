@@ -24,17 +24,19 @@ git push -u origin main
 
 ### Database Setup
 
-Your PostgreSQL database needs to be accessible from Vercel. 
+Your PostgreSQL database needs to be accessible from Vercel.
 
 **📖 See `DATABASE_HOSTING.md` for detailed setup instructions and security best practices.**
 
 **Quick Recommendation: Supabase** (Best for Next.js + Vercel)
+
 - Free tier with 500MB database
 - Built-in security and SSL/TLS
 - Connection pooling included
 - Easy setup: https://supabase.com
 
 **Other Options:**
+
 - **Neon** - Serverless PostgreSQL (https://neon.tech)
 - **Railway** - Simple PostgreSQL hosting (https://railway.app)
 - **Render** - Free tier available (https://render.com)
@@ -115,6 +117,7 @@ ELASTICSEARCH_PASSWORD=your_password
 ## Step 5: Build Configuration
 
 Vercel will automatically:
+
 - Detect Next.js
 - Run `npm install`
 - Run `npm run build`
@@ -137,6 +140,7 @@ The project includes a `postinstall` script that generates Prisma client. Make s
 After deployment:
 
 1. **Run Database Migrations**:
+
    ```bash
    # Via Vercel CLI or add as a build script
    vercel env pull .env.local
@@ -144,6 +148,7 @@ After deployment:
    ```
 
 2. **Populate Events** (if needed):
+
    ```bash
    # You can run this locally pointing to production DB
    # Or create a Vercel serverless function to do it
@@ -216,4 +221,3 @@ Before deploying, make sure you have:
 - Vercel Docs: https://vercel.com/docs
 - Next.js Deployment: https://nextjs.org/docs/deployment
 - Prisma on Vercel: https://www.prisma.io/docs/guides/deployment/deployment-guides/deploying-to-vercel
-
