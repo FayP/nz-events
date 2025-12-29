@@ -1,0 +1,170 @@
+import { elasticsearchClient, INDEX_NAME } from '@/lib/elasticsearch'
+import { SearchResponse, SearchResult } from '@/types'
+
+export interface SearchOptions {
+  q?: string
+  eventType?: string
+  region?: string
+  city?: string
+  startDate?: string
+  endDate?: string
+  distance?: string
+  page?: number
+  limit?: number
+}
+
+export async function searchEvents(options: SearchOptions): Promise<SearchResponse> {
+  const {
+    q = '',
+    eventType,
+    region,
+    city,
+    startDate,
+    endDate,
+    page = 1,
+    limit = 20,
+  } = options
+
+  const from = (page - 1) * limit
+
+  const must: any[] = []
+  const should: any[] = []
+
+  // Full-text search
+  if (q) {
+    should.push({
+      multi_match: {
+        query: q,
+        fields: ['name^3', 'description^2', 'location', 'organizer', 'searchable_text'],
+        fuzziness: 'AUTO',
+        type: 'best_fields',
+      },
+    })
+  }
+
+  // Filters
+  if (eventType) {
+    must.push({ term: { eventType } })
+  }
+
+  if (region) {
+    must.push({ term: { region } })
+  }
+
+  if (city) {
+    must.push({ term: { city } })
+  }
+
+  if (startDate || endDate) {
+    const dateRange: any = {}
+    if (startDate) dateRange.gte = startDate
+    if (endDate) dateRange.lte = endDate
+    must.push({ range: { startDate: dateRange } })
+  }
+
+  const query: any = {
+    bool: {},
+  }
+
+  if (must.length > 0) {
+    query.bool.must = must
+  }
+
+  if (should.length > 0) {
+    query.bool.should = should
+    query.bool.minimum_should_match = q ? 1 : 0
+  }
+
+  const body: any = {
+    query,
+    from,
+    size: limit,
+    highlight: {
+      fields: {
+        name: {},
+        description: { fragment_size: 150 },
+      },
+    },
+    aggs: {
+      eventTypes: {
+        terms: { field: 'eventType', size: 10 },
+      },
+      regions: {
+        terms: { field: 'region', size: 20 },
+      },
+    },
+  }
+
+  const response = await elasticsearchClient.search({
+    index: INDEX_NAME,
+    body,
+  })
+
+  const results: SearchResult[] = response.body.hits.hits.map((hit: any) => ({
+    id: hit._id,
+    name: hit._source.name,
+    description: hit._source.description,
+    eventType: hit._source.eventType,
+    startDate: hit._source.startDate,
+    location: hit._source.location,
+    city: hit._source.city,
+    region: hit._source.region,
+    highlight: hit.highlight
+      ? {
+          name: hit.highlight.name,
+          description: hit.highlight.description,
+        }
+      : undefined,
+  }))
+
+  return {
+    results,
+    total: response.body.hits.total.value,
+    took: response.body.took,
+    aggregations: {
+      eventTypes: response.body.aggregations?.eventTypes?.buckets?.reduce(
+        (acc: any, bucket: any) => {
+          acc[bucket.key] = bucket.doc_count
+          return acc
+        },
+        {}
+      ),
+      regions: response.body.aggregations?.regions?.buckets?.reduce(
+        (acc: any, bucket: any) => {
+          acc[bucket.key] = bucket.doc_count
+          return acc
+        },
+        {}
+      ),
+    },
+  }
+}
+
+export async function autocompleteSearch(query: string, limit: number = 10) {
+  const response = await elasticsearchClient.search({
+    index: INDEX_NAME,
+    body: {
+      suggest: {
+        event_suggest: {
+          prefix: query,
+          completion: {
+            field: 'name.suggest',
+            size: limit,
+            fuzzy: {
+              fuzziness: 1,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  const suggestions =
+    response.body.suggest?.event_suggest?.[0]?.options?.map((option: any) => ({
+      text: option.text,
+      score: option.score,
+    })) || []
+
+  return suggestions
+}
+
