@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { ContentGeneratorService } from '@/lib/services/content-generator'
 import { prisma } from '@/lib/prisma'
-import { Event } from '@/types'
+import { Event, EventType, EventStatus, EventSource } from '@/types'
 
 export async function POST(request: Request) {
   try {
@@ -31,22 +31,36 @@ export async function POST(request: Request) {
 
     // Convert Prisma null values to undefined for type compatibility
     const eventData: Partial<Event> = {
-      ...event,
+      id: event.id,
+      name: event.name,
+      slug: event.slug,
       description: event.description ?? undefined,
+      eventType: event.eventType as EventType,
+      startDate: event.startDate,
       endDate: event.endDate ?? undefined,
       registrationOpenDate: event.registrationOpenDate ?? undefined,
       registrationCloseDate: event.registrationCloseDate ?? undefined,
+      location: event.location,
+      city: event.city,
+      region: event.region,
+      latitude: event.latitude ?? undefined,
+      longitude: event.longitude ?? undefined,
       website: event.website ?? undefined,
       registrationUrl: event.registrationUrl ?? undefined,
       organizer: event.organizer ?? undefined,
       organizerEmail: event.organizerEmail ?? undefined,
-      latitude: event.latitude ?? undefined,
-      longitude: event.longitude ?? undefined,
+      distances: Array.isArray(event.distances) ? (event.distances as string[]) : undefined,
+      price: event.price ? (event.price as any) : undefined,
+      images: Array.isArray(event.images) ? (event.images as string[]) : undefined,
+      featured: event.featured,
+      verified: event.verified,
+      status: event.status as EventStatus,
+      source: event.source as EventSource,
       seoTitle: event.seoTitle ?? undefined,
       seoDescription: event.seoDescription ?? undefined,
-      distances: Array.isArray(event.distances) ? event.distances as string[] : undefined,
-      price: event.price ? event.price as any : undefined,
-      images: event.images ? event.images as any : undefined,
+      tags: Array.isArray(event.tags) ? event.tags : [],
+      createdAt: event.createdAt,
+      updatedAt: event.updatedAt,
     }
 
     if (type === 'description' || !type) {
