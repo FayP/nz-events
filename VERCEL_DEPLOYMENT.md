@@ -24,23 +24,22 @@ git push -u origin main
 
 ### Database Setup
 
-Your PostgreSQL database needs to be accessible from Vercel. Options:
+Your PostgreSQL database needs to be accessible from Vercel. 
 
-1. **Supabase** (Recommended - Free tier available)
-   - Sign up at https://supabase.com
-   - Create a new project
-   - Get your connection string from Settings > Database
-   - Update `DATABASE_URL` in Vercel environment variables
+**📖 See `DATABASE_HOSTING.md` for detailed setup instructions and security best practices.**
 
-2. **Neon** (Serverless PostgreSQL)
-   - Sign up at https://neon.tech
-   - Create a project
-   - Get connection string
-   - Update `DATABASE_URL` in Vercel
+**Quick Recommendation: Supabase** (Best for Next.js + Vercel)
+- Free tier with 500MB database
+- Built-in security and SSL/TLS
+- Connection pooling included
+- Easy setup: https://supabase.com
 
-3. **Railway** or **Render**
-   - Both offer free PostgreSQL databases
-   - Get connection string after setup
+**Other Options:**
+- **Neon** - Serverless PostgreSQL (https://neon.tech)
+- **Railway** - Simple PostgreSQL hosting (https://railway.app)
+- **Render** - Free tier available (https://render.com)
+
+**Security:** All recommended providers include SSL/TLS encryption by default. See `DATABASE_HOSTING.md` for security best practices.
 
 ### Elasticsearch Setup
 
