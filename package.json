@@ -15,7 +15,8 @@
     "sync:sanity": "tsx scripts/sync-events-to-sanity.ts",
     "sanity:dev": "sanity dev",
     "sanity:build": "sanity build",
-    "sanity:deploy": "sanity deploy"
+    "sanity:deploy": "sanity deploy",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@elastic/elasticsearch": "^9.2.0",

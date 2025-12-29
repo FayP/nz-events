@@ -2,7 +2,7 @@
 // Alternative: Use Contentful or other CMS
 
 import { createClient } from "@sanity/client";
-import imageUrlBuilder from "@sanity/image-url";
+import { createImageUrlBuilder } from "@sanity/image-url";
 
 if (!process.env.SANITY_PROJECT_ID || !process.env.SANITY_DATASET) {
   console.warn(
@@ -31,7 +31,7 @@ export const sanityWriteClient = process.env.SANITY_PROJECT_ID && process.env.SA
     })
   : null;
 
-const builder = sanityClient ? imageUrlBuilder(sanityClient) : null;
+const builder = sanityClient ? createImageUrlBuilder(sanityClient) : null;
 
 export function urlFor(source: any) {
   return builder ? builder.image(source) : null;

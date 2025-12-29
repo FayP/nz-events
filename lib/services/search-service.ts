@@ -97,10 +97,10 @@ export async function searchEvents(options: SearchOptions): Promise<SearchRespon
 
   const response = await elasticsearchClient.search({
     index: INDEX_NAME,
-    body,
+    ...body,
   })
 
-  const results: SearchResult[] = response.body.hits.hits.map((hit: any) => ({
+  const results: SearchResult[] = response.hits.hits.map((hit: any) => ({
     id: hit._id,
     name: hit._source.name,
     description: hit._source.description,
@@ -117,19 +117,23 @@ export async function searchEvents(options: SearchOptions): Promise<SearchRespon
       : undefined,
   }))
 
+  const total = typeof response.hits.total === 'object' 
+    ? response.hits.total.value 
+    : (response.hits.total || 0)
+
   return {
     results,
-    total: response.body.hits.total.value,
-    took: response.body.took,
+    total: total || 0,
+    took: response.took || 0,
     aggregations: {
-      eventTypes: response.body.aggregations?.eventTypes?.buckets?.reduce(
+      eventTypes: (response.aggregations?.eventTypes as any)?.buckets?.reduce(
         (acc: any, bucket: any) => {
           acc[bucket.key] = bucket.doc_count
           return acc
         },
         {}
       ),
-      regions: response.body.aggregations?.regions?.buckets?.reduce(
+      regions: (response.aggregations?.regions as any)?.buckets?.reduce(
         (acc: any, bucket: any) => {
           acc[bucket.key] = bucket.doc_count
           return acc
@@ -143,16 +147,14 @@ export async function searchEvents(options: SearchOptions): Promise<SearchRespon
 export async function autocompleteSearch(query: string, limit: number = 10) {
   const response = await elasticsearchClient.search({
     index: INDEX_NAME,
-    body: {
-      suggest: {
-        event_suggest: {
-          prefix: query,
-          completion: {
-            field: 'name.suggest',
-            size: limit,
-            fuzzy: {
-              fuzziness: 1,
-            },
+    suggest: {
+      event_suggest: {
+        prefix: query,
+        completion: {
+          field: 'name.suggest',
+          size: limit,
+          fuzzy: {
+            fuzziness: 1,
           },
         },
       },
@@ -160,7 +162,7 @@ export async function autocompleteSearch(query: string, limit: number = 10) {
   })
 
   const suggestions =
-    response.body.suggest?.event_suggest?.[0]?.options?.map((option: any) => ({
+    (response.suggest?.event_suggest as any)?.[0]?.options?.map((option: any) => ({
       text: option.text,
       score: option.score,
     })) || []

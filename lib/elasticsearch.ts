@@ -25,42 +25,40 @@ export async function initializeElasticsearchIndex() {
   if (!exists) {
     await elasticsearchClient.indices.create({
       index: INDEX_NAME,
-      body: {
-        mappings: {
-          properties: {
-            id: { type: "keyword" },
-            name: {
-              type: "text",
-              fields: {
-                keyword: { type: "keyword" },
-                suggest: {
-                  type: "completion",
-                  analyzer: "simple",
-                },
+      mappings: {
+        properties: {
+          id: { type: "keyword" },
+          name: {
+            type: "text",
+            fields: {
+              keyword: { type: "keyword" },
+              suggest: {
+                type: "completion",
+                analyzer: "simple",
               },
             },
-            description: { type: "text" },
-            eventType: { type: "keyword" },
-            startDate: { type: "date" },
-            endDate: { type: "date" },
-            location: { type: "text" },
-            city: { type: "keyword" },
-            region: { type: "keyword" },
-            coordinates: { type: "geo_point" },
-            organizer: { type: "text" },
-            distances: { type: "keyword" },
-            tags: { type: "keyword" },
-            searchable_text: { type: "text" },
           },
+          description: { type: "text" },
+          eventType: { type: "keyword" },
+          startDate: { type: "date" },
+          endDate: { type: "date" },
+          location: { type: "text" },
+          city: { type: "keyword" },
+          region: { type: "keyword" },
+          coordinates: { type: "geo_point" },
+          organizer: { type: "text" },
+          distances: { type: "keyword" },
+          tags: { type: "keyword" },
+          searchable_text: { type: "text" },
         },
-        settings: {
-          analysis: {
-            analyzer: {
-              event_search: {
-                type: "custom",
-                tokenizer: "standard",
-                filter: ["lowercase", "asciifolding"],
-              },
+      },
+      settings: {
+        analysis: {
+          analyzer: {
+            event_search: {
+              type: "custom",
+              tokenizer: "standard",
+              filter: ["lowercase", "asciifolding"],
             },
           },
         },
@@ -104,7 +102,7 @@ export async function indexEvent(event: any) {
   await elasticsearchClient.index({
     index: INDEX_NAME,
     id: event.id,
-    body: doc,
+    document: doc,
   });
 }
 

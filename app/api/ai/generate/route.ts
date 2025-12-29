@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { ContentGeneratorService } from '@/lib/services/content-generator'
 import { prisma } from '@/lib/prisma'
+import { Event } from '@/types'
 
 export async function POST(request: Request) {
   try {
@@ -28,18 +29,38 @@ export async function POST(request: Request) {
     const generator = new ContentGeneratorService()
     let result: any = {}
 
+    // Convert Prisma null values to undefined for type compatibility
+    const eventData: Partial<Event> = {
+      ...event,
+      description: event.description ?? undefined,
+      endDate: event.endDate ?? undefined,
+      registrationOpenDate: event.registrationOpenDate ?? undefined,
+      registrationCloseDate: event.registrationCloseDate ?? undefined,
+      website: event.website ?? undefined,
+      registrationUrl: event.registrationUrl ?? undefined,
+      organizer: event.organizer ?? undefined,
+      organizerEmail: event.organizerEmail ?? undefined,
+      latitude: event.latitude ?? undefined,
+      longitude: event.longitude ?? undefined,
+      seoTitle: event.seoTitle ?? undefined,
+      seoDescription: event.seoDescription ?? undefined,
+      distances: Array.isArray(event.distances) ? event.distances as string[] : undefined,
+      price: event.price ? event.price as any : undefined,
+      images: event.images ? event.images as any : undefined,
+    }
+
     if (type === 'description' || !type) {
-      const description = await generator.generateEventDescription(event)
+      const description = await generator.generateEventDescription(eventData)
       result.description = description
     }
 
     if (type === 'seo' || !type) {
-      const seo = await generator.generateSEOContent(event)
+      const seo = await generator.generateSEOContent(eventData)
       result.seo = seo
     }
 
     if (type === 'tags' || !type) {
-      const tags = await generator.generateTags(event)
+      const tags = await generator.generateTags(eventData)
       result.tags = tags
     }
 

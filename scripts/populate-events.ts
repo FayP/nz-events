@@ -27,6 +27,7 @@ const prisma = new PrismaClient({
 })
 import { indexEvent, initializeElasticsearchIndex } from '../lib/elasticsearch'
 import { ContentGeneratorService } from '../lib/services/content-generator'
+import { Event } from '../types'
 
 interface DiscoveredEvent {
   name: string
@@ -147,21 +148,33 @@ async function saveEvent(event: DiscoveredEvent): Promise<boolean> {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
 
-    // Generate content if description is missing
-    const contentGenerator = new ContentGeneratorService()
-    let description = event.description
-    let seoTitle: string | undefined
-    let seoDescription: string | undefined
-    let tags: string[] = []
+      // Generate content if description is missing
+      const contentGenerator = new ContentGeneratorService()
+      let description = event.description
+      let seoTitle: string | undefined
+      let seoDescription: string | undefined
+      let tags: string[] = []
 
-    if (!description || description.length < 50) {
-      console.log(`📝 Generating content for: ${event.name}`)
-      description = await contentGenerator.generateEventDescription(event)
-      const seo = await contentGenerator.generateSEOContent(event)
-      seoTitle = seo.title
-      seoDescription = seo.description
-      tags = await contentGenerator.generateTags(event)
-    }
+      if (!description || description.length < 50) {
+        console.log(`📝 Generating content for: ${event.name}`)
+        // Convert DiscoveredEvent to Event format for content generator
+        const eventData = {
+          name: event.name,
+          eventType: event.eventType,
+          location: event.location,
+          city: event.city,
+          region: event.region,
+          startDate: new Date(event.startDate),
+          endDate: event.endDate ? new Date(event.endDate) : undefined,
+          distances: event.distances,
+          organizer: event.organizer,
+        } as Partial<Event>
+        description = await contentGenerator.generateEventDescription(eventData)
+        const seo = await contentGenerator.generateSEOContent(eventData)
+        seoTitle = seo.title
+        seoDescription = seo.description
+        tags = await contentGenerator.generateTags(eventData)
+      }
 
     // Create event
     const created = await prisma.event.create({
