@@ -3,6 +3,7 @@ import { getEventBySlug, urlFor } from '@/lib/cms'
 import { prisma } from '@/lib/prisma'
 import Image from 'next/image'
 import Link from 'next/link'
+import ShareButton from './ShareButton'
 
 interface PageProps {
   params: Promise<{
@@ -124,73 +125,183 @@ export default async function EventPage({ params }: PageProps) {
     ? urlFor(event.heroImage)?.url()
     : null
 
+  // Format date and time
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-NZ', {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  }
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleTimeString('en-NZ', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    })
+  }
+
+  // Get price range
+  const getPriceRange = () => {
+    if (!event.registration?.price) return null
+    const { earlyBird, standard } = event.registration.price
+    if (earlyBird && standard) {
+      return `${earlyBird} - ${standard}`
+    }
+    return earlyBird || standard || null
+  }
+
+  const priceRange = getPriceRange()
+  const distancesCount = event.distances?.length || 0
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <Link
-        href="/events"
+        href="/"
         className="mb-4 text-blue-600 hover:underline dark:text-blue-400"
       >
         ← Back to Events
       </Link>
 
-      {/* Hero Section */}
-      {heroImageUrl && (
-        <div className="mb-8 overflow-hidden rounded-lg">
-          <Image
-            src={heroImageUrl}
-            alt={event.title}
-            width={1200}
-            height={600}
-            className="h-64 w-full object-cover md:h-96"
-            priority
-          />
-        </div>
-      )}
+      {/* Hero Section with Key Info */}
+      <div className="mb-8">
+        {/* Hero Image */}
+        {heroImageUrl && (
+          <div className="mb-6 overflow-hidden rounded-lg">
+            <Image
+              src={heroImageUrl}
+              alt={event.title}
+              width={1200}
+              height={600}
+              className="h-64 w-full object-cover md:h-96"
+              priority
+            />
+          </div>
+        )}
 
-      {/* Header */}
-      <div className="mb-6">
-        <span className="mb-2 inline-block rounded bg-black px-3 py-1 text-sm font-medium text-white dark:bg-white dark:text-black">
-          {event.eventType}
-        </span>
-        <h1 className="mt-4 text-4xl font-bold text-black dark:text-zinc-50">
-          {event.title}
-        </h1>
-        {event.excerpt && (
-          <p className="mt-4 text-xl text-zinc-600 dark:text-zinc-400">
-            {event.excerpt}
-          </p>
+        {/* Event Title and Badge */}
+        <div className="mb-6">
+          <div className="mb-3">
+            <span className="inline-block rounded bg-black px-3 py-1 text-sm font-medium text-white dark:bg-white dark:text-black">
+              {event.eventType === 'BIKING' ? 'Cycling' : event.eventType}
+            </span>
+          </div>
+          <h1 className="text-4xl font-bold text-black dark:text-zinc-50 md:text-5xl">
+            {event.title}
+          </h1>
+        </div>
+
+        {/* Key Information Grid */}
+        {event.eventDetails && (
+          <div className="mb-6 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {/* Date */}
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">📅</span>
+                <div>
+                  <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                    Date
+                  </div>
+                  <div className="text-base font-semibold text-black dark:text-zinc-50">
+                    {formatDate(event.eventDetails.startDate)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Time */}
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">⏰</span>
+                <div>
+                  <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                    Time
+                  </div>
+                  <div className="text-base font-semibold text-black dark:text-zinc-50">
+                    {formatTime(event.eventDetails.startDate)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Location */}
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">📍</span>
+                <div>
+                  <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                    Location
+                  </div>
+                  <div className="text-base font-semibold text-black dark:text-zinc-50">
+                    {event.eventDetails.location}
+                    <br />
+                    <span className="text-sm font-normal text-zinc-600 dark:text-zinc-400">
+                      {event.eventDetails.city}, {event.eventDetails.region}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Price */}
+              {priceRange && (
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">💰</span>
+                  <div>
+                    <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                      Price
+                    </div>
+                    <div className="text-base font-semibold text-black dark:text-zinc-50">
+                      {priceRange}
+                      {event.registration?.price?.currency && (
+                        <span className="ml-1 text-sm font-normal">
+                          {event.registration.price.currency}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Distances */}
+              {distancesCount > 0 && (
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">🏃</span>
+                  <div>
+                    <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                      Races
+                    </div>
+                    <div className="text-base font-semibold text-black dark:text-zinc-50">
+                      {distancesCount} distance{distancesCount !== 1 ? 's' : ''}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-6 flex flex-wrap gap-3">
+              {event.registration?.registrationUrl && (
+                <a
+                  href={event.registration.registrationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg bg-black px-6 py-3 font-semibold text-white transition-colors hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+                >
+                  Book Now
+                </a>
+              )}
+              <ShareButton title={event.title} text={event.excerpt} />
+            </div>
+          </div>
         )}
       </div>
 
-      {/* Event Details */}
-      {event.eventDetails && (
-        <div className="mb-8 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 className="mb-4 text-2xl font-semibold">Event Details</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <strong className="text-zinc-700 dark:text-zinc-300">Date:</strong>
-              <p className="text-zinc-600 dark:text-zinc-400">
-                {new Date(event.eventDetails.startDate).toLocaleDateString('en-NZ', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-                {event.eventDetails.endDate &&
-                  ` - ${new Date(event.eventDetails.endDate).toLocaleDateString('en-NZ', {
-                    month: 'long',
-                    day: 'numeric',
-                  })}`}
-              </p>
-            </div>
-            <div>
-              <strong className="text-zinc-700 dark:text-zinc-300">Location:</strong>
-              <p className="text-zinc-600 dark:text-zinc-400">
-                {event.eventDetails.location}
-                <br />
-                {event.eventDetails.city}, {event.eventDetails.region}
-              </p>
-            </div>
-          </div>
+      {/* Event Summary */}
+      {event.excerpt && (
+        <div className="mb-8">
+          <p className="text-xl leading-relaxed text-zinc-600 dark:text-zinc-400">
+            {event.excerpt}
+          </p>
         </div>
       )}
 
