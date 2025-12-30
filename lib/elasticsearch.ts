@@ -4,14 +4,29 @@ if (!process.env.ELASTICSEARCH_URL) {
   throw new Error("ELASTICSEARCH_URL is not set in environment variables");
 }
 
+// Support both API key and username/password authentication
+const getAuth = () => {
+  // Prefer API key if provided (more secure)
+  if (process.env.ELASTICSEARCH_API_KEY) {
+    return {
+      apiKey: process.env.ELASTICSEARCH_API_KEY,
+    };
+  }
+  
+  // Fall back to username/password if API key not provided
+  if (process.env.ELASTICSEARCH_AUTH) {
+    return {
+      username: process.env.ELASTICSEARCH_USERNAME || "",
+      password: process.env.ELASTICSEARCH_PASSWORD || "",
+    };
+  }
+  
+  return undefined;
+};
+
 export const elasticsearchClient = new Client({
   node: process.env.ELASTICSEARCH_URL,
-  auth: process.env.ELASTICSEARCH_AUTH
-    ? {
-        username: process.env.ELASTICSEARCH_USERNAME || "",
-        password: process.env.ELASTICSEARCH_PASSWORD || "",
-      }
-    : undefined,
+  auth: getAuth(),
 });
 
 export const INDEX_NAME = "events";

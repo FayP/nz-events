@@ -25,10 +25,17 @@ export default function EventsPage() {
   const fetchEvents = async () => {
     try {
       const response = await fetch('/api/events?status=PUBLISHED&limit=50')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('API Error:', errorData)
+        throw new Error(errorData.error || `HTTP ${response.status}`)
+      }
       const data = await response.json()
       setEvents(data.events || [])
     } catch (error) {
       console.error('Error fetching events:', error)
+      // Show error to user
+      setEvents([])
     } finally {
       setLoading(false)
     }
