@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import Image from 'next/image'
 import Link from 'next/link'
 import ShareButton from './ShareButton'
+import EventMap from './EventMap'
 
 interface PageProps {
   params: Promise<{
@@ -309,6 +310,63 @@ export default async function EventPage({ params }: PageProps) {
       {event.description && event.description.length > 0 && (
         <div className="mb-8">
           <PortableText blocks={event.description} />
+        </div>
+      )}
+
+      {/* Location & Map Section */}
+      {event.eventDetails && (
+        <div className="mb-8">
+          <h2 className="mb-4 text-2xl font-semibold">Location</h2>
+          
+          {/* Map */}
+          {event.eventDetails.coordinates?.lat && event.eventDetails.coordinates?.lng ? (
+            <div className="mb-4 overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800">
+              <EventMap
+                latitude={event.eventDetails.coordinates.lat}
+                longitude={event.eventDetails.coordinates.lng}
+                location={event.eventDetails.location}
+                city={event.eventDetails.city}
+                region={event.eventDetails.region}
+              />
+            </div>
+          ) : null}
+
+          {/* Address and Directions */}
+          <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="mb-4">
+              <h3 className="mb-2 text-lg font-semibold">Address</h3>
+              <p className="text-zinc-600 dark:text-zinc-400">
+                {event.eventDetails.address || event.eventDetails.location}
+                <br />
+                {event.eventDetails.city}, {event.eventDetails.region}
+              </p>
+            </div>
+            
+            {/* Get Directions Link */}
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                event.eventDetails.address || 
+                `${event.eventDetails.location}, ${event.eventDetails.city}, ${event.eventDetails.region}`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              Get Directions
+            </a>
+          </div>
         </div>
       )}
 
