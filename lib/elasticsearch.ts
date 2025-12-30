@@ -44,6 +44,7 @@ export async function initializeElasticsearchIndex() {
         mappings: {
           properties: {
             id: { type: "keyword" },
+            slug: { type: "keyword" },
             name: {
               type: "text",
               fields: {
@@ -96,6 +97,7 @@ export async function initializeElasticsearchIndex() {
 export async function indexEvent(event: any) {
   const doc = {
     id: event.id,
+    slug: event.slug, // Add slug for linking
     name: event.name,
     name_suggest: event.name,
     description: event.description || "",

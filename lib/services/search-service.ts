@@ -1,21 +1,23 @@
-import { elasticsearchClient, INDEX_NAME } from '@/lib/elasticsearch'
-import { SearchResponse, SearchResult } from '@/types'
+import { elasticsearchClient, INDEX_NAME } from "@/lib/elasticsearch";
+import { SearchResponse, SearchResult } from "@/types";
 
 export interface SearchOptions {
-  q?: string
-  eventType?: string
-  region?: string
-  city?: string
-  startDate?: string
-  endDate?: string
-  distance?: string
-  page?: number
-  limit?: number
+  q?: string;
+  eventType?: string;
+  region?: string;
+  city?: string;
+  startDate?: string;
+  endDate?: string;
+  distance?: string;
+  page?: number;
+  limit?: number;
 }
 
-export async function searchEvents(options: SearchOptions): Promise<SearchResponse> {
+export async function searchEvents(
+  options: SearchOptions
+): Promise<SearchResponse> {
   const {
-    q = '',
+    q = "",
     eventType,
     region,
     city,
@@ -23,56 +25,62 @@ export async function searchEvents(options: SearchOptions): Promise<SearchRespon
     endDate,
     page = 1,
     limit = 20,
-  } = options
+  } = options;
 
-  const from = (page - 1) * limit
+  const from = (page - 1) * limit;
 
-  const must: any[] = []
-  const should: any[] = []
+  const must: any[] = [];
+  const should: any[] = [];
 
   // Full-text search
   if (q) {
     should.push({
       multi_match: {
         query: q,
-        fields: ['name^3', 'description^2', 'location', 'organizer', 'searchable_text'],
-        fuzziness: 'AUTO',
-        type: 'best_fields',
+        fields: [
+          "name^3",
+          "description^2",
+          "location",
+          "organizer",
+          "searchable_text",
+        ],
+        fuzziness: "AUTO",
+        type: "best_fields",
       },
-    })
+    });
   }
 
   // Filters
   if (eventType) {
-    must.push({ term: { eventType } })
+    must.push({ term: { eventType } });
   }
 
   if (region) {
-    must.push({ term: { region } })
+    must.push({ term: { region } });
   }
 
   if (city) {
-    must.push({ term: { city } })
+    must.push({ term: { city } });
   }
 
   if (startDate || endDate) {
-    const dateRange: any = {}
-    if (startDate) dateRange.gte = startDate
-    if (endDate) dateRange.lte = endDate
-    must.push({ range: { startDate: dateRange } })
+    const dateRange: any = {};
+    if (startDate) dateRange.gte = startDate;
+    if (endDate) dateRange.lte = endDate;
+    must.push({ range: { startDate: dateRange } });
   }
 
   const query: any = {
     bool: {},
-  }
+  };
 
   if (must.length > 0) {
-    query.bool.must = must
+    query.bool.must = must;
   }
 
   if (should.length > 0) {
-    query.bool.should = should
-    query.bool.minimum_should_match = q ? 1 : 0
+    query.bool.should = should;
+    query.bool.minimum_should_match = q ? 1 : 0;
   }
 
   const body: any = {
@@ -87,21 +95,22 @@ export async function searchEvents(options: SearchOptions): Promise<SearchRespon
     },
     aggs: {
       eventTypes: {
-        terms: { field: 'eventType', size: 10 },
+        terms: { field: "eventType", size: 10 },
       },
       regions: {
-        terms: { field: 'region', size: 20 },
+        terms: { field: "region", size: 20 },
       },
     },
-  }
+  };
 
   const response = await elasticsearchClient.search({
     index: INDEX_NAME,
     ...body,
-  })
+  });
 
   const results: SearchResult[] = response.hits.hits.map((hit: any) => ({
     id: hit._id,
+    slug: hit._source.slug || hit._id, // Use slug from index, fallback to id
     name: hit._source.name,
     description: hit._source.description,
     eventType: hit._source.eventType,
@@ -109,17 +118,19 @@ export async function searchEvents(options: SearchOptions): Promise<SearchRespon
     location: hit._source.location,
     city: hit._source.city,
     region: hit._source.region,
+    distances: hit._source.distances || [],
     highlight: hit.highlight
       ? {
           name: hit.highlight.name,
           description: hit.highlight.description,
         }
       : undefined,
-  }))
+  }));
 
-  const total = typeof response.hits.total === 'object' 
-    ? response.hits.total.value 
-    : (response.hits.total || 0)
+  const total =
+    typeof response.hits.total === "object"
+      ? response.hits.total.value
+      : response.hits.total || 0;
 
   return {
     results,
@@ -128,20 +139,20 @@ export async function searchEvents(options: SearchOptions): Promise<SearchRespon
     aggregations: {
       eventTypes: (response.aggregations?.eventTypes as any)?.buckets?.reduce(
         (acc: any, bucket: any) => {
-          acc[bucket.key] = bucket.doc_count
-          return acc
+          acc[bucket.key] = bucket.doc_count;
+          return acc;
         },
         {}
       ),
       regions: (response.aggregations?.regions as any)?.buckets?.reduce(
         (acc: any, bucket: any) => {
-          acc[bucket.key] = bucket.doc_count
-          return acc
+          acc[bucket.key] = bucket.doc_count;
+          return acc;
         },
         {}
       ),
     },
-  }
+  };
 }
 
 export async function autocompleteSearch(query: string, limit: number = 10) {
@@ -151,7 +162,7 @@ export async function autocompleteSearch(query: string, limit: number = 10) {
       event_suggest: {
         prefix: query,
         completion: {
-          field: 'name.suggest',
+          field: "name.suggest",
           size: limit,
           fuzzy: {
             fuzziness: 1,
@@ -159,14 +170,15 @@ export async function autocompleteSearch(query: string, limit: number = 10) {
         },
       },
     },
-  })
+  });
 
   const suggestions =
-    (response.suggest?.event_suggest as any)?.[0]?.options?.map((option: any) => ({
-      text: option.text,
-      score: option.score,
-    })) || []
+    (response.suggest?.event_suggest as any)?.[0]?.options?.map(
+      (option: any) => ({
+        text: option.text,
+        score: option.score,
+      })
+    ) || [];
 
-  return suggestions
+  return suggestions;
 }
-

@@ -7,6 +7,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const eventType = searchParams.get('eventType')
     const region = searchParams.get('region')
+    const distance = searchParams.get('distance') // New: distance filter
     const status = searchParams.get('status') || 'PUBLISHED'
     const limit = parseInt(searchParams.get('limit') || '20')
     const page = parseInt(searchParams.get('page') || '1')
@@ -17,15 +18,28 @@ export async function GET(request: Request) {
     if (region) where.region = region
     if (status) where.status = status
 
-    const [events, total] = await Promise.all([
-      prisma.event.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { startDate: 'asc' },
-      }),
-      prisma.event.count({ where }),
-    ])
+    let events = await prisma.event.findMany({
+      where,
+      skip: 0, // Get all matching events first for distance filtering
+      take: 1000, // Get enough to filter by distance
+      orderBy: { startDate: 'asc' },
+    })
+
+    // Filter by distance if provided (Prisma doesn't easily filter JSON arrays)
+    if (distance) {
+      events = events.filter((event) => {
+        if (!event.distances || !Array.isArray(event.distances)) return false
+        const distances = event.distances as string[]
+        return distances.some((d) => 
+          d.toLowerCase().includes(distance.toLowerCase()) ||
+          distance.toLowerCase().includes(d.toLowerCase())
+        )
+      })
+    }
+
+    // Apply pagination after filtering
+    const total = events.length
+    events = events.slice(skip, skip + limit)
 
     return NextResponse.json({
       events,
