@@ -33,52 +33,62 @@ export const INDEX_NAME = "events";
 
 // Initialize index with mapping
 export async function initializeElasticsearchIndex() {
-  const exists = await elasticsearchClient.indices.exists({
-    index: INDEX_NAME,
-  });
-
-  if (!exists) {
-    await elasticsearchClient.indices.create({
+  try {
+    const exists = await elasticsearchClient.indices.exists({
       index: INDEX_NAME,
-      mappings: {
-        properties: {
-          id: { type: "keyword" },
-          name: {
-            type: "text",
-            fields: {
-              keyword: { type: "keyword" },
-              suggest: {
-                type: "completion",
-                analyzer: "simple",
+    });
+
+    if (!exists) {
+      await elasticsearchClient.indices.create({
+        index: INDEX_NAME,
+        mappings: {
+          properties: {
+            id: { type: "keyword" },
+            name: {
+              type: "text",
+              fields: {
+                keyword: { type: "keyword" },
+                suggest: {
+                  type: "completion",
+                  analyzer: "simple",
+                },
+              },
+            },
+            description: { type: "text" },
+            eventType: { type: "keyword" },
+            startDate: { type: "date" },
+            endDate: { type: "date" },
+            location: { type: "text" },
+            city: { type: "keyword" },
+            region: { type: "keyword" },
+            coordinates: { type: "geo_point" },
+            organizer: { type: "text" },
+            distances: { type: "keyword" },
+            tags: { type: "keyword" },
+            searchable_text: { type: "text" },
+          },
+        },
+        settings: {
+          analysis: {
+            analyzer: {
+              event_search: {
+                type: "custom",
+                tokenizer: "standard",
+                filter: ["lowercase", "asciifolding"],
               },
             },
           },
-          description: { type: "text" },
-          eventType: { type: "keyword" },
-          startDate: { type: "date" },
-          endDate: { type: "date" },
-          location: { type: "text" },
-          city: { type: "keyword" },
-          region: { type: "keyword" },
-          coordinates: { type: "geo_point" },
-          organizer: { type: "text" },
-          distances: { type: "keyword" },
-          tags: { type: "keyword" },
-          searchable_text: { type: "text" },
         },
-      },
-      settings: {
-        analysis: {
-          analyzer: {
-            event_search: {
-              type: "custom",
-              tokenizer: "standard",
-              filter: ["lowercase", "asciifolding"],
-            },
-          },
-        },
-      },
-    });
+      });
+    }
+  } catch (error: any) {
+    // If index already exists (race condition or concurrent requests), that's fine
+    if (error?.meta?.body?.error?.type === 'resource_already_exists_exception') {
+      // Index already exists, which is what we want - no action needed
+      return;
+    }
+    // Re-throw other errors
+    throw error;
   }
 }
 
