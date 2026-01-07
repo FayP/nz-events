@@ -58,6 +58,13 @@ export async function getEventBySlug(slug: string) {
         url
       }
     },
+    courseMap {
+      ...,
+      asset->{
+        _id,
+        url
+      }
+    },
     gallery[] {
       ...,
       asset->{

@@ -190,6 +190,15 @@ export default {
       ],
     },
     {
+      name: 'courseMap',
+      title: 'Course Map',
+      type: 'image',
+      description: 'Map showing the race course/route',
+      options: {
+        hotspot: true,
+      },
+    },
+    {
       name: 'gallery',
       title: 'Image Gallery',
       type: 'array',

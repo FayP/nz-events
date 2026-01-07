@@ -303,18 +303,10 @@ export default async function EventPage({ params }: PageProps) {
         )}
       </div>
 
-      {/* Event Summary */}
-      {event.excerpt && (
-        <div className="mb-8">
-          <p className="text-xl leading-relaxed text-zinc-600 dark:text-zinc-400">
-            {event.excerpt}
-          </p>
-        </div>
-      )}
-
       {/* Description */}
       {event.description && event.description.length > 0 && (
         <div className="mb-8">
+          <h2 className="mb-4 text-2xl font-semibold">About This Event</h2>
           <PortableText blocks={event.description} />
         </div>
       )}
@@ -393,15 +385,54 @@ export default async function EventPage({ params }: PageProps) {
         </div>
       )}
 
+      {/* Course Map */}
+      {event.courseMap && urlFor(event.courseMap)?.url() && (
+        <div className="mb-8">
+          <h2 className="mb-4 text-2xl font-semibold">Course Map</h2>
+          <Card>
+            <CardContent className="p-0">
+              <div className="overflow-hidden rounded-lg">
+                <Image
+                  src={urlFor(event.courseMap)?.url() || ''}
+                  alt="Course Map"
+                  width={1200}
+                  height={800}
+                  className="w-full h-auto"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Course Information */}
+      {event.courseInfo && event.courseInfo.length > 0 && (
+        <div className="mb-8">
+          <h2 className="mb-4 text-2xl font-semibold">Course Information</h2>
+          <div className="space-y-4">
+            {event.courseInfo.map((info: any, i: number) => (
+              <Card key={i}>
+                <CardHeader>
+                  <CardTitle className="text-lg">{info.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground whitespace-pre-line">{info.content}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Registration */}
       {event.registration && (
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Registration</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             {event.registration.registrationUrl && (
-              <Button asChild size="lg" className="mb-4">
+              <Button asChild size="lg" className="w-full sm:w-auto">
                 <a
                   href={event.registration.registrationUrl}
                   target="_blank"
@@ -411,16 +442,84 @@ export default async function EventPage({ params }: PageProps) {
                 </a>
               </Button>
             )}
-            {event.registration.price && (
-              <div>
-                <strong>Price:</strong>
-                {event.registration.price.earlyBird && (
-                  <p>Early Bird: {event.registration.price.earlyBird}</p>
+            
+            {/* Registration Dates */}
+            {(event.registration.registrationOpenDate || event.registration.registrationCloseDate) && (
+              <div className="space-y-2">
+                <h3 className="font-semibold">Registration Period</h3>
+                {event.registration.registrationOpenDate && (
+                  <p className="text-sm text-muted-foreground">
+                    Opens: {new Date(event.registration.registrationOpenDate).toLocaleDateString('en-NZ', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </p>
                 )}
-                {event.registration.price.standard && (
-                  <p>Standard: {event.registration.price.standard}</p>
+                {event.registration.registrationCloseDate && (
+                  <p className="text-sm text-muted-foreground">
+                    Closes: {new Date(event.registration.registrationCloseDate).toLocaleDateString('en-NZ', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </p>
                 )}
               </div>
+            )}
+
+            {/* Pricing */}
+            {event.registration.price && (
+              <div className="space-y-2">
+                <h3 className="font-semibold">Pricing</h3>
+                {event.registration.price.earlyBird && (
+                  <div className="flex items-center justify-between rounded-lg border p-3">
+                    <span className="text-sm font-medium">Early Bird</span>
+                    <span className="text-sm font-semibold">
+                      {event.registration.price.earlyBird}
+                      {event.registration.price.currency && ` ${event.registration.price.currency}`}
+                    </span>
+                  </div>
+                )}
+                {event.registration.price.standard && (
+                  <div className="flex items-center justify-between rounded-lg border p-3">
+                    <span className="text-sm font-medium">Standard</span>
+                    <span className="text-sm font-semibold">
+                      {event.registration.price.standard}
+                      {event.registration.price.currency && ` ${event.registration.price.currency}`}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Registration Website */}
+            {event.registration.website && (
+              <div>
+                <p className="mb-2 text-sm text-muted-foreground">
+                  For more information, visit the official registration website.
+                </p>
+                <Button asChild variant="outline">
+                  <a
+                    href={event.registration.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Visit Registration Website
+                  </a>
+                </Button>
+              </div>
+            )}
+
+            {/* Fallback message if no registration details */}
+            {!event.registration.registrationUrl && 
+             !event.registration.website && 
+             !event.registration.registrationOpenDate && 
+             !event.registration.registrationCloseDate && 
+             !event.registration.price && (
+              <p className="text-sm text-muted-foreground">
+                Registration details will be available soon. Please check back later or contact the event organizer for more information.
+              </p>
             )}
           </CardContent>
         </Card>
