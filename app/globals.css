@@ -49,60 +49,60 @@
 :root {
   --radius: 0.75rem;
 
-  /* Energetic Earth Palette - Light Mode */
-  --background: oklch(0.98 0.005 85);
-  --foreground: oklch(0.2 0.015 255);
+  /* Dark-first Design - Default to Dark Mode */
+  --background: oklch(0.08 0.01 255);
+  --foreground: oklch(0.95 0.005 85);
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.015 255);
+  --card: oklch(0.12 0.015 255);
+  --card-foreground: oklch(0.95 0.005 85);
 
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.015 255);
+  --popover: oklch(0.12 0.015 255);
+  --popover-foreground: oklch(0.95 0.005 85);
 
-  /* Primary: Deep Teal #0D9488 */
-  --primary: oklch(0.55 0.13 180);
-  --primary-foreground: oklch(1 0 0);
+  /* Primary: Deep Teal - adjusted for dark mode */
+  --primary: oklch(0.65 0.13 180);
+  --primary-foreground: oklch(0.08 0.01 255);
 
-  /* Secondary: Warm Coral #F97316 */
-  --secondary: oklch(0.68 0.19 45);
-  --secondary-foreground: oklch(1 0 0);
+  /* Secondary: Warm Coral - adjusted for dark mode */
+  --secondary: oklch(0.7 0.17 45);
+  --secondary-foreground: oklch(0.08 0.01 255);
 
-  /* Muted: Warm Gray */
-  --muted: oklch(0.95 0.005 85);
-  --muted-foreground: oklch(0.5 0.01 255);
+  /* Muted: Dark Gray */
+  --muted: oklch(0.18 0.01 255);
+  --muted-foreground: oklch(0.55 0.01 255);
 
-  /* Accent: Forest Green #16A34A */
-  --accent: oklch(0.6 0.18 145);
-  --accent-foreground: oklch(1 0 0);
+  /* Accent: Forest Green - adjusted for dark mode */
+  --accent: oklch(0.65 0.16 145);
+  --accent-foreground: oklch(0.08 0.01 255);
 
-  /* Destructive: Keep existing */
-  --destructive: oklch(0.577 0.245 27.325);
+  /* Destructive: Adjusted for dark mode */
+  --destructive: oklch(0.65 0.22 27);
 
-  --border: oklch(0.9 0.005 255);
-  --input: oklch(0.9 0.005 255);
-  --ring: oklch(0.55 0.13 180);
+  --border: oklch(0.2 0.01 255);
+  --input: oklch(0.15 0.01 255);
+  --ring: oklch(0.65 0.13 180);
 
-  /* Event Type Colors */
-  --event-running: oklch(0.55 0.13 180); /* Teal */
-  --event-cycling: oklch(0.68 0.19 45); /* Coral */
-  --event-triathlon: oklch(0.6 0.18 145); /* Green */
-  --event-other: oklch(0.5 0.05 255); /* Slate Blue */
+  /* Event Type Colors - adjusted for dark mode */
+  --event-running: oklch(0.7 0.17 45); /* Coral/Orange */
+  --event-cycling: oklch(0.6 0.15 280); /* Purple */
+  --event-triathlon: oklch(0.65 0.16 145); /* Green */
+  --event-other: oklch(0.6 0.05 255); /* Slate Blue */
 
   /* Chart colors - vibrant sports palette */
-  --chart-1: oklch(0.55 0.13 180); /* Teal */
-  --chart-2: oklch(0.68 0.19 45); /* Coral */
-  --chart-3: oklch(0.6 0.18 145); /* Green */
-  --chart-4: oklch(0.5 0.05 255); /* Slate Blue */
-  --chart-5: oklch(0.7 0.15 85); /* Warm Yellow */
+  --chart-1: oklch(0.65 0.13 180); /* Teal */
+  --chart-2: oklch(0.7 0.17 45); /* Coral */
+  --chart-3: oklch(0.65 0.16 145); /* Green */
+  --chart-4: oklch(0.6 0.05 255); /* Slate Blue */
+  --chart-5: oklch(0.75 0.14 85); /* Warm Yellow */
 
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.2 0.015 255);
-  --sidebar-primary: oklch(0.55 0.13 180);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.95 0.005 85);
-  --sidebar-accent-foreground: oklch(0.2 0.015 255);
-  --sidebar-border: oklch(0.9 0.005 255);
-  --sidebar-ring: oklch(0.55 0.13 180);
+  --sidebar: oklch(0.12 0.015 255);
+  --sidebar-foreground: oklch(0.95 0.005 85);
+  --sidebar-primary: oklch(0.65 0.13 180);
+  --sidebar-primary-foreground: oklch(0.08 0.01 255);
+  --sidebar-accent: oklch(0.18 0.01 255);
+  --sidebar-accent-foreground: oklch(0.95 0.005 85);
+  --sidebar-border: oklch(0.2 0.01 255);
+  --sidebar-ring: oklch(0.65 0.13 180);
 }
 
 .dark {

@@ -164,55 +164,56 @@ export default async function EventPage({ params }: PageProps) {
   const distancesCount = event.distances?.length || 0
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <Link
-        href="/"
-        className="inline-block mb-6 text-primary hover:underline hover:text-primary/80 transition-colors"
-      >
-        ← Back to Events
-      </Link>
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-5xl px-4 py-8">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 mb-8 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          ← Back to Events
+        </Link>
 
-      {/* Hero Section with Key Info */}
-      <div className="mb-8">
-        {/* Hero Image */}
-        {heroImageUrl && (
-          <div className="mb-6 overflow-hidden rounded-lg">
-            <Image
-              src={heroImageUrl}
-              alt={event.title}
-              width={1200}
-              height={600}
-              className="h-64 w-full object-cover md:h-96"
-              priority
-            />
-          </div>
-        )}
+        {/* Hero Section with Key Info */}
+        <div className="mb-12">
+          {/* Hero Image */}
+          {heroImageUrl && (
+            <div className="mb-8 overflow-hidden rounded-xl">
+              <Image
+                src={heroImageUrl}
+                alt={event.title}
+                width={1200}
+                height={600}
+                className="h-80 w-full object-cover md:h-96"
+                priority
+              />
+            </div>
+          )}
 
-        {/* Event Title and Badge */}
-        <div className="mb-6">
-          <div className="mb-3">
-            <Badge variant={getEventBadgeVariant(event.eventType)} className="text-sm">
-              {formatEventType(event.eventType)}
-            </Badge>
+          {/* Event Title and Badge */}
+          <div className="mb-8">
+            <div className="mb-4">
+              <Badge variant={getEventBadgeVariant(event.eventType)} className="text-xs font-semibold">
+                {formatEventType(event.eventType).toUpperCase()}
+              </Badge>
+            </div>
+            <h1 className="text-4xl font-bold text-foreground md:text-5xl">
+              {event.title}
+            </h1>
           </div>
-          <h1 className="text-4xl font-bold md:text-5xl">
-            {event.title}
-          </h1>
-        </div>
 
         {/* Key Information Grid */}
         {event.eventDetails && (
-          <Card className="mb-6">
+          <Card className="mb-8 bg-card border-border">
             <CardContent className="pt-6">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {/* Date */}
               <div className="flex items-start gap-3">
                 <span className="text-2xl">📅</span>
                 <div>
-                  <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                  <div className="text-sm font-medium text-muted-foreground">
                     Date
                   </div>
-                  <div className="text-base font-semibold text-black dark:text-zinc-50">
+                  <div className="text-base font-semibold text-foreground">
                     {formatDate(event.eventDetails.startDate)}
                   </div>
                 </div>
@@ -222,10 +223,10 @@ export default async function EventPage({ params }: PageProps) {
               <div className="flex items-start gap-3">
                 <span className="text-2xl">⏰</span>
                 <div>
-                  <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                  <div className="text-sm font-medium text-muted-foreground">
                     Time
                   </div>
-                  <div className="text-base font-semibold text-black dark:text-zinc-50">
+                  <div className="text-base font-semibold text-foreground">
                     {formatTime(event.eventDetails.startDate)}
                   </div>
                 </div>
@@ -235,13 +236,13 @@ export default async function EventPage({ params }: PageProps) {
               <div className="flex items-start gap-3">
                 <span className="text-2xl">📍</span>
                 <div>
-                  <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                  <div className="text-sm font-medium text-muted-foreground">
                     Location
                   </div>
-                  <div className="text-base font-semibold text-black dark:text-zinc-50">
+                  <div className="text-base font-semibold text-foreground">
                     {event.eventDetails.location}
                     <br />
-                    <span className="text-sm font-normal text-zinc-600 dark:text-zinc-400">
+                    <span className="text-sm font-normal text-muted-foreground">
                       {event.eventDetails.city}, {event.eventDetails.region}
                     </span>
                   </div>
@@ -253,13 +254,13 @@ export default async function EventPage({ params }: PageProps) {
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">💰</span>
                   <div>
-                    <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                    <div className="text-sm font-medium text-muted-foreground">
                       Price
                     </div>
-                    <div className="text-base font-semibold text-black dark:text-zinc-50">
+                    <div className="text-base font-semibold text-foreground">
                       {priceRange}
                       {event.registration?.price?.currency && (
-                        <span className="ml-1 text-sm font-normal">
+                        <span className="ml-1 text-sm font-normal text-muted-foreground">
                           {event.registration.price.currency}
                         </span>
                       )}
@@ -273,10 +274,10 @@ export default async function EventPage({ params }: PageProps) {
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">🏃</span>
                   <div>
-                    <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                    <div className="text-sm font-medium text-muted-foreground">
                       Races
                     </div>
-                    <div className="text-base font-semibold text-black dark:text-zinc-50">
+                    <div className="text-base font-semibold text-foreground">
                       {distancesCount} distance{distancesCount !== 1 ? 's' : ''}
                     </div>
                   </div>
@@ -532,7 +533,7 @@ export default async function EventPage({ params }: PageProps) {
           <h2 className="mb-4 text-2xl font-semibold">Event Highlights</h2>
           <ul className="list-disc space-y-2 pl-6">
             {event.highlights.map((highlight: string, i: number) => (
-              <li key={i} className="text-zinc-600 dark:text-zinc-400">
+              <li key={i} className="text-muted-foreground">
                 {highlight}
               </li>
             ))}
@@ -580,6 +581,7 @@ export default async function EventPage({ params }: PageProps) {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }
