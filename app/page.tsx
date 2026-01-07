@@ -311,22 +311,33 @@ function HomeContent() {
 
             {/* Region Dropdown */}
             {filterOptions && (
-              <Select
-                value={selectedRegion || undefined}
-                onValueChange={(value) => setSelectedRegion(value || '')}
-              >
-                <SelectTrigger className="w-[180px] h-10 bg-card border-border">
-                  <SelectValue placeholder="All Regions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Regions</SelectItem>
-                  {filterOptions.regions.map((reg) => (
-                    <SelectItem key={reg} value={reg}>
-                      {reg}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={selectedRegion || undefined}
+                  onValueChange={(value) => setSelectedRegion(value)}
+                >
+                  <SelectTrigger className="w-[180px] h-10 bg-card border-border">
+                    <SelectValue placeholder="All Regions" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filterOptions.regions.map((reg) => (
+                      <SelectItem key={reg} value={reg}>
+                        {reg}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedRegion && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedRegion('')}
+                    className="h-10 text-muted-foreground hover:text-foreground"
+                  >
+                    ✕
+                  </Button>
+                )}
+              </div>
             )}
 
             {/* Clear Filters */}
