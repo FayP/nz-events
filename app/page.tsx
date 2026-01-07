@@ -51,18 +51,27 @@ function HomeContent() {
   const [loading, setLoading] = useState(true)
   const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null)
   const [suggestions, setSuggestions] = useState<string[]>([])
+  const [mounted, setMounted] = useState(false)
 
-  // Filters from URL
-  const searchQuery = searchParams.get('q') || ''
-  const eventTypes = searchParams.get('eventTypes')?.split(',').filter(Boolean) || []
-  const distances = searchParams.get('distances')?.split(',').filter(Boolean) || []
-  const region = searchParams.get('region') || ''
+  // Local filter state - initialize with empty values to avoid hydration issues
+  const [searchInput, setSearchInput] = useState('')
+  const [selectedEventTypes, setSelectedEventTypes] = useState<string[]>([])
+  const [selectedDistances, setSelectedDistances] = useState<string[]>([])
+  const [selectedRegion, setSelectedRegion] = useState('')
 
-  // Local filter state
-  const [searchInput, setSearchInput] = useState(searchQuery)
-  const [selectedEventTypes, setSelectedEventTypes] = useState<string[]>(eventTypes)
-  const [selectedDistances, setSelectedDistances] = useState<string[]>(distances)
-  const [selectedRegion, setSelectedRegion] = useState(region)
+  // Sync state with URL params after mount (avoid hydration mismatch)
+  useEffect(() => {
+    setMounted(true)
+    const searchQuery = searchParams.get('q') || ''
+    const eventTypes = searchParams.get('eventTypes')?.split(',').filter(Boolean) || []
+    const distances = searchParams.get('distances')?.split(',').filter(Boolean) || []
+    const region = searchParams.get('region') || ''
+
+    setSearchInput(searchQuery)
+    setSelectedEventTypes(eventTypes)
+    setSelectedDistances(distances)
+    setSelectedRegion(region)
+  }, [searchParams])
 
   // Fetch filter options
   useEffect(() => {
