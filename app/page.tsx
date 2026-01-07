@@ -290,12 +290,14 @@ function HomeContent() {
               {distanceOptions.length > 0 && (
                 <div>
                   <h3 className="mb-3 text-sm font-medium">Distance</h3>
-                  <Select value={selectedDistance} onValueChange={setSelectedDistance}>
+                  <Select 
+                    value={selectedDistance || undefined} 
+                    onValueChange={(value) => setSelectedDistance(value || '')}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="All Distances" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Distances</SelectItem>
                       {distanceOptions.map((dist) => (
                         <SelectItem key={dist} value={dist}>
                           {dist}
@@ -303,6 +305,16 @@ function HomeContent() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {selectedDistance && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedDistance('')}
+                      className="mt-2 h-auto p-0 text-xs"
+                    >
+                      Clear distance
+                    </Button>
+                  )}
                 </div>
               )}
 
@@ -310,12 +322,14 @@ function HomeContent() {
               {filterOptions && (
                 <div>
                   <h3 className="mb-3 text-sm font-medium">Location</h3>
-                  <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                  <Select 
+                    value={selectedRegion || undefined} 
+                    onValueChange={(value) => setSelectedRegion(value || '')}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="All Regions" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Regions</SelectItem>
                       {filterOptions.regions.map((reg) => (
                         <SelectItem key={reg} value={reg}>
                           {reg}
@@ -323,6 +337,16 @@ function HomeContent() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {selectedRegion && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedRegion('')}
+                      className="mt-2 h-auto p-0 text-xs"
+                    >
+                      Clear location
+                    </Button>
+                  )}
                 </div>
               )}
             </CardContent>
