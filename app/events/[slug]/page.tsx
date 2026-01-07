@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import ShareButton from './ShareButton'
 import EventMap from './EventMap'
+import { getEventBadgeVariant, formatEventType } from '@/lib/utils'
 
 interface PageProps {
   params: Promise<{
@@ -166,7 +167,7 @@ export default async function EventPage({ params }: PageProps) {
     <div className="mx-auto max-w-4xl px-4 py-8">
       <Link
         href="/"
-        className="mb-4 text-blue-600 hover:underline dark:text-blue-400"
+        className="inline-block mb-6 text-primary hover:underline hover:text-primary/80 transition-colors"
       >
         ← Back to Events
       </Link>
@@ -190,8 +191,8 @@ export default async function EventPage({ params }: PageProps) {
         {/* Event Title and Badge */}
         <div className="mb-6">
           <div className="mb-3">
-            <Badge variant="default" className="text-sm">
-              {event.eventType === 'BIKING' ? 'Cycling' : event.eventType}
+            <Badge variant={getEventBadgeVariant(event.eventType)} className="text-sm">
+              {formatEventType(event.eventType)}
             </Badge>
           </div>
           <h1 className="text-4xl font-bold md:text-5xl">

@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { getEventBadgeVariant, formatEventType } from '@/lib/utils'
 
 // Force dynamic rendering for search params
 export const dynamic = 'force-dynamic'
@@ -207,10 +208,10 @@ function HomeContent() {
     <div className="mx-auto max-w-7xl px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="mb-4 text-4xl font-bold text-black dark:text-zinc-50">
+        <h1 className="mb-4 text-4xl font-bold bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent dark:from-primary dark:via-accent dark:to-secondary">
           Discover Events in New Zealand
         </h1>
-        <p className="text-lg text-zinc-600 dark:text-zinc-400">
+        <p className="text-lg text-muted-foreground">
           Find running, cycling, and triathlon events across New Zealand
         </p>
       </div>
@@ -265,89 +266,109 @@ function HomeContent() {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-
-              {/* Event Type Filter */}
-              <div>
-                <h3 className="mb-3 text-sm font-medium">Event Type</h3>
-                <div className="space-y-2">
-                  {filterOptions?.eventTypes.map((type) => (
-                    <label key={type} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedEventTypes.includes(type)}
-                        onChange={() => toggleEventType(type)}
-                        className="h-4 w-4 rounded border-input"
-                      />
-                      <span className="text-sm">
-                        {type === 'BIKING' ? 'Cycling' : type}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Distance Filter (shows when Running or Triathlon selected) */}
-              {distanceOptions.length > 0 && (
-                <div>
-                  <h3 className="mb-3 text-sm font-medium">Distance</h3>
-                  <Select 
-                    value={selectedDistance || undefined} 
-                    onValueChange={(value) => setSelectedDistance(value || '')}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="All Distances" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {distanceOptions.map((dist) => (
-                        <SelectItem key={dist} value={dist}>
-                          {dist}
-                        </SelectItem>
+              {!filterOptions ? (
+                /* Loading Skeleton */
+                <>
+                  <div>
+                    <div className="mb-3 h-4 w-20 bg-muted animate-pulse rounded"></div>
+                    <div className="space-y-2">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <div className="h-4 w-4 bg-muted animate-pulse rounded"></div>
+                          <div className="h-4 w-24 bg-muted animate-pulse rounded"></div>
+                        </div>
                       ))}
-                    </SelectContent>
-                  </Select>
-                  {selectedDistance && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedDistance('')}
-                      className="mt-2 h-auto p-0 text-xs"
-                    >
-                      Clear distance
-                    </Button>
-                  )}
-                </div>
-              )}
-
-              {/* Location Filter */}
-              {filterOptions && (
-                <div>
-                  <h3 className="mb-3 text-sm font-medium">Location</h3>
-                  <Select 
-                    value={selectedRegion || undefined} 
-                    onValueChange={(value) => setSelectedRegion(value || '')}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="All Regions" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {filterOptions.regions.map((reg) => (
-                        <SelectItem key={reg} value={reg}>
-                          {reg}
-                        </SelectItem>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mb-3 h-4 w-16 bg-muted animate-pulse rounded"></div>
+                    <div className="h-9 w-full bg-muted animate-pulse rounded-md"></div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Event Type Filter */}
+                  <div>
+                    <h3 className="mb-3 text-sm font-medium">Event Type</h3>
+                    <div className="space-y-2">
+                      {filterOptions.eventTypes.map((type) => (
+                        <label key={type} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedEventTypes.includes(type)}
+                            onChange={() => toggleEventType(type)}
+                            className="h-4 w-4 rounded border-input"
+                          />
+                          <span className="text-sm">
+                            {formatEventType(type)}
+                          </span>
+                        </label>
                       ))}
-                    </SelectContent>
-                  </Select>
-                  {selectedRegion && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedRegion('')}
-                      className="mt-2 h-auto p-0 text-xs"
-                    >
-                      Clear location
-                    </Button>
+                    </div>
+                  </div>
+
+                  {/* Distance Filter (shows when Running or Triathlon selected) */}
+                  {distanceOptions.length > 0 && (
+                    <div>
+                      <h3 className="mb-3 text-sm font-medium">Distance</h3>
+                      <Select
+                        value={selectedDistance || undefined}
+                        onValueChange={(value) => setSelectedDistance(value || '')}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="All Distances" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {distanceOptions.map((dist) => (
+                            <SelectItem key={dist} value={dist}>
+                              {dist}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {selectedDistance && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedDistance('')}
+                          className="mt-2 h-auto p-0 text-xs"
+                        >
+                          Clear distance
+                        </Button>
+                      )}
+                    </div>
                   )}
-                </div>
+
+                  {/* Location Filter */}
+                  <div>
+                    <h3 className="mb-3 text-sm font-medium">Location</h3>
+                    <Select
+                      value={selectedRegion || undefined}
+                      onValueChange={(value) => setSelectedRegion(value || '')}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="All Regions" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filterOptions.regions.map((reg) => (
+                          <SelectItem key={reg} value={reg}>
+                            {reg}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {selectedRegion && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedRegion('')}
+                        className="mt-2 h-auto p-0 text-xs"
+                      >
+                        Clear location
+                      </Button>
+                    )}
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
@@ -376,15 +397,15 @@ function HomeContent() {
               </div>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {events.map((event) => (
-                  <Card key={event.id} className="transition-shadow hover:shadow-lg">
+                  <Card key={event.id} className="group overflow-hidden">
                     <Link href={`/events/${event.slug}`} className="block">
                       <CardHeader>
                         <div className="mb-2">
-                          <Badge variant="default">
-                            {event.eventType === 'BIKING' ? 'Cycling' : event.eventType}
+                          <Badge variant={getEventBadgeVariant(event.eventType)}>
+                            {formatEventType(event.eventType)}
                           </Badge>
                         </div>
-                        <CardTitle className="text-xl">{event.name}</CardTitle>
+                        <CardTitle className="text-xl group-hover:text-primary transition-colors">{event.name}</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <p className="mb-2 text-sm text-muted-foreground">
