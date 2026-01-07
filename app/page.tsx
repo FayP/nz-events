@@ -54,14 +54,14 @@ function HomeContent() {
 
   // Filters from URL
   const searchQuery = searchParams.get('q') || ''
-  const eventTypes = searchParams.get('eventTypes')?.split(',') || []
-  const distance = searchParams.get('distance') || ''
+  const eventTypes = searchParams.get('eventTypes')?.split(',').filter(Boolean) || []
+  const distances = searchParams.get('distances')?.split(',').filter(Boolean) || []
   const region = searchParams.get('region') || ''
 
   // Local filter state
   const [searchInput, setSearchInput] = useState(searchQuery)
   const [selectedEventTypes, setSelectedEventTypes] = useState<string[]>(eventTypes)
-  const [selectedDistance, setSelectedDistance] = useState(distance)
+  const [selectedDistances, setSelectedDistances] = useState<string[]>(distances)
   const [selectedRegion, setSelectedRegion] = useState(region)
 
   // Fetch filter options
@@ -83,11 +83,11 @@ function HomeContent() {
     const params = new URLSearchParams()
     if (searchInput) params.set('q', searchInput)
     if (selectedEventTypes.length > 0) params.set('eventTypes', selectedEventTypes.join(','))
-    if (selectedDistance) params.set('distance', selectedDistance)
+    if (selectedDistances.length > 0) params.set('distances', selectedDistances.join(','))
     if (selectedRegion) params.set('region', selectedRegion)
 
     router.push(`/?${params.toString()}`)
-  }, [searchInput, selectedEventTypes, selectedDistance, selectedRegion, router])
+  }, [searchInput, selectedEventTypes, selectedDistances, selectedRegion, router])
 
   // Fetch events with filters
   const fetchEvents = useCallback(async () => {
@@ -104,40 +104,56 @@ function HomeContent() {
         params.set('eventType', selectedEventTypes[0])
       }
       if (selectedRegion) params.set('region', selectedRegion)
-      if (selectedDistance) params.set('distance', selectedDistance)
+      // Add multiple distances as separate params or comma-separated
+      if (selectedDistances.length > 0) {
+        params.set('distances', selectedDistances.join(','))
+      }
 
       // Use search API if there's a query, otherwise use events API
       let response
+      let allEvents: Event[] = []
+
       if (searchInput.trim()) {
         params.set('q', searchInput)
         response = await fetch(`/api/search?${params.toString()}`)
         const data = await response.json()
         // Convert search results to event format
-        setEvents(
-          data.results?.map((r: any) => ({
-            id: r.id,
-            name: r.name,
-            slug: r.slug || r.id, // Use slug from search results
-            eventType: r.eventType,
-            startDate: r.startDate,
-            location: r.location,
-            city: r.city,
-            region: r.region,
-            distances: r.distances || [],
-          })) || []
-        )
+        allEvents = data.results?.map((r: any) => ({
+          id: r.id,
+          name: r.name,
+          slug: r.slug || r.id,
+          eventType: r.eventType,
+          startDate: r.startDate,
+          location: r.location,
+          city: r.city,
+          region: r.region,
+          distances: r.distances || [],
+        })) || []
       } else {
         response = await fetch(`/api/events?${params.toString()}`)
         const data = await response.json()
-        setEvents(data.events || [])
+        allEvents = data.events || []
       }
+
+      // Client-side filtering for multiple distances if needed
+      if (selectedDistances.length > 0) {
+        allEvents = allEvents.filter((event) => {
+          if (!event.distances || !Array.isArray(event.distances)) return false
+          // Check if event has any of the selected distances
+          return selectedDistances.some((dist) =>
+            event.distances.includes(dist)
+          )
+        })
+      }
+
+      setEvents(allEvents)
     } catch (error) {
       console.error('Error fetching events:', error)
       setEvents([])
     } finally {
       setLoading(false)
     }
-  }, [searchInput, selectedEventTypes, selectedRegion, selectedDistance])
+  }, [searchInput, selectedEventTypes, selectedRegion, selectedDistances])
 
   // Fetch events when filters change
   useEffect(() => {
@@ -189,20 +205,27 @@ function HomeContent() {
     setSelectedEventTypes((prev) =>
       prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
     )
-    // Clear distance if event type changes
-    setSelectedDistance('')
+    // Clear distances if event type changes
+    setSelectedDistances([])
+  }
+
+  // Toggle distance
+  const toggleDistance = (distance: string) => {
+    setSelectedDistances((prev) =>
+      prev.includes(distance) ? prev.filter((d) => d !== distance) : [...prev, distance]
+    )
   }
 
   // Clear all filters
   const clearFilters = () => {
     setSearchInput('')
     setSelectedEventTypes([])
-    setSelectedDistance('')
+    setSelectedDistances([])
     setSelectedRegion('')
   }
 
   const hasActiveFilters =
-    searchInput || selectedEventTypes.length > 0 || selectedDistance || selectedRegion
+    searchInput || selectedEventTypes.length > 0 || selectedDistances.length > 0 || selectedRegion
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -310,32 +333,32 @@ function HomeContent() {
                   {/* Distance Filter (shows when Running or Triathlon selected) */}
                   {distanceOptions.length > 0 && (
                     <div>
-                      <h3 className="mb-3 text-sm font-medium">Distance</h3>
-                      <Select
-                        value={selectedDistance || undefined}
-                        onValueChange={(value) => setSelectedDistance(value || '')}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="All Distances" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {distanceOptions.map((dist) => (
-                            <SelectItem key={dist} value={dist}>
-                              {dist}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {selectedDistance && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedDistance('')}
-                          className="mt-2 h-auto p-0 text-xs"
-                        >
-                          Clear distance
-                        </Button>
-                      )}
+                      <div className="mb-3 flex items-center justify-between">
+                        <h3 className="text-sm font-medium">Distance</h3>
+                        {selectedDistances.length > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedDistances([])}
+                            className="h-auto p-0 text-xs"
+                          >
+                            Clear
+                          </Button>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        {distanceOptions.map((dist) => (
+                          <label key={dist} className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={selectedDistances.includes(dist)}
+                              onChange={() => toggleDistance(dist)}
+                              className="h-4 w-4 rounded border-input"
+                            />
+                            <span className="text-sm">{dist}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   )}
 
