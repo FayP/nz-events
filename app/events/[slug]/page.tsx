@@ -3,6 +3,9 @@ import { getEventBySlug, urlFor } from '@/lib/cms'
 import { prisma } from '@/lib/prisma'
 import Image from 'next/image'
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import ShareButton from './ShareButton'
 import EventMap from './EventMap'
 
@@ -187,18 +190,19 @@ export default async function EventPage({ params }: PageProps) {
         {/* Event Title and Badge */}
         <div className="mb-6">
           <div className="mb-3">
-            <span className="inline-block rounded bg-black px-3 py-1 text-sm font-medium text-white dark:bg-white dark:text-black">
+            <Badge variant="default" className="text-sm">
               {event.eventType === 'BIKING' ? 'Cycling' : event.eventType}
-            </span>
+            </Badge>
           </div>
-          <h1 className="text-4xl font-bold text-black dark:text-zinc-50 md:text-5xl">
+          <h1 className="text-4xl font-bold md:text-5xl">
             {event.title}
           </h1>
         </div>
 
         {/* Key Information Grid */}
         {event.eventDetails && (
-          <div className="mb-6 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+          <Card className="mb-6">
+            <CardContent className="pt-6">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {/* Date */}
               <div className="flex items-start gap-3">
@@ -279,21 +283,23 @@ export default async function EventPage({ params }: PageProps) {
               )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="mt-6 flex flex-wrap gap-3">
-              {event.registration?.registrationUrl && (
-                <a
-                  href={event.registration.registrationUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-lg bg-black px-6 py-3 font-semibold text-white transition-colors hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
-                >
-                  Book Now
-                </a>
-              )}
-              <ShareButton title={event.title} text={event.excerpt} />
-            </div>
-          </div>
+              {/* Action Buttons */}
+              <div className="mt-6 flex flex-wrap gap-3">
+                {event.registration?.registrationUrl && (
+                  <Button asChild size="lg">
+                    <a
+                      href={event.registration.registrationUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Book Now
+                    </a>
+                  </Button>
+                )}
+                <ShareButton title={event.title} text={event.excerpt} />
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
 
@@ -332,41 +338,44 @@ export default async function EventPage({ params }: PageProps) {
           ) : null}
 
           {/* Address and Directions */}
-          <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="mb-4">
-              <h3 className="mb-2 text-lg font-semibold">Address</h3>
-              <p className="text-zinc-600 dark:text-zinc-400">
+          <Card>
+            <CardHeader>
+              <CardTitle>Address</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-4 text-muted-foreground">
                 {event.eventDetails.address || event.eventDetails.location}
                 <br />
                 {event.eventDetails.city}, {event.eventDetails.region}
               </p>
-            </div>
-            
-            {/* Get Directions Link */}
-            <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-                event.eventDetails.address || 
-                `${event.eventDetails.location}, ${event.eventDetails.city}, ${event.eventDetails.region}`
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Get Directions
-            </a>
-          </div>
+              
+              {/* Get Directions Link */}
+              <Button asChild>
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                    event.eventDetails.address || 
+                    `${event.eventDetails.location}, ${event.eventDetails.city}, ${event.eventDetails.region}`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Get Directions
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       )}
 
@@ -376,12 +385,9 @@ export default async function EventPage({ params }: PageProps) {
           <h2 className="mb-4 text-2xl font-semibold">Available Distances</h2>
           <div className="flex flex-wrap gap-2">
             {event.distances.map((distance: string, i: number) => (
-              <span
-                key={i}
-                className="rounded bg-zinc-100 px-3 py-1 text-sm dark:bg-zinc-800"
-              >
+              <Badge key={i} variant="secondary">
                 {distance}
-              </span>
+              </Badge>
             ))}
           </div>
         </div>
@@ -389,30 +395,35 @@ export default async function EventPage({ params }: PageProps) {
 
       {/* Registration */}
       {event.registration && (
-        <div className="mb-8 rounded-lg border border-zinc-200 bg-blue-50 p-6 dark:border-zinc-800 dark:bg-blue-900/20">
-          <h2 className="mb-4 text-2xl font-semibold">Registration</h2>
-          {event.registration.registrationUrl && (
-            <a
-              href={event.registration.registrationUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block rounded bg-blue-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-blue-700"
-            >
-              Register Now
-            </a>
-          )}
-          {event.registration.price && (
-            <div className="mt-4">
-              <strong>Price:</strong>
-              {event.registration.price.earlyBird && (
-                <p>Early Bird: {event.registration.price.earlyBird}</p>
-              )}
-              {event.registration.price.standard && (
-                <p>Standard: {event.registration.price.standard}</p>
-              )}
-            </div>
-          )}
-        </div>
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Registration</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {event.registration.registrationUrl && (
+              <Button asChild size="lg" className="mb-4">
+                <a
+                  href={event.registration.registrationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Register Now
+                </a>
+              </Button>
+            )}
+            {event.registration.price && (
+              <div>
+                <strong>Price:</strong>
+                {event.registration.price.earlyBird && (
+                  <p>Early Bird: {event.registration.price.earlyBird}</p>
+                )}
+                {event.registration.price.standard && (
+                  <p>Standard: {event.registration.price.standard}</p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {/* Highlights */}
@@ -435,10 +446,14 @@ export default async function EventPage({ params }: PageProps) {
           <h2 className="mb-4 text-2xl font-semibold">Frequently Asked Questions</h2>
           <div className="space-y-4">
             {event.faq.map((item: any, i: number) => (
-              <div key={i} className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-                <h3 className="font-semibold">{item.question}</h3>
-                <p className="mt-2 text-zinc-600 dark:text-zinc-400">{item.answer}</p>
-              </div>
+              <Card key={i}>
+                <CardHeader>
+                  <CardTitle className="text-lg">{item.question}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">{item.answer}</p>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>

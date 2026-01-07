@@ -1,5 +1,7 @@
 "use client"
 
+import { Button } from "@/components/ui/button"
+
 export default function ShareButton({ title, text }: { title: string; text?: string }) {
   const handleShare = async () => {
     const url = typeof window !== 'undefined' ? window.location.href : ''
@@ -27,12 +29,12 @@ export default function ShareButton({ title, text }: { title: string; text?: str
   }
 
   return (
-    <button
+    <Button
+      variant="outline"
       onClick={handleShare}
-      className="rounded-lg border border-zinc-300 px-6 py-3 font-semibold text-black transition-colors hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-50 dark:hover:bg-zinc-800"
     >
       Share
-    </button>
+    </Button>
   )
 }
 

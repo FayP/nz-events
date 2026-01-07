@@ -3,6 +3,17 @@
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 // Force dynamic rendering for search params
 export const dynamic = 'force-dynamic'
@@ -207,26 +218,27 @@ function HomeContent() {
       {/* Search Bar */}
       <div className="mb-6">
         <div className="relative">
-          <input
+          <Input
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search for events..."
-            className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-lg text-black placeholder-zinc-400 focus:border-black focus:outline-none focus:ring-2 focus:ring-black dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-400"
+            className="w-full text-lg"
           />
           {suggestions.length > 0 && (
-            <div className="absolute z-10 mt-1 w-full rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="absolute z-10 mt-1 w-full rounded-lg border bg-popover shadow-lg">
               {suggestions.map((suggestion, index) => (
-                <button
+                <Button
                   key={index}
+                  variant="ghost"
                   onClick={() => {
                     setSearchInput(suggestion)
                     setSuggestions([])
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-black hover:bg-zinc-100 dark:text-zinc-50 dark:hover:bg-zinc-800"
+                  className="w-full justify-start"
                 >
                   {suggestion}
-                </button>
+                </Button>
               ))}
             </div>
           )}
@@ -236,83 +248,85 @@ function HomeContent() {
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* Filters Sidebar */}
         <aside className="w-full lg:w-64 lg:flex-shrink-0">
-          <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Filters</h2>
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-                >
-                  Clear
-                </button>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Filters</CardTitle>
+                {hasActiveFilters && (
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="h-auto p-0 text-sm"
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+
+              {/* Event Type Filter */}
+              <div>
+                <h3 className="mb-3 text-sm font-medium">Event Type</h3>
+                <div className="space-y-2">
+                  {filterOptions?.eventTypes.map((type) => (
+                    <label key={type} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedEventTypes.includes(type)}
+                        onChange={() => toggleEventType(type)}
+                        className="h-4 w-4 rounded border-input"
+                      />
+                      <span className="text-sm">
+                        {type === 'BIKING' ? 'Cycling' : type}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Distance Filter (shows when Running or Triathlon selected) */}
+              {distanceOptions.length > 0 && (
+                <div>
+                  <h3 className="mb-3 text-sm font-medium">Distance</h3>
+                  <Select value={selectedDistance} onValueChange={setSelectedDistance}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="All Distances" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Distances</SelectItem>
+                      {distanceOptions.map((dist) => (
+                        <SelectItem key={dist} value={dist}>
+                          {dist}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
-            </div>
 
-            {/* Event Type Filter */}
-            <div className="mb-6">
-              <h3 className="mb-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Event Type
-              </h3>
-              <div className="space-y-2">
-                {filterOptions?.eventTypes.map((type) => (
-                  <label key={type} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedEventTypes.includes(type)}
-                      onChange={() => toggleEventType(type)}
-                      className="mr-2 h-4 w-4 rounded border-zinc-300 text-black focus:ring-2 focus:ring-black dark:border-zinc-600 dark:focus:ring-zinc-400"
-                    />
-                    <span className="text-sm text-zinc-700 dark:text-zinc-300">
-                      {type === 'BIKING' ? 'Cycling' : type}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Distance Filter (shows when Running or Triathlon selected) */}
-            {distanceOptions.length > 0 && (
-              <div className="mb-6">
-                <h3 className="mb-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                  Distance
-                </h3>
-                <select
-                  value={selectedDistance}
-                  onChange={(e) => setSelectedDistance(e.target.value)}
-                  className="w-full rounded border border-zinc-300 bg-white px-3 py-2 text-sm text-black focus:border-black focus:outline-none focus:ring-2 focus:ring-black dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
-                >
-                  <option value="">All Distances</option>
-                  {distanceOptions.map((dist) => (
-                    <option key={dist} value={dist}>
-                      {dist}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Location Filter */}
-            {filterOptions && (
-              <div className="mb-6">
-                <h3 className="mb-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                  Location
-                </h3>
-                <select
-                  value={selectedRegion}
-                  onChange={(e) => setSelectedRegion(e.target.value)}
-                  className="w-full rounded border border-zinc-300 bg-white px-3 py-2 text-sm text-black focus:border-black focus:outline-none focus:ring-2 focus:ring-black dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50"
-                >
-                  <option value="">All Regions</option>
-                  {filterOptions.regions.map((reg) => (
-                    <option key={reg} value={reg}>
-                      {reg}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
+              {/* Location Filter */}
+              {filterOptions && (
+                <div>
+                  <h3 className="mb-3 text-sm font-medium">Location</h3>
+                  <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="All Regions" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Regions</SelectItem>
+                      {filterOptions.regions.map((reg) => (
+                        <SelectItem key={reg} value={reg}>
+                          {reg}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </aside>
 
         {/* Events Grid */}
@@ -338,42 +352,39 @@ function HomeContent() {
               </div>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {events.map((event) => (
-                  <Link
-                    key={event.id}
-                    href={`/events/${event.slug}`}
-                    className="rounded-lg border border-zinc-200 bg-white p-6 transition-shadow hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900"
-                  >
-                    <div className="mb-2">
-                      <span className="rounded bg-black px-2 py-1 text-xs font-medium text-white dark:bg-white dark:text-black">
-                        {event.eventType === 'BIKING' ? 'Cycling' : event.eventType}
-                      </span>
-                    </div>
-                    <h2 className="mb-2 text-xl font-semibold text-black dark:text-zinc-50">
-                      {event.name}
-                    </h2>
-                    <p className="mb-2 text-sm text-zinc-600 dark:text-zinc-400">
-                      {new Date(event.startDate).toLocaleDateString('en-NZ', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </p>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                      {event.location}, {event.region}
-                    </p>
-                    {event.distances && Array.isArray(event.distances) && event.distances.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {(event.distances as string[]).slice(0, 3).map((dist, i) => (
-                          <span
-                            key={i}
-                            className="rounded bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
-                          >
-                            {dist}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </Link>
+                  <Card key={event.id} className="transition-shadow hover:shadow-lg">
+                    <Link href={`/events/${event.slug}`} className="block">
+                      <CardHeader>
+                        <div className="mb-2">
+                          <Badge variant="default">
+                            {event.eventType === 'BIKING' ? 'Cycling' : event.eventType}
+                          </Badge>
+                        </div>
+                        <CardTitle className="text-xl">{event.name}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="mb-2 text-sm text-muted-foreground">
+                          {new Date(event.startDate).toLocaleDateString('en-NZ', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })}
+                        </p>
+                        <p className="mb-2 text-sm text-muted-foreground">
+                          {event.location}, {event.region}
+                        </p>
+                        {event.distances && Array.isArray(event.distances) && event.distances.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {(event.distances as string[]).slice(0, 3).map((dist, i) => (
+                              <Badge key={i} variant="outline" className="text-xs">
+                                {dist}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Link>
+                  </Card>
                 ))}
               </div>
             </>
