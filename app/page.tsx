@@ -241,7 +241,7 @@ function HomeContent() {
       {/* Header */}
       <div className="mx-auto max-w-7xl px-4 pt-12 pb-8">
         <div className="mb-12">
-          <h1 className="mb-3 text-5xl font-bold text-foreground">
+          <h1 className="mb-3 text-5xl font-bold text-foreground tracking-tight">
             Discover Events
           </h1>
           <p className="text-lg text-muted-foreground">
@@ -284,29 +284,38 @@ function HomeContent() {
           <div className="flex flex-wrap items-center gap-3">
             {/* Event Type Chips */}
             {filterOptions?.eventTypes.map((type) => (
-              <Button
+              <button
                 key={type}
-                variant={selectedEventTypes.includes(type) ? "default" : "outline"}
                 onClick={() => toggleEventType(type)}
-                className={`h-10 gap-2 ${
-                  selectedEventTypes.includes(type)
-                    ? getEventBadgeVariant(type) === 'running'
-                      ? 'bg-[var(--event-running)] hover:bg-[var(--event-running)]/90'
-                      : getEventBadgeVariant(type) === 'cycling'
-                      ? 'bg-[var(--event-cycling)] hover:bg-[var(--event-cycling)]/90'
-                      : getEventBadgeVariant(type) === 'triathlon'
-                      ? 'bg-[var(--event-triathlon)] hover:bg-[var(--event-triathlon)]/90'
-                      : ''
-                    : 'bg-transparent border-border hover:bg-muted'
-                }`}
+                className={`
+                  inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium
+                  transition-all duration-200 ease-in-out
+                  ${
+                    selectedEventTypes.includes(type)
+                      ? getEventBadgeVariant(type) === 'running'
+                        ? 'bg-[var(--event-running)] text-white shadow-md hover:shadow-lg'
+                        : getEventBadgeVariant(type) === 'cycling'
+                        ? 'bg-[var(--event-cycling)] text-white shadow-md hover:shadow-lg'
+                        : getEventBadgeVariant(type) === 'triathlon'
+                        ? 'bg-[var(--event-triathlon)] text-white shadow-md hover:shadow-lg'
+                        : 'bg-primary text-white shadow-md hover:shadow-lg'
+                      : 'bg-transparent border border-border text-foreground hover:bg-muted/50'
+                  }
+                `}
               >
-                <span className={`h-2 w-2 rounded-full ${
-                  getEventBadgeVariant(type) === 'running' ? 'bg-[var(--event-running)]' :
-                  getEventBadgeVariant(type) === 'cycling' ? 'bg-[var(--event-cycling)]' :
-                  getEventBadgeVariant(type) === 'triathlon' ? 'bg-[var(--event-triathlon)]' : 'bg-muted-foreground'
-                } ${selectedEventTypes.includes(type) ? 'bg-white' : ''}`} />
+                <span
+                  className={`h-2 w-2 rounded-full transition-colors ${
+                    getEventBadgeVariant(type) === 'running'
+                      ? selectedEventTypes.includes(type) ? 'bg-white' : 'bg-[var(--event-running)]'
+                      : getEventBadgeVariant(type) === 'cycling'
+                      ? selectedEventTypes.includes(type) ? 'bg-white' : 'bg-[var(--event-cycling)]'
+                      : getEventBadgeVariant(type) === 'triathlon'
+                      ? selectedEventTypes.includes(type) ? 'bg-white' : 'bg-[var(--event-triathlon)]'
+                      : 'bg-muted-foreground'
+                  }`}
+                />
                 {formatEventType(type)}
-              </Button>
+              </button>
             ))}
 
             {/* Region Dropdown */}
@@ -354,18 +363,24 @@ function HomeContent() {
 
           {/* Distance Chips (when event type selected) */}
           {distanceOptions.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 animate-slide-in">
               <span className="text-sm text-muted-foreground">Distances:</span>
               {distanceOptions.map((dist) => (
-                <Button
+                <button
                   key={dist}
-                  variant={selectedDistances.includes(dist) ? "secondary" : "outline"}
                   onClick={() => toggleDistance(dist)}
-                  size="sm"
-                  className={selectedDistances.includes(dist) ? "" : "bg-transparent border-border hover:bg-muted"}
+                  className={`
+                    px-3 py-1.5 rounded-full text-sm font-medium
+                    transition-all duration-200 ease-in-out
+                    ${
+                      selectedDistances.includes(dist)
+                        ? 'bg-secondary text-white shadow-md hover:shadow-lg'
+                        : 'bg-transparent border border-border text-foreground hover:bg-muted/50'
+                    }
+                  `}
                 >
                   {dist}
-                </Button>
+                </button>
               ))}
             </div>
           )}
@@ -406,11 +421,12 @@ function HomeContent() {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {events.map((event) => (
+            {events.map((event, index) => (
               <Link
                 key={event.id}
                 href={`/events/${event.slug}`}
-                className="group rounded-xl bg-card border border-border p-6 transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5"
+                className="group rounded-xl bg-card border border-border p-6 transition-all duration-300 ease-in-out hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 animate-fade-in"
+                style={{ animationDelay: `${index * 50}ms` }}
               >
                 {/* Event Type Badge */}
                 <div className="mb-4">
@@ -420,7 +436,7 @@ function HomeContent() {
                 </div>
 
                 {/* Event Title */}
-                <h3 className="mb-3 text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
+                <h3 className="mb-3 text-xl font-semibold text-foreground group-hover:text-primary transition-colors tracking-tight">
                   {event.name}
                 </h3>
 

@@ -196,7 +196,7 @@ export default async function EventPage({ params }: PageProps) {
                 {formatEventType(event.eventType).toUpperCase()}
               </Badge>
             </div>
-            <h1 className="text-4xl font-bold text-foreground md:text-5xl">
+            <h1 className="text-4xl font-bold text-foreground md:text-5xl tracking-tight">
               {event.title}
             </h1>
           </div>
