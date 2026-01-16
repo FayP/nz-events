@@ -2,6 +2,21 @@ export type EventType = "RUNNING" | "BIKING" | "TRIATHLON";
 export type EventStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 export type EventSource = "AI_GENERATED" | "MANUAL" | "SCRAPED";
 
+export interface DistanceDetail {
+  name: string;
+  distance: string;
+  elevation: string;
+  time: string;
+  description: string;
+}
+
+export interface CourseInfo {
+  terrain?: string;
+  surface?: string;
+  traffic?: string;
+  cutoffTime?: string;
+}
+
 export interface Event {
   id: string;
   name: string;
@@ -21,9 +36,20 @@ export interface Event {
   registrationUrl?: string;
   organizer?: string;
   organizerEmail?: string;
+  organizerWebsite?: string;
   distances?: string[];
+  distanceDetails?: DistanceDetail[];
   price?: any;
   images?: string[];
+  schedule?: Array<{ time: string; description: string }>;
+  highlights?: string[];
+  courseTerrain?: string;
+  courseSurface?: string;
+  courseTraffic?: string;
+  requirements?: string[];
+  registrationCapacity?: number;
+  registrationTaken?: number;
+  fullAddress?: string;
   featured: boolean;
   verified: boolean;
   status: EventStatus;

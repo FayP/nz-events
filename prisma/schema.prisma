@@ -28,38 +28,50 @@ enum EventSource {
 }
 
 model Event {
-  id                  String      @id @default(cuid())
-  name                String
-  slug                String      @unique
-  description         String?     @db.Text
-  eventType           EventType
-  startDate           DateTime
-  endDate             DateTime?
-  registrationOpenDate DateTime?
-  registrationCloseDate DateTime?
-  location            String
-  city                String
-  region              String
-  latitude            Float?
-  longitude           Float?
-  website             String?
-  registrationUrl     String?
-  organizer           String?
-  organizerEmail      String?
-  distances           Json?       // Array of distances, e.g. ["5K", "10K", "Half Marathon"]
-  price               Json?       // Price information
-  images              Json?       // Array of image URLs
-  featured            Boolean     @default(false)
-  verified            Boolean     @default(false)
-  status              EventStatus @default(DRAFT)
-  source              EventSource @default(MANUAL)
-  seoTitle            String?
-  seoDescription      String?
-  tags                String[]    @default([])
-  indexedInElasticsearch Boolean  @default(false)
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @updatedAt
-  content             EventContent?
+  id                     String        @id @default(cuid())
+  name                   String
+  slug                   String        @unique
+  description            String?       @db.Text
+  eventType              EventType
+  startDate              DateTime
+  endDate                DateTime?
+  registrationOpenDate   DateTime?
+  registrationCloseDate  DateTime?
+  location               String
+  city                   String
+  region                 String
+  latitude               Float?
+  longitude              Float?
+  website                String?
+  registrationUrl        String?
+  organizer              String?
+  organizerEmail         String?
+  organizerWebsite       String?
+  distances              Json? // Array of distances, e.g. ["5K", "10K", "Half Marathon"]
+  distanceDetails        Json? // Enhanced distance info [{ name, distance, elevation, time, description }]
+  price                  Json? // Price information
+  images                 Json? // Array of image URLs
+  schedule               Json? // Race day schedule [{ time: "5:00 AM", description: "Transition opens" }]
+  highlights             String[]      @default([]) // Event highlights
+  courseTerrain          String? // e.g., "Rolling Hills", "Flat", "Mountainous"
+  courseSurface          String? // e.g., "Sealed Roads", "Trail", "Mixed"
+  courseTraffic          String? // e.g., "Full Closure", "Partial Closure", "Open Roads"
+  cutoffTime             String? // e.g., "6.5 hours", "No cutoff"
+  requirements           String[]      @default([]) // Equipment requirements
+  registrationCapacity   Int? // Total spots available
+  registrationTaken      Int? // Spots already filled
+  fullAddress            String? // Complete street address
+  featured               Boolean       @default(false)
+  verified               Boolean       @default(false)
+  status                 EventStatus   @default(DRAFT)
+  source                 EventSource   @default(MANUAL)
+  seoTitle               String?
+  seoDescription         String?
+  tags                   String[]      @default([])
+  indexedInElasticsearch Boolean       @default(false)
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+  content                EventContent?
 
   @@index([eventType])
   @@index([region])
@@ -70,10 +82,10 @@ model Event {
 }
 
 model EventContent {
-  id          String   @id @default(cuid())
-  eventId     String   @unique
-  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  content     Json     // Rich text content from CMS
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  eventId   String   @unique
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  content   Json // Rich text content from CMS
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

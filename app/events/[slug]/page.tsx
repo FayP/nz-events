@@ -1,14 +1,13 @@
 import { notFound } from 'next/navigation'
-import { getEventBySlug, urlFor } from '@/lib/cms'
+import { getEventBySlug } from '@/lib/cms'
 import { prisma } from '@/lib/prisma'
-import Image from 'next/image'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import ShareButton from './ShareButton'
-import EventMap from './EventMap'
-import { getEventBadgeVariant, formatEventType } from '@/lib/utils'
+import { formatEventType } from '@/lib/utils'
+import { Calendar, MapPin } from 'lucide-react'
+import { AmbientBackground } from '@/components/ui/ambient-background'
+import DistanceSelector from './DistanceSelector'
+import CourseInfoBar from './CourseInfoBar'
+import EventContent from './EventContent'
 
 interface PageProps {
   params: Promise<{
@@ -16,52 +15,6 @@ interface PageProps {
   }> | {
     slug: string
   }
-}
-
-// Helper to render portable text (Sanity's rich text format)
-function PortableText({ blocks }: { blocks: any[] }) {
-  if (!blocks || !Array.isArray(blocks)) return null
-
-  return (
-    <div className="prose prose-lg dark:prose-invert max-w-none">
-      {blocks.map((block, i) => {
-        if (block._type === 'block') {
-          const style = block.style || 'normal'
-          const children = block.children?.map((child: any, j: number) => {
-            if (child._type === 'span') {
-              return <span key={j}>{child.text}</span>
-            }
-            return null
-          })
-
-          switch (style) {
-            case 'h2':
-              return <h2 key={i}>{children}</h2>
-            case 'h3':
-              return <h3 key={i}>{children}</h3>
-            case 'blockquote':
-              return <blockquote key={i}>{children}</blockquote>
-            default:
-              return <p key={i}>{children}</p>
-          }
-        }
-        if (block._type === 'image' && block.asset) {
-          const imageUrl = urlFor(block)?.url()
-          return imageUrl ? (
-            <Image
-              key={i}
-              src={imageUrl}
-              alt={block.alt || ''}
-              width={800}
-              height={600}
-              className="rounded-lg my-8"
-            />
-          ) : null
-        }
-        return null
-      })}
-    </div>
-  )
 }
 
 export default async function EventPage({ params }: PageProps) {
@@ -78,57 +31,58 @@ export default async function EventPage({ params }: PageProps) {
   // Try to get event from Sanity CMS first
   let event = await getEventBySlug(slug)
 
-  // Fallback to database if not in CMS
-  if (!event) {
-    const dbEvent = await prisma.event.findUnique({
-      where: { slug },
-    })
+  // Always fetch from database to get latest fields (distanceDetails, courseInfo, etc.)
+  const dbEvent = await prisma.event.findUnique({
+    where: { slug },
+  })
 
-    if (!dbEvent) {
-      notFound()
-    }
-
-    // Return basic page if not in CMS yet
-    return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <Link
-          href="/events"
-          className="mb-4 text-blue-600 hover:underline dark:text-blue-400"
-        >
-          ← Back to Events
-        </Link>
-        <h1 className="mb-4 text-4xl font-bold">{dbEvent.name}</h1>
-        <div className="rounded-lg border border-zinc-200 bg-yellow-50 p-4 dark:border-zinc-800 dark:bg-yellow-900/20">
-          <p className="text-sm text-yellow-800 dark:text-yellow-200">
-            This event page is being set up in the CMS. Check back soon for full details!
-          </p>
-        </div>
-        <div className="mt-6 space-y-4">
-          <div>
-            <strong>Date:</strong>{' '}
-            {new Date(dbEvent.startDate).toLocaleDateString('en-NZ', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </div>
-          <div>
-            <strong>Location:</strong> {dbEvent.location}, {dbEvent.city}, {dbEvent.region}
-          </div>
-          {dbEvent.description && (
-            <div>
-              <strong>Description:</strong>
-              <p className="mt-2">{dbEvent.description}</p>
-            </div>
-          )}
-        </div>
-      </div>
-    )
+  // If no event in either place, return 404
+  if (!event && !dbEvent) {
+    notFound()
   }
 
-  const heroImageUrl = event.heroImage?.asset?.url
-    ? urlFor(event.heroImage)?.url()
-    : null
+  // If database event exists, use it as source of truth for data fields
+  // CMS can be used for rich content (descriptions, images) but database has the structured data
+  if (dbEvent) {
+    event = {
+      title: dbEvent.name,
+      eventType: dbEvent.eventType,
+      distanceDetails: dbEvent.distanceDetails as any,
+      eventDetails: {
+        startDate: dbEvent.startDate.toISOString(),
+        location: dbEvent.location,
+        city: dbEvent.city,
+        region: dbEvent.region,
+        address: dbEvent.fullAddress,
+      },
+      organizer: dbEvent.organizer ? {
+        name: dbEvent.organizer,
+        website: dbEvent.organizerWebsite,
+      } : undefined,
+      courseInfo: {
+        terrain: dbEvent.courseTerrain,
+        surface: dbEvent.courseSurface,
+        traffic: dbEvent.courseTraffic,
+        cutoffTime: dbEvent.cutoffTime,
+      },
+      schedule: dbEvent.schedule as any,
+      highlights: dbEvent.highlights,
+      requirements: dbEvent.requirements,
+      registration: {
+        registrationUrl: dbEvent.registrationUrl,
+        price: dbEvent.price as any,
+        capacity: dbEvent.registrationCapacity,
+        taken: dbEvent.registrationTaken,
+      },
+      description: dbEvent.description ? [
+        {
+          _type: 'block',
+          style: 'normal',
+          children: [{ _type: 'span', text: dbEvent.description }],
+        },
+      ] : undefined,
+    }
+  }
 
   // Format date and time
   const formatDate = (dateString: string) => {
@@ -150,437 +104,193 @@ export default async function EventPage({ params }: PageProps) {
     })
   }
 
-  // Get price range
-  const getPriceRange = () => {
-    if (!event.registration?.price) return null
-    const { earlyBird, standard } = event.registration.price
-    if (earlyBird && standard) {
-      return `${earlyBird} - ${standard}`
+  // Get event type badge colors
+  const getEventTypeColor = (eventType: string) => {
+    const type = eventType.toUpperCase()
+    switch (type) {
+      case 'RUNNING':
+        return {
+          bg: 'rgba(249, 115, 22, 0.15)',
+          text: 'var(--event-running)',
+          border: 'rgba(249, 115, 22, 0.3)',
+        }
+      case 'BIKING':
+      case 'CYCLING':
+        return {
+          bg: 'rgba(139, 92, 246, 0.15)',
+          text: 'var(--event-cycling)',
+          border: 'rgba(139, 92, 246, 0.3)',
+        }
+      case 'TRIATHLON':
+        return {
+          bg: 'rgba(16, 185, 129, 0.15)',
+          text: 'var(--event-triathlon)',
+          border: 'rgba(16, 185, 129, 0.3)',
+        }
+      default:
+        return {
+          bg: 'rgba(100, 100, 100, 0.15)',
+          text: 'rgba(255, 255, 255, 0.6)',
+          border: 'rgba(100, 100, 100, 0.3)',
+        }
     }
-    return earlyBird || standard || null
   }
 
-  const priceRange = getPriceRange()
-  const distancesCount = event.distances?.length || 0
+  const typeColors = getEventTypeColor(event.eventType)
+
+  // Build course info object
+  const courseInfo = event.courseInfo
+    ? {
+        terrain: event.courseInfo.terrain,
+        surface: event.courseInfo.surface,
+        traffic: event.courseInfo.traffic,
+        cutoffTime: event.courseInfo.cutoffTime,
+      }
+    : undefined
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-5xl px-4 py-8">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 mb-8 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          ← Back to Events
-        </Link>
+    <div className="min-h-screen bg-gradient-to-b from-[#0a0a0b] to-[#111113] relative overflow-hidden">
+      {/* Ambient Background Effects */}
+      <AmbientBackground eventType={event.eventType} />
 
-        {/* Hero Section with Key Info */}
-        <div className="mb-12">
-          {/* Hero Image */}
-          {heroImageUrl && (
-            <div className="mb-8 overflow-hidden rounded-xl">
-              <Image
-                src={heroImageUrl}
-                alt={event.title}
-                width={1200}
-                height={600}
-                className="h-80 w-full object-cover md:h-96"
-                priority
-              />
-            </div>
-          )}
+      {/* Main Content */}
+      <div className="relative z-10">
+        {/* Header Section */}
+        <div className="max-w-7xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
+          {/* Back Button */}
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 px-5 py-3 mb-10 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white/60 hover:text-white hover:bg-white/[0.06] transition-all duration-300 animate-fade-in-up"
+          >
+            <span className="text-lg">←</span>
+            Back to Events
+          </Link>
 
-          {/* Event Title and Badge */}
-          <div className="mb-8">
-            <div className="mb-4">
-              <Badge variant={getEventBadgeVariant(event.eventType)} className="text-xs font-semibold">
-                {formatEventType(event.eventType).toUpperCase()}
-              </Badge>
-            </div>
-            <h1 className="text-4xl font-bold text-foreground md:text-5xl tracking-tight">
-              {event.title}
-            </h1>
+          {/* Type Badge */}
+          <div
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full mb-6 animate-fade-in-up"
+            style={{
+              background: typeColors.bg,
+              border: `1px solid ${typeColors.border}`,
+              animationDelay: '0.1s'
+            }}
+          >
+            <span
+              className="w-2 h-2 rounded-full"
+              style={{ background: typeColors.text }}
+            />
+            <span
+              className="text-xs font-semibold uppercase tracking-wider"
+              style={{ color: typeColors.text }}
+            >
+              {formatEventType(event.eventType)}
+            </span>
           </div>
 
-        {/* Key Information Grid */}
-        {event.eventDetails && (
-          <Card className="mb-8 bg-card border-border">
-            <CardContent className="pt-6">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {/* Date */}
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">📅</span>
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground">
-                    Date
-                  </div>
-                  <div className="text-base font-semibold text-foreground">
-                    {formatDate(event.eventDetails.startDate)}
-                  </div>
-                </div>
-              </div>
+          {/* Header Grid with Organizer on Top Right */}
+          <div
+            className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-10 items-start mb-8 animate-fade-in-up"
+            style={{ animationDelay: '0.15s' }}
+          >
+            {/* Left Column - Event Info */}
+            <div>
+              {/* Event Title */}
+              <h1 className="font-outfit text-5xl md:text-6xl font-semibold leading-tight mb-6 text-white bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent"
+                  style={{ letterSpacing: '-0.02em' }}>
+                {event.title}
+              </h1>
 
-              {/* Time */}
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">⏰</span>
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground">
-                    Time
-                  </div>
-                  <div className="text-base font-semibold text-foreground">
-                    {formatTime(event.eventDetails.startDate)}
-                  </div>
-                </div>
-              </div>
-
-              {/* Location */}
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">📍</span>
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground">
-                    Location
-                  </div>
-                  <div className="text-base font-semibold text-foreground">
-                    {event.eventDetails.location}
-                    <br />
-                    <span className="text-sm font-normal text-muted-foreground">
-                      {event.eventDetails.city}, {event.eventDetails.region}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Price */}
-              {priceRange && (
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">💰</span>
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground">
-                      Price
+              {/* Quick Info */}
+              {event.eventDetails && (
+                <div className="flex flex-wrap items-start gap-6 text-white/60">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-white/[0.04] flex items-center justify-center">
+                      <Calendar className="h-5 w-5" />
                     </div>
-                    <div className="text-base font-semibold text-foreground">
-                      {priceRange}
-                      {event.registration?.price?.currency && (
-                        <span className="ml-1 text-sm font-normal text-muted-foreground">
-                          {event.registration.price.currency}
-                        </span>
-                      )}
+                    <div>
+                      <div className="font-medium text-white">
+                        {formatDate(event.eventDetails.startDate)}
+                      </div>
+                      <div className="text-xs text-white/40">
+                        {formatTime(event.eventDetails.startDate)}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-
-              {/* Distances */}
-              {distancesCount > 0 && (
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">🏃</span>
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground">
-                      Races
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-white/[0.04] flex items-center justify-center">
+                      <MapPin className="h-5 w-5" />
                     </div>
-                    <div className="text-base font-semibold text-foreground">
-                      {distancesCount} distance{distancesCount !== 1 ? 's' : ''}
+                    <div>
+                      <div className="font-medium text-white">{event.eventDetails.location}</div>
+                      <div className="text-xs text-white/40">
+                        {event.eventDetails.city}, {event.eventDetails.region}
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
             </div>
 
-              {/* Action Buttons */}
-              <div className="mt-6 flex flex-wrap gap-3">
-                {event.registration?.registrationUrl && (
-                  <Button asChild size="lg">
+            {/* Right Column - Organizer Card */}
+            {event.organizer?.name && (
+              <div className="p-6 bg-white/[0.03] border border-white/[0.06] rounded-2xl flex items-center gap-4 self-start hidden md:flex">
+                <div className="w-12 h-12 bg-white/[0.05] rounded-xl flex items-center justify-center text-2xl">
+                  🏆
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-white">{event.organizer.name}</div>
+                  {event.organizer.website && (
                     <a
-                      href={event.registration.registrationUrl}
+                      href={event.organizer.website}
                       target="_blank"
                       rel="noopener noreferrer"
+                      className="text-xs hover:underline"
+                      style={{ color: typeColors.text }}
                     >
-                      Book Now
+                      {new URL(event.organizer.website).hostname.replace('www.', '')}
                     </a>
-                  </Button>
-                )}
-                <ShareButton title={event.title} text={event.excerpt} />
+                  )}
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Description */}
-      {event.description && event.description.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-4 text-2xl font-semibold">About This Event</h2>
-          <PortableText blocks={event.description} />
-        </div>
-      )}
-
-      {/* Location & Map Section */}
-      {event.eventDetails && (
-        <div className="mb-8">
-          <h2 className="mb-4 text-2xl font-semibold">Location</h2>
-          
-          {/* Map */}
-          {event.eventDetails.coordinates?.lat && event.eventDetails.coordinates?.lng ? (
-            <div className="mb-4 overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800">
-              <EventMap
-                latitude={event.eventDetails.coordinates.lat}
-                longitude={event.eventDetails.coordinates.lng}
-                location={event.eventDetails.location}
-                city={event.eventDetails.city}
-                region={event.eventDetails.region}
-              />
-            </div>
-          ) : null}
-
-          {/* Address and Directions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Address</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="mb-4 text-muted-foreground">
-                {event.eventDetails.address || event.eventDetails.location}
-                <br />
-                {event.eventDetails.city}, {event.eventDetails.region}
-              </p>
-              
-              {/* Get Directions Link */}
-              <Button asChild>
-                <a
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-                    event.eventDetails.address || 
-                    `${event.eventDetails.location}, ${event.eventDetails.city}, ${event.eventDetails.region}`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Get Directions
-                </a>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Distances */}
-      {event.distances && event.distances.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-4 text-2xl font-semibold">Available Distances</h2>
-          <div className="flex flex-wrap gap-2">
-            {event.distances.map((distance: string, i: number) => (
-              <Badge key={i} variant="secondary">
-                {distance}
-              </Badge>
-            ))}
+            )}
           </div>
-        </div>
-      )}
 
-      {/* Course Map */}
-      {event.courseMap && urlFor(event.courseMap)?.url() && (
-        <div className="mb-8">
-          <h2 className="mb-4 text-2xl font-semibold">Course Map</h2>
-          <Card>
-            <CardContent className="p-0">
-              <div className="overflow-hidden rounded-lg">
-                <Image
-                  src={urlFor(event.courseMap)?.url() || ''}
-                  alt="Course Map"
-                  width={1200}
-                  height={800}
-                  className="w-full h-auto"
-                />
+          {/* Organizer Card Below (Mobile Only) */}
+          {event.organizer?.name && (
+            <div className="md:hidden p-6 bg-white/[0.03] border border-white/[0.06] rounded-2xl flex items-center gap-4 mb-8">
+              <div className="w-12 h-12 bg-white/[0.05] rounded-xl flex items-center justify-center text-2xl">
+                🏆
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Course Information */}
-      {event.courseInfo && event.courseInfo.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-4 text-2xl font-semibold">Course Information</h2>
-          <div className="space-y-4">
-            {event.courseInfo.map((info: any, i: number) => (
-              <Card key={i}>
-                <CardHeader>
-                  <CardTitle className="text-lg">{info.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground whitespace-pre-line">{info.content}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Registration */}
-      {event.registration && (
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Registration</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {event.registration.registrationUrl && (
-              <Button asChild size="lg" className="w-full sm:w-auto">
-                <a
-                  href={event.registration.registrationUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Register Now
-                </a>
-              </Button>
-            )}
-            
-            {/* Registration Dates */}
-            {(event.registration.registrationOpenDate || event.registration.registrationCloseDate) && (
-              <div className="space-y-2">
-                <h3 className="font-semibold">Registration Period</h3>
-                {event.registration.registrationOpenDate && (
-                  <p className="text-sm text-muted-foreground">
-                    Opens: {new Date(event.registration.registrationOpenDate).toLocaleDateString('en-NZ', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </p>
-                )}
-                {event.registration.registrationCloseDate && (
-                  <p className="text-sm text-muted-foreground">
-                    Closes: {new Date(event.registration.registrationCloseDate).toLocaleDateString('en-NZ', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Pricing */}
-            {event.registration.price && (
-              <div className="space-y-2">
-                <h3 className="font-semibold">Pricing</h3>
-                {event.registration.price.earlyBird && (
-                  <div className="flex items-center justify-between rounded-lg border p-3">
-                    <span className="text-sm font-medium">Early Bird</span>
-                    <span className="text-sm font-semibold">
-                      {event.registration.price.earlyBird}
-                      {event.registration.price.currency && ` ${event.registration.price.currency}`}
-                    </span>
-                  </div>
-                )}
-                {event.registration.price.standard && (
-                  <div className="flex items-center justify-between rounded-lg border p-3">
-                    <span className="text-sm font-medium">Standard</span>
-                    <span className="text-sm font-semibold">
-                      {event.registration.price.standard}
-                      {event.registration.price.currency && ` ${event.registration.price.currency}`}
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Registration Website */}
-            {event.registration.website && (
               <div>
-                <p className="mb-2 text-sm text-muted-foreground">
-                  For more information, visit the official registration website.
-                </p>
-                <Button asChild variant="outline">
+                <div className="text-sm font-medium text-white">{event.organizer.name}</div>
+                {event.organizer.website && (
                   <a
-                    href={event.registration.website}
+                    href={event.organizer.website}
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="text-xs hover:underline"
+                    style={{ color: typeColors.text }}
                   >
-                    Visit Registration Website
+                    {new URL(event.organizer.website).hostname.replace('www.', '')}
                   </a>
-                </Button>
+                )}
               </div>
-            )}
-
-            {/* Fallback message if no registration details */}
-            {!event.registration.registrationUrl && 
-             !event.registration.website && 
-             !event.registration.registrationOpenDate && 
-             !event.registration.registrationCloseDate && 
-             !event.registration.price && (
-              <p className="text-sm text-muted-foreground">
-                Registration details will be available soon. Please check back later or contact the event organizer for more information.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Highlights */}
-      {event.highlights && event.highlights.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-4 text-2xl font-semibold">Event Highlights</h2>
-          <ul className="list-disc space-y-2 pl-6">
-            {event.highlights.map((highlight: string, i: number) => (
-              <li key={i} className="text-muted-foreground">
-                {highlight}
-              </li>
-            ))}
-          </ul>
+            </div>
+          )}
         </div>
-      )}
 
-      {/* FAQ */}
-      {event.faq && event.faq.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-4 text-2xl font-semibold">Frequently Asked Questions</h2>
-          <div className="space-y-4">
-            {event.faq.map((item: any, i: number) => (
-              <Card key={i}>
-                <CardHeader>
-                  <CardTitle className="text-lg">{item.question}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">{item.answer}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
+        {/* Distance Selector */}
+        {event.distanceDetails && event.distanceDetails.length > 0 && (
+          <DistanceSelector distances={event.distanceDetails} eventType={event.eventType} />
+        )}
 
-      {/* Gallery */}
-      {event.gallery && event.gallery.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-4 text-2xl font-semibold">Gallery</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            {event.gallery.map((image: any, i: number) => {
-              const imageUrl = urlFor(image)?.url()
-              return imageUrl ? (
-                <Image
-                  key={i}
-                  src={imageUrl}
-                  alt={image.alt || `Gallery image ${i + 1}`}
-                  width={600}
-                  height={400}
-                  className="rounded-lg"
-                />
-              ) : null
-            })}
-          </div>
+        {/* Course Info Bar */}
+        {courseInfo && <CourseInfoBar courseInfo={courseInfo} />}
+
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-4 pb-20 sm:px-6 lg:px-8 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+          <EventContent event={event} eventType={event.eventType} />
         </div>
-      )}
       </div>
     </div>
   )
@@ -595,7 +305,7 @@ export async function generateStaticParams() {
     })
 
     return events
-      .filter((event) => event.slug) // Filter out any null/undefined slugs
+      .filter((event) => event.slug)
       .map((event) => ({
         slug: event.slug,
       }))
@@ -604,4 +314,3 @@ export async function generateStaticParams() {
     return []
   }
 }
-

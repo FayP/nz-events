@@ -143,6 +143,22 @@ export default {
       description: 'Available distances or categories (e.g., "5K", "10K", "Half Marathon")',
     },
     {
+      name: 'distanceDetails',
+      title: 'Distance Details',
+      type: 'array',
+      of: [{
+        type: 'object',
+        fields: [
+          { name: 'name', title: 'Distance Name', type: 'string' },
+          { name: 'distance', title: 'Distance (e.g., 160km)', type: 'string' },
+          { name: 'elevation', title: 'Elevation Gain (e.g., 1,850m)', type: 'string' },
+          { name: 'time', title: 'Estimated Time (e.g., 4-8 hrs)', type: 'string' },
+          { name: 'description', title: 'Description', type: 'text' },
+        ],
+      }],
+      description: 'Detailed information for each distance option',
+    },
+    {
       name: 'registration',
       title: 'Registration Information',
       type: 'object',
@@ -176,6 +192,18 @@ export default {
             { name: 'standard', title: 'Standard Price', type: 'string' },
             { name: 'currency', title: 'Currency', type: 'string', initialValue: 'NZD' },
           ],
+        },
+        {
+          name: 'capacity',
+          title: 'Total Capacity',
+          type: 'number',
+          description: 'Total registration spots available',
+        },
+        {
+          name: 'taken',
+          title: 'Spots Taken',
+          type: 'number',
+          description: 'Number of spots already registered',
         },
       ],
     },
@@ -215,16 +243,20 @@ export default {
     {
       name: 'courseInfo',
       title: 'Course Information',
-      type: 'array',
-      of: [
-        {
-          type: 'object',
-          fields: [
-            { name: 'title', title: 'Section Title', type: 'string' },
-            { name: 'content', title: 'Content', type: 'text', rows: 4 },
-          ],
-        },
+      type: 'object',
+      fields: [
+        { name: 'terrain', title: 'Terrain Type', type: 'string', description: 'e.g., "Rolling Hills", "Flat", "Mountainous"' },
+        { name: 'surface', title: 'Surface Type', type: 'string', description: 'e.g., "Sealed Roads", "Trail", "Mixed"' },
+        { name: 'traffic', title: 'Traffic Management', type: 'string', description: 'e.g., "Full Closure", "Partial Closure", "Open Roads"' },
       ],
+      description: 'Quick stats about the course',
+    },
+    {
+      name: 'requirements',
+      title: 'Equipment Requirements',
+      type: 'array',
+      of: [{ type: 'string' }],
+      description: 'Required or recommended equipment (e.g., "Road bike", "Helmet (mandatory)")',
     },
     {
       name: 'faq',
