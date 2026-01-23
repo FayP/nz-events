@@ -18,11 +18,11 @@ const badgeVariants = cva(
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
         running:
-          "border-transparent bg-[var(--event-running)] text-white [a&]:hover:opacity-90 [a&]:hover:shadow-md",
+          "border-[var(--event-running)] bg-transparent text-[var(--event-running)] [a&]:hover:bg-[var(--event-running)]/10",
         cycling:
-          "border-transparent bg-[var(--event-cycling)] text-white [a&]:hover:opacity-90 [a&]:hover:shadow-md",
+          "border-[var(--event-cycling)] bg-transparent text-[var(--event-cycling)] [a&]:hover:bg-[var(--event-cycling)]/10",
         triathlon:
-          "border-transparent bg-[var(--event-triathlon)] text-white [a&]:hover:opacity-90 [a&]:hover:shadow-md",
+          "border-[var(--event-triathlon)] bg-transparent text-[var(--event-triathlon)] [a&]:hover:bg-[var(--event-triathlon)]/10",
       },
     },
     defaultVariants: {

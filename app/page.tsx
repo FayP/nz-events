@@ -363,7 +363,7 @@ function HomeContent() {
 
           {/* Distance Chips (when event type selected) */}
           {distanceOptions.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 animate-slide-in">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm text-muted-foreground">Distances:</span>
               {distanceOptions.map((dist) => (
                 <button
@@ -421,27 +421,31 @@ function HomeContent() {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {events.map((event, index) => (
+            {events.map((event) => (
               <Link
                 key={event.id}
                 href={`/events/${event.slug}`}
-                className="group rounded-xl bg-card border border-border p-6 transition-all duration-300 ease-in-out hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 animate-fade-in"
-                style={{ animationDelay: `${index * 50}ms` }}
+                className="group rounded-2xl bg-card border border-border/40 p-6 transition-all duration-200 ease-out hover:border-border hover:shadow-lg"
               >
-                {/* Event Type Badge */}
-                <div className="mb-4">
-                  <Badge variant={getEventBadgeVariant(event.eventType)} className="text-xs font-semibold">
-                    {formatEventType(event.eventType).toUpperCase()}
-                  </Badge>
+                {/* Event Type Badge - solid pill style */}
+                <div className="mb-6">
+                  <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide ${
+                    getEventBadgeVariant(event.eventType) === 'running' ? 'bg-[var(--event-running)] text-white' :
+                    getEventBadgeVariant(event.eventType) === 'cycling' ? 'bg-[var(--event-cycling)] text-white' :
+                    getEventBadgeVariant(event.eventType) === 'triathlon' ? 'bg-[var(--event-triathlon)] text-white' : 'bg-muted text-foreground'
+                  }`}>
+                    <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                    {formatEventType(event.eventType)}
+                  </span>
                 </div>
 
                 {/* Event Title */}
-                <h3 className="mb-3 text-xl font-semibold text-foreground group-hover:text-primary transition-colors tracking-tight">
+                <h3 className="mb-6 text-2xl font-bold text-foreground tracking-tight">
                   {event.name}
                 </h3>
 
                 {/* Date */}
-                <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="mb-3 flex items-center gap-2.5 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
                   <span>
                     {new Date(event.startDate).toLocaleDateString('en-NZ', {
@@ -453,20 +457,20 @@ function HomeContent() {
                 </div>
 
                 {/* Location */}
-                <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="mb-8 flex items-center gap-2.5 text-sm text-muted-foreground">
                   <MapPin className="h-4 w-4" />
                   <span>{event.location}, {event.city}</span>
                 </div>
 
                 {/* Distances and Arrow */}
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-wrap gap-2">
+                <div className="flex items-end justify-between">
+                  <div className="flex flex-wrap gap-3">
                     {event.distances && Array.isArray(event.distances) && event.distances.length > 0 && (
                       <>
                         {(event.distances as string[]).slice(0, 3).map((dist, i) => (
                           <span
                             key={i}
-                            className="rounded-md bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
+                            className="text-base font-medium text-foreground/90"
                           >
                             {dist}
                           </span>
@@ -474,7 +478,17 @@ function HomeContent() {
                       </>
                     )}
                   </div>
-                  <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <div className={`flex items-center justify-center rounded-full w-14 h-14 shrink-0 transition-all duration-300 ${
+                    getEventBadgeVariant(event.eventType) === 'running' ? 'bg-[var(--event-running)]/15 border border-[var(--event-running)]/30 group-hover:bg-[var(--event-running)]/25' :
+                    getEventBadgeVariant(event.eventType) === 'cycling' ? 'bg-[var(--event-cycling)]/15 border border-[var(--event-cycling)]/30 group-hover:bg-[var(--event-cycling)]/25' :
+                    getEventBadgeVariant(event.eventType) === 'triathlon' ? 'bg-[var(--event-triathlon)]/15 border border-[var(--event-triathlon)]/30 group-hover:bg-[var(--event-triathlon)]/25' : 'bg-muted border border-border group-hover:bg-muted/80'
+                  }`}>
+                    <ArrowRight className={`h-5 w-5 transition-all duration-300 group-hover:translate-x-1 ${
+                      getEventBadgeVariant(event.eventType) === 'running' ? 'text-[var(--event-running)]' :
+                      getEventBadgeVariant(event.eventType) === 'cycling' ? 'text-[var(--event-cycling)]' :
+                      getEventBadgeVariant(event.eventType) === 'triathlon' ? 'text-[var(--event-triathlon)]' : 'text-muted-foreground'
+                    }`} />
+                  </div>
                 </div>
               </Link>
             ))}

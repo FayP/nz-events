@@ -160,7 +160,7 @@ export default async function EventPage({ params }: PageProps) {
           {/* Back Button */}
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-5 py-3 mb-10 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white/60 hover:text-white hover:bg-white/[0.06] transition-all duration-300 animate-fade-in-up"
+            className="inline-flex items-center gap-2 px-5 py-3 mb-16 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white/60 hover:text-white hover:bg-white/[0.06] transition-all duration-300 animate-fade-in-up"
           >
             <span className="text-lg">←</span>
             Back to Events
@@ -168,7 +168,7 @@ export default async function EventPage({ params }: PageProps) {
 
           {/* Type Badge */}
           <div
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full mb-6 animate-fade-in-up"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full mb-8 animate-fade-in-up"
             style={{
               background: typeColors.bg,
               border: `1px solid ${typeColors.border}`,

@@ -11,7 +11,20 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-const prisma = new PrismaClient()
+// Add pgbouncer parameter to avoid prepared statement errors with Supabase
+const getDatabaseUrl = () => {
+  const url = process.env.DATABASE_URL
+  if (!url) throw new Error('DATABASE_URL not found')
+  return url.includes('?') ? `${url}&pgbouncer=true` : `${url}?pgbouncer=true`
+}
+
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: getDatabaseUrl()
+    }
+  }
+})
 
 interface CourseInfoResult {
   terrain: string
