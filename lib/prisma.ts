@@ -4,6 +4,15 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+// Add pgbouncer parameter for Supabase connection pooler
+const getDatabaseUrl = () => {
+  const url = process.env.DATABASE_URL;
+  if (!url) return undefined;
+  // Add pgbouncer=true if not already present
+  if (url.includes('pgbouncer=true')) return url;
+  return url.includes('?') ? `${url}&pgbouncer=true` : `${url}?pgbouncer=true`;
+};
+
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
@@ -11,8 +20,11 @@ export const prisma =
       process.env.NODE_ENV === "development"
         ? ["query", "error", "warn"]
         : ["error"],
-    // Fix for "prepared statement already exists" error in development
-    datasourceUrl: process.env.DATABASE_URL,
+    datasources: {
+      db: {
+        url: getDatabaseUrl(),
+      },
+    },
   });
 
 // Prevent multiple instances during hot reload

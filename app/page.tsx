@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select'
 import { getEventBadgeVariant, formatEventType } from '@/lib/utils'
 import { Search, Calendar, MapPin, ArrowRight } from 'lucide-react'
+import { Logo } from '@/components/ui/logo'
 
 // Force dynamic rendering for search params
 export const dynamic = 'force-dynamic'
@@ -239,10 +240,15 @@ function HomeContent() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="mx-auto max-w-7xl px-4 pt-12 pb-8">
+      <div className="mx-auto max-w-7xl px-4 pt-8 pb-8">
+        {/* Logo */}
+        <div className="mb-10">
+          <Logo size="lg" />
+        </div>
+
         <div className="mb-12">
           <h1 className="mb-3 text-5xl font-bold text-foreground tracking-tight">
-            Discover Events
+            Find Your Next Finish Line
           </h1>
           <p className="text-lg text-muted-foreground">
             Running, cycling & triathlon events across New Zealand

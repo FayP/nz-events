@@ -15,8 +15,11 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "NZ Events - Discover Running, Biking & Triathlon Events",
-  description: "Find running, biking, and triathlon events across New Zealand. Search by location, date, or event type.",
+  title: "GoStride - Find Your Next Finish Line",
+  description: "Discover running, cycling, and triathlon events across New Zealand. Find your next finish line with GoStride.",
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({

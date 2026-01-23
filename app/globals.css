@@ -49,6 +49,13 @@
 :root {
   --radius: 0.75rem;
 
+  /* GoStride Brand Colors */
+  --gostride-emerald: #10b981;
+  --gostride-orange: #f97316;
+  --gostride-purple: #8b5cf6;
+  --gostride-dark: #0a0a0b;
+  --gostride-gray: #111113;
+
   /* Dark-first Design - Default to Dark Mode */
   --background: oklch(0.08 0.01 255);
   --foreground: oklch(0.95 0.005 85);
@@ -82,10 +89,10 @@
   --input: oklch(0.15 0.01 255);
   --ring: oklch(0.65 0.13 180);
 
-  /* Event Type Colors - adjusted for dark mode */
-  --event-running: oklch(0.7 0.17 45); /* Coral/Orange */
-  --event-cycling: oklch(0.6 0.15 280); /* Purple */
-  --event-triathlon: oklch(0.65 0.16 145); /* Green */
+  /* Event Type Colors - GoStride Brand */
+  --event-running: #f97316; /* Orange */
+  --event-cycling: #8b5cf6; /* Purple */
+  --event-triathlon: #10b981; /* Emerald */
   --event-other: oklch(0.6 0.05 255); /* Slate Blue */
 
   /* Chart colors - vibrant sports palette */

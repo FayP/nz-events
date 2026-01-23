@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { formatEventType } from '@/lib/utils'
 import { Calendar, MapPin } from 'lucide-react'
 import { AmbientBackground } from '@/components/ui/ambient-background'
+import { Logo } from '@/components/ui/logo'
 import DistanceSelector from './DistanceSelector'
 import CourseInfoBar from './CourseInfoBar'
 import EventContent from './EventContent'
@@ -157,14 +158,10 @@ export default async function EventPage({ params }: PageProps) {
       <div className="relative z-10">
         {/* Header Section */}
         <div className="max-w-7xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
-          {/* Back Button */}
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 px-5 py-3 mb-16 bg-white/[0.03] border border-white/[0.08] rounded-xl text-white/60 hover:text-white hover:bg-white/[0.06] transition-all duration-300 animate-fade-in-up"
-          >
-            <span className="text-lg">←</span>
-            Back to Events
-          </Link>
+          {/* Logo */}
+          <div className="mb-12 animate-fade-in-up">
+            <Logo size="md" />
+          </div>
 
           {/* Type Badge */}
           <div

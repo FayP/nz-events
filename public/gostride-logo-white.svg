@@ -1,0 +1,10 @@
+<svg width="240" height="48" viewBox="0 0 240 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Icon -->
+  <rect x="0" y="0" width="48" height="48" rx="12" fill="#10b981"/>
+  <path d="M12 32L18 16L26 26L36 12" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="36" cy="12" r="3" fill="white"/>
+  
+  <!-- Text - White with green accent for dark backgrounds -->
+  <text x="60" y="34" font-family="Outfit, sans-serif" font-size="32" font-weight="600" fill="white" letter-spacing="-1">go</text>
+  <text x="100" y="34" font-family="Outfit, sans-serif" font-size="32" font-weight="600" fill="#10b981" letter-spacing="-1">stride</text>
+</svg>
