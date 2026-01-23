@@ -4,13 +4,18 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-// Add pgbouncer parameter for Supabase connection pooler
+// Add pgbouncer and connection pool parameters for Supabase
 const getDatabaseUrl = () => {
   const url = process.env.DATABASE_URL;
   if (!url) return undefined;
-  // Add pgbouncer=true if not already present
-  if (url.includes('pgbouncer=true')) return url;
-  return url.includes('?') ? `${url}&pgbouncer=true` : `${url}?pgbouncer=true`;
+
+  const params: string[] = [];
+  if (!url.includes('pgbouncer=true')) params.push('pgbouncer=true');
+  if (!url.includes('connection_limit=')) params.push('connection_limit=1');
+
+  if (params.length === 0) return url;
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}${params.join('&')}`;
 };
 
 export const prisma =
