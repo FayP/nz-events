@@ -9,6 +9,8 @@ import { Logo } from '@/components/ui/logo'
 import DistanceSelector from './DistanceSelector'
 import CourseInfoBar from './CourseInfoBar'
 import EventContent from './EventContent'
+import AddToCalendar from './AddToCalendar'
+import WeatherForecast from './WeatherForecast'
 
 interface PageProps {
   params: Promise<{
@@ -51,11 +53,15 @@ export default async function EventPage({ params }: PageProps) {
       distanceDetails: dbEvent.distanceDetails as any,
       eventDetails: {
         startDate: dbEvent.startDate.toISOString(),
+        endDate: dbEvent.endDate?.toISOString(),
         location: dbEvent.location,
         city: dbEvent.city,
         region: dbEvent.region,
         address: dbEvent.fullAddress,
+        latitude: dbEvent.latitude,
+        longitude: dbEvent.longitude,
       },
+      website: dbEvent.website,
       organizer: dbEvent.organizer ? {
         name: dbEvent.organizer,
         website: dbEvent.organizerWebsite,
@@ -199,7 +205,7 @@ export default async function EventPage({ params }: PageProps) {
 
               {/* Quick Info */}
               {event.eventDetails && (
-                <div className="flex flex-wrap items-start gap-6 text-white/60">
+                <div className="flex flex-wrap items-start gap-6 text-white/60 mb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-white/[0.04] flex items-center justify-center">
                       <Calendar className="h-5 w-5" />
@@ -225,6 +231,20 @@ export default async function EventPage({ params }: PageProps) {
                     </div>
                   </div>
                 </div>
+              )}
+
+              {/* Add to Calendar */}
+              {event.eventDetails && (
+                <AddToCalendar
+                  eventName={event.title}
+                  startDate={event.eventDetails.startDate}
+                  endDate={event.eventDetails.endDate}
+                  location={event.eventDetails.location}
+                  city={event.eventDetails.city}
+                  region={event.eventDetails.region}
+                  description={event.description?.[0]?.children?.[0]?.text}
+                  url={event.website}
+                />
               )}
             </div>
 
@@ -283,6 +303,18 @@ export default async function EventPage({ params }: PageProps) {
 
         {/* Course Info Bar */}
         {courseInfo && <CourseInfoBar courseInfo={courseInfo} />}
+
+        {/* Weather Forecast */}
+        {event.eventDetails && (
+          <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            <WeatherForecast
+              latitude={event.eventDetails.latitude}
+              longitude={event.eventDetails.longitude}
+              eventDate={event.eventDetails.startDate}
+              eventType={event.eventType}
+            />
+          </div>
+        )}
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 pb-20 sm:px-6 lg:px-8 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
