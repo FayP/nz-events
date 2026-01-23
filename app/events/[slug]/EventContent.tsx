@@ -106,7 +106,7 @@ export default function EventContent({ event, eventType }: EventContentProps) {
   const colors = useEventColors(eventType)
 
   // Build tabs array dynamically
-  const tabs = ['Overview', 'Schedule']
+  const tabs = ['Overview']
   if (event.highlights && event.highlights.length > 0) {
     tabs.push('Highlights')
   }
@@ -183,29 +183,6 @@ export default function EventContent({ event, eventType }: EventContentProps) {
                 />
               </div>
             </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'Schedule' && (
-        <div>
-          {event.schedule && event.schedule.length > 0 ? (
-            <div className="space-y-1">
-              <h2 className="mb-6 text-2xl font-outfit font-semibold text-white">Race Day Schedule</h2>
-              {event.schedule.map((item: { time: string; description: string }, i: number) => (
-                <div key={i} className="flex items-start gap-5 py-5 px-6 bg-white/[0.02] rounded-xl">
-                  <span
-                    className="font-outfit text-base font-semibold min-w-[90px]"
-                    style={{ color: colors.text }}
-                  >
-                    {item.time}
-                  </span>
-                  <span className="text-base text-white/70">{item.description}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-white/40">Schedule information coming soon.</p>
           )}
         </div>
       )}
