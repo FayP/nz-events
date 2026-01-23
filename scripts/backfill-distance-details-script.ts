@@ -15,9 +15,6 @@ async function main() {
   const events = await prisma.event.findMany({
     where: {
       status: 'PUBLISHED',
-      distances: {
-        not: null,
-      },
     },
   })
 
