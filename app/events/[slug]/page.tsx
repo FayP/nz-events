@@ -1,48 +1,50 @@
-import { notFound } from 'next/navigation'
-import { getEventBySlug } from '@/lib/cms'
-import { prisma } from '@/lib/prisma'
-import Link from 'next/link'
-import { formatEventType } from '@/lib/utils'
-import { Calendar, MapPin, ArrowLeft } from 'lucide-react'
-import { AmbientBackground } from '@/components/ui/ambient-background'
-import { Logo } from '@/components/ui/logo'
-import DistanceSelector from './DistanceSelector'
-import CourseInfoBar from './CourseInfoBar'
-import EventContent from './EventContent'
-import AddToCalendar from './AddToCalendar'
-import WeatherForecast from './WeatherForecast'
-import RegistrationCard from './RegistrationCard'
+import { notFound } from "next/navigation";
+import { getEventBySlug } from "@/lib/cms";
+import { prisma } from "@/lib/prisma";
+import Link from "next/link";
+import { formatEventType } from "@/lib/utils";
+import { Calendar, MapPin, ArrowLeft } from "lucide-react";
+import { AmbientBackground } from "@/components/ui/ambient-background";
+import { Logo } from "@/components/ui/logo";
+import DistanceSelector from "./DistanceSelector";
+import CourseInfoBar from "./CourseInfoBar";
+import EventContent from "./EventContent";
+import AddToCalendar from "./AddToCalendar";
+import WeatherForecast from "./WeatherForecast";
+import RegistrationCard from "./RegistrationCard";
 
 interface PageProps {
-  params: Promise<{
-    slug: string
-  }> | {
-    slug: string
-  }
+  params:
+    | Promise<{
+        slug: string;
+      }>
+    | {
+        slug: string;
+      };
 }
 
 export default async function EventPage({ params }: PageProps) {
   // Handle params - it might be a Promise in Next.js 15+
-  const resolvedParams = params instanceof Promise ? await params : params
-  const slug = resolvedParams?.slug
+  const resolvedParams = params instanceof Promise ? await params : params;
+  const slug = resolvedParams?.slug;
 
   // Validate slug
-  if (!slug || typeof slug !== 'string' || slug.trim() === '') {
-    console.error('Invalid slug:', slug)
-    notFound()
+  if (!slug || typeof slug !== "string" || slug.trim() === "") {
+    console.error("Invalid slug:", slug);
+    notFound();
   }
 
   // Try to get event from Sanity CMS first
-  let event = await getEventBySlug(slug)
+  let event = await getEventBySlug(slug);
 
   // Always fetch from database to get latest fields (distanceDetails, courseInfo, etc.)
   const dbEvent = await prisma.event.findUnique({
     where: { slug },
-  })
+  });
 
   // If no event in either place, return 404
   if (!event && !dbEvent) {
-    notFound()
+    notFound();
   }
 
   // If database event exists, use it as source of truth for data fields
@@ -63,10 +65,12 @@ export default async function EventPage({ params }: PageProps) {
         longitude: dbEvent.longitude,
       },
       website: dbEvent.website,
-      organizer: dbEvent.organizer ? {
-        name: dbEvent.organizer,
-        website: dbEvent.organizerWebsite,
-      } : undefined,
+      organizer: dbEvent.organizer
+        ? {
+            name: dbEvent.organizer,
+            website: dbEvent.organizerWebsite,
+          }
+        : undefined,
       courseInfo: {
         terrain: dbEvent.courseTerrain,
         surface: dbEvent.courseSurface,
@@ -83,69 +87,71 @@ export default async function EventPage({ params }: PageProps) {
         taken: dbEvent.registrationTaken,
         inclusions: (dbEvent as any).inclusions as string[] | undefined,
       },
-      description: dbEvent.description ? [
-        {
-          _type: 'block',
-          style: 'normal',
-          children: [{ _type: 'span', text: dbEvent.description }],
-        },
-      ] : undefined,
-    }
+      description: dbEvent.description
+        ? [
+            {
+              _type: "block",
+              style: "normal",
+              children: [{ _type: "span", text: dbEvent.description }],
+            },
+          ]
+        : undefined,
+    };
   }
 
   // Format date and time
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-NZ', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-  }
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-NZ", {
+      weekday: "short",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
 
   const formatTime = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleTimeString('en-NZ', {
-      hour: 'numeric',
-      minute: '2-digit',
+    const date = new Date(dateString);
+    return date.toLocaleTimeString("en-NZ", {
+      hour: "numeric",
+      minute: "2-digit",
       hour12: true,
-    })
-  }
+    });
+  };
 
   // Get event type badge colors
   const getEventTypeColor = (eventType: string) => {
-    const type = eventType.toUpperCase()
+    const type = eventType.toUpperCase();
     switch (type) {
-      case 'RUNNING':
+      case "RUNNING":
         return {
-          bg: 'rgba(249, 115, 22, 0.15)',
-          text: 'var(--event-running)',
-          border: 'rgba(249, 115, 22, 0.3)',
-        }
-      case 'BIKING':
-      case 'CYCLING':
+          bg: "rgba(249, 115, 22, 0.15)",
+          text: "var(--event-running)",
+          border: "rgba(249, 115, 22, 0.3)",
+        };
+      case "BIKING":
+      case "CYCLING":
         return {
-          bg: 'rgba(139, 92, 246, 0.15)',
-          text: 'var(--event-cycling)',
-          border: 'rgba(139, 92, 246, 0.3)',
-        }
-      case 'TRIATHLON':
+          bg: "rgba(139, 92, 246, 0.15)",
+          text: "var(--event-cycling)",
+          border: "rgba(139, 92, 246, 0.3)",
+        };
+      case "TRIATHLON":
         return {
-          bg: 'rgba(16, 185, 129, 0.15)',
-          text: 'var(--event-triathlon)',
-          border: 'rgba(16, 185, 129, 0.3)',
-        }
+          bg: "rgba(16, 185, 129, 0.15)",
+          text: "var(--event-triathlon)",
+          border: "rgba(16, 185, 129, 0.3)",
+        };
       default:
         return {
-          bg: 'rgba(100, 100, 100, 0.15)',
-          text: 'rgba(255, 255, 255, 0.6)',
-          border: 'rgba(100, 100, 100, 0.3)',
-        }
+          bg: "rgba(100, 100, 100, 0.15)",
+          text: "rgba(255, 255, 255, 0.6)",
+          border: "rgba(100, 100, 100, 0.3)",
+        };
     }
-  }
+  };
 
-  const typeColors = getEventTypeColor(event.eventType)
+  const typeColors = getEventTypeColor(event.eventType);
 
   // Build course info object
   const courseInfo = event.courseInfo
@@ -155,7 +161,7 @@ export default async function EventPage({ params }: PageProps) {
         traffic: event.courseInfo.traffic,
         cutoffTime: event.courseInfo.cutoffTime,
       }
-    : undefined
+    : undefined;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0a0b] to-[#111113] relative overflow-hidden">
@@ -170,7 +176,7 @@ export default async function EventPage({ params }: PageProps) {
           <div className="flex items-center justify-between mb-12 animate-fade-in-up">
             <Logo size="md" />
             <Link
-              href="/events"
+              href="/"
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white/60 hover:text-white bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] rounded-full transition-all"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -184,7 +190,7 @@ export default async function EventPage({ params }: PageProps) {
             style={{
               background: typeColors.bg,
               border: `1px solid ${typeColors.border}`,
-              animationDelay: '0.1s'
+              animationDelay: "0.1s",
             }}
           >
             <span
@@ -202,13 +208,15 @@ export default async function EventPage({ params }: PageProps) {
           {/* Header Grid with Organizer on Top Right */}
           <div
             className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-10 items-start mb-8 animate-fade-in-up"
-            style={{ animationDelay: '0.15s' }}
+            style={{ animationDelay: "0.15s" }}
           >
             {/* Left Column - Event Info */}
             <div>
               {/* Event Title */}
-              <h1 className="font-outfit text-5xl md:text-6xl font-semibold leading-tight mb-6 text-white bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent"
-                  style={{ letterSpacing: '-0.02em' }}>
+              <h1
+                className="font-outfit text-5xl md:text-6xl font-semibold leading-tight mb-6 text-white bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent"
+                style={{ letterSpacing: "-0.02em" }}
+              >
                 {event.title}
               </h1>
 
@@ -233,7 +241,9 @@ export default async function EventPage({ params }: PageProps) {
                       <MapPin className="h-5 w-5" />
                     </div>
                     <div>
-                      <div className="font-medium text-white">{event.eventDetails.location}</div>
+                      <div className="font-medium text-white">
+                        {event.eventDetails.location}
+                      </div>
                       <div className="text-xs text-white/40">
                         {event.eventDetails.city}, {event.eventDetails.region}
                       </div>
@@ -264,7 +274,9 @@ export default async function EventPage({ params }: PageProps) {
                   🏆
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-white">{event.organizer.name}</div>
+                  <div className="text-sm font-medium text-white">
+                    {event.organizer.name}
+                  </div>
                   {event.organizer.website && (
                     <a
                       href={event.organizer.website}
@@ -273,7 +285,10 @@ export default async function EventPage({ params }: PageProps) {
                       className="text-xs hover:underline"
                       style={{ color: typeColors.text }}
                     >
-                      {new URL(event.organizer.website).hostname.replace('www.', '')}
+                      {new URL(event.organizer.website).hostname.replace(
+                        "www.",
+                        ""
+                      )}
                     </a>
                   )}
                 </div>
@@ -288,7 +303,9 @@ export default async function EventPage({ params }: PageProps) {
                 🏆
               </div>
               <div>
-                <div className="text-sm font-medium text-white">{event.organizer.name}</div>
+                <div className="text-sm font-medium text-white">
+                  {event.organizer.name}
+                </div>
                 {event.organizer.website && (
                   <a
                     href={event.organizer.website}
@@ -297,7 +314,10 @@ export default async function EventPage({ params }: PageProps) {
                     className="text-xs hover:underline"
                     style={{ color: typeColors.text }}
                   >
-                    {new URL(event.organizer.website).hostname.replace('www.', '')}
+                    {new URL(event.organizer.website).hostname.replace(
+                      "www.",
+                      ""
+                    )}
                   </a>
                 )}
               </div>
@@ -307,7 +327,10 @@ export default async function EventPage({ params }: PageProps) {
 
         {/* Distance Selector */}
         {event.distanceDetails && event.distanceDetails.length > 0 && (
-          <DistanceSelector distances={event.distanceDetails} eventType={event.eventType} />
+          <DistanceSelector
+            distances={event.distanceDetails}
+            eventType={event.eventType}
+          />
         )}
 
         {/* Course Info Bar */}
@@ -340,7 +363,10 @@ export default async function EventPage({ params }: PageProps) {
         </div>
 
         {/* Main Content with Registration Sidebar on Desktop */}
-        <div className="max-w-7xl mx-auto px-4 pb-20 sm:px-6 lg:px-8 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+        <div
+          className="max-w-7xl mx-auto px-4 pb-20 sm:px-6 lg:px-8 animate-fade-in-up"
+          style={{ animationDelay: "0.3s" }}
+        >
           <div className="lg:grid lg:grid-cols-[1fr_380px] lg:gap-10">
             {/* Event Content */}
             <div>
@@ -366,7 +392,7 @@ export default async function EventPage({ params }: PageProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // Generate static params for all future events
@@ -374,19 +400,19 @@ export async function generateStaticParams() {
   try {
     const events = await prisma.event.findMany({
       where: {
-        status: 'PUBLISHED',
+        status: "PUBLISHED",
         startDate: { gte: new Date() }, // Only generate pages for future events
       },
       select: { slug: true },
-    })
+    });
 
     return events
       .filter((event) => event.slug)
       .map((event) => ({
         slug: event.slug,
-      }))
+      }));
   } catch (error) {
-    console.error('Error generating static params:', error)
-    return []
+    console.error("Error generating static params:", error);
+    return [];
   }
 }
