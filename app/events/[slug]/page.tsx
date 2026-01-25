@@ -3,7 +3,7 @@ import { getEventBySlug } from '@/lib/cms'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { formatEventType } from '@/lib/utils'
-import { Calendar, MapPin } from 'lucide-react'
+import { Calendar, MapPin, ArrowLeft } from 'lucide-react'
 import { AmbientBackground } from '@/components/ui/ambient-background'
 import { Logo } from '@/components/ui/logo'
 import DistanceSelector from './DistanceSelector'
@@ -166,9 +166,16 @@ export default async function EventPage({ params }: PageProps) {
       <div className="relative z-10">
         {/* Header Section */}
         <div className="max-w-7xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
-          {/* Logo */}
-          <div className="mb-12 animate-fade-in-up">
+          {/* Logo and Back Button */}
+          <div className="flex items-center justify-between mb-12 animate-fade-in-up">
             <Logo size="md" />
+            <Link
+              href="/events"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white/60 hover:text-white bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] rounded-full transition-all"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              All Events
+            </Link>
           </div>
 
           {/* Type Badge */}
