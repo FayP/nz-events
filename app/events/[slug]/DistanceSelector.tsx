@@ -7,15 +7,47 @@ import { DistanceDetail } from '@/types'
 interface DistanceSelectorProps {
   distances?: DistanceDetail[]
   eventType: string
-  onSelect?: (index: number) => void
+}
+
+// Get icon and label for triathlon disciplines
+const getTriathlonDiscipline = (name: string): { icon: string; label: string; color: string } => {
+  const nameLower = name.toLowerCase()
+  if (nameLower.includes('swim')) {
+    return { icon: '🏊', label: 'SWIM', color: '#06b6d4' } // cyan
+  }
+  if (nameLower.includes('bike') || nameLower.includes('cycle')) {
+    return { icon: '🚴', label: 'BIKE', color: '#10b981' } // emerald
+  }
+  if (nameLower.includes('run')) {
+    return { icon: '🏃', label: 'RUN', color: '#f59e0b' } // amber
+  }
+  // Default
+  return { icon: '🏅', label: name.toUpperCase(), color: '#10b981' }
+}
+
+// Get icon for running distances
+const getRunningIcon = (name: string): string => {
+  const nameLower = name.toLowerCase()
+  if (nameLower.includes('ultra') || nameLower.includes('marathon')) return '🏃‍♂️'
+  if (nameLower.includes('half')) return '🏃'
+  if (nameLower.includes('trail')) return '🥾'
+  if (nameLower.includes('kid') || nameLower.includes('fun')) return '👟'
+  return '🏃'
+}
+
+// Get icon for cycling distances
+const getCyclingIcon = (name: string): string => {
+  const nameLower = name.toLowerCase()
+  if (nameLower.includes('mountain') || nameLower.includes('mtb')) return '🚵'
+  if (nameLower.includes('gravel')) return '🚵‍♂️'
+  if (nameLower.includes('tour') || nameLower.includes('gran')) return '🚴‍♂️'
+  return '🚴'
 }
 
 export default function DistanceSelector({
   distances,
   eventType,
-  onSelect,
 }: DistanceSelectorProps) {
-  const [selectedIndex, setSelectedIndex] = useState(0)
   const [currentPage, setCurrentPage] = useState(0)
   const colors = useEventColors(eventType)
 
@@ -23,22 +55,16 @@ export default function DistanceSelector({
     return null
   }
 
-  // For triathlons, these are disciplines (not selectable options)
-  // For running/cycling, these are distance options (selectable)
   const isTriathlon = eventType.toUpperCase() === 'TRIATHLON'
+  const isRunning = eventType.toUpperCase() === 'RUNNING'
+  const isCycling = eventType.toUpperCase() === 'BIKING' || eventType.toUpperCase() === 'CYCLING'
+
   const sectionTitle = isTriathlon ? 'Race Disciplines' : 'Distance Options'
 
   // Carousel settings
   const itemsPerPage = 3
   const totalPages = Math.ceil(distances.length / itemsPerPage)
   const showCarousel = distances.length > 3
-
-  const handleSelect = (index: number) => {
-    if (!isTriathlon) {
-      setSelectedIndex(index)
-      onSelect?.(index)
-    }
-  }
 
   const nextPage = () => {
     setCurrentPage((prev) => (prev + 1) % totalPages)
@@ -52,14 +78,95 @@ export default function DistanceSelector({
     ? distances.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage)
     : distances
 
+  // Render a single distance card
+  const renderCard = (distance: DistanceDetail, index: number) => {
+    let icon: string
+    let label: string
+    let accentColor: string
+
+    if (isTriathlon) {
+      const discipline = getTriathlonDiscipline(distance.name)
+      icon = discipline.icon
+      label = discipline.label
+      accentColor = discipline.color
+    } else if (isRunning) {
+      icon = getRunningIcon(distance.name)
+      label = distance.name.toUpperCase()
+      accentColor = colors.text // Orange for running
+    } else if (isCycling) {
+      icon = getCyclingIcon(distance.name)
+      label = distance.name.toUpperCase()
+      accentColor = colors.text // Purple for cycling
+    } else {
+      icon = '🏅'
+      label = distance.name.toUpperCase()
+      accentColor = colors.text
+    }
+
+    return (
+      <div
+        key={index}
+        className="relative overflow-hidden rounded-2xl p-6 bg-white/[0.02] border border-white/[0.08] transition-all duration-300 hover:bg-white/[0.04] hover:border-white/[0.12]"
+      >
+        {/* Accent bar at top */}
+        <div
+          className="absolute top-0 left-0 right-0 h-1"
+          style={{ background: accentColor }}
+        />
+
+        {/* Icon */}
+        <div className="text-3xl mb-4">{icon}</div>
+
+        {/* Label */}
+        <div
+          className="text-xs font-semibold uppercase tracking-wider mb-2"
+          style={{ color: accentColor }}
+        >
+          {label}
+        </div>
+
+        {/* Distance */}
+        <div
+          className="font-outfit text-4xl font-bold text-white mb-3"
+          style={{ letterSpacing: '-0.03em' }}
+        >
+          {distance.distance}
+        </div>
+
+        {/* Description */}
+        <div className="text-sm text-white/50 leading-relaxed">
+          {distance.description}
+        </div>
+
+        {/* Stats - show if available */}
+        {(distance.elevation || distance.time) && (
+          <div className="flex gap-4 mt-4 pt-4 border-t border-white/[0.06]">
+            {distance.elevation && (
+              <div>
+                <div className="text-[10px] text-white/30 uppercase tracking-wide">Elevation</div>
+                <div className="text-xs text-white/60 font-medium">{distance.elevation}</div>
+              </div>
+            )}
+            {distance.time && (
+              <div>
+                <div className="text-[10px] text-white/30 uppercase tracking-wide">Est. Time</div>
+                <div className="text-xs text-white/60 font-medium">{distance.time}</div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+        <h2 className="text-sm font-medium text-white/40 uppercase tracking-wider">
           {sectionTitle}
         </h2>
 
-        {/* Carousel Navigation - Only on tablet/desktop when more than 3 items */}
+        {/* Carousel Navigation */}
         {showCarousel && (
           <div className="hidden md:flex items-center gap-2">
             <button
@@ -88,150 +195,15 @@ export default function DistanceSelector({
       </div>
 
       {/* Mobile: Show all items stacked */}
-      <div className="grid grid-cols-1 gap-5 md:hidden">
-        {distances.map((distance, index) => {
-          const isSelected = !isTriathlon && selectedIndex === index
-          const isClickable = !isTriathlon
-
-          return (
-            <div
-              key={index}
-              onClick={() => handleSelect(index)}
-              className={`
-                relative overflow-hidden rounded-2xl p-7 transition-all duration-300
-                border ${isClickable ? (isSelected ? 'border-opacity-100' : 'border-opacity-20 hover:border-opacity-40 cursor-pointer') : 'border-opacity-20'}
-              `}
-              style={{
-                background: isSelected ? colors.bg : 'rgba(255, 255, 255, 0.02)',
-                borderColor: isSelected ? colors.border : 'rgba(255, 255, 255, 0.08)',
-              }}
-            >
-              {/* Elevation visualization bar */}
-              <div
-                className="absolute top-0 left-0 right-0 transition-all duration-300"
-                style={{
-                  height: isSelected ? '4px' : '2px',
-                  background: isSelected ? colors.gradient : 'rgba(255, 255, 255, 0.1)',
-                }}
-              />
-
-              <div className="flex justify-between items-start mb-4">
-                <div
-                  className="font-outfit text-xl font-semibold transition-colors duration-300"
-                  style={{ color: isSelected ? '#fff' : 'rgba(255, 255, 255, 0.7)' }}
-                >
-                  {distance.name}
-                </div>
-                {isSelected && (
-                  <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs"
-                    style={{ background: colors.gradient }}
-                  >
-                    ✓
-                  </div>
-                )}
-              </div>
-
-              <div
-                className="font-outfit text-5xl font-bold mb-3 transition-colors duration-300"
-                style={{
-                  color: isSelected ? colors.text : 'rgba(255, 255, 255, 0.4)',
-                  letterSpacing: '-0.05em',
-                }}
-              >
-              {distance.distance}
-            </div>
-
-            {/* Stats row */}
-            <div className="flex gap-5 mb-4 pb-4 border-b border-white/5">
-              <div>
-                <div className="text-xs text-white/30 uppercase tracking-wide mb-1">Elevation</div>
-                <div className="text-sm text-white/70 font-medium">{distance.elevation}</div>
-              </div>
-              <div>
-                <div className="text-xs text-white/30 uppercase tracking-wide mb-1">Est. Time</div>
-                <div className="text-sm text-white/70 font-medium">{distance.time}</div>
-              </div>
-            </div>
-
-            <div className="text-sm text-white/40 leading-relaxed">{distance.description}</div>
-          </div>
-          )
-        })}
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {distances.map((distance, index) => renderCard(distance, index))}
       </div>
 
-      {/* Tablet/Desktop: Show carousel with 3 items max */}
-      <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {/* Tablet/Desktop: Show grid with carousel if needed */}
+      <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {visibleDistances.map((distance, visibleIndex) => {
-          // Calculate the actual index in the full distances array
           const actualIndex = showCarousel ? currentPage * itemsPerPage + visibleIndex : visibleIndex
-          const isSelected = !isTriathlon && selectedIndex === actualIndex
-          const isClickable = !isTriathlon
-
-          return (
-            <div
-              key={actualIndex}
-              onClick={() => handleSelect(actualIndex)}
-              className={`
-                relative overflow-hidden rounded-2xl p-7 transition-all duration-300
-                border ${isClickable ? (isSelected ? 'border-opacity-100' : 'border-opacity-20 hover:border-opacity-40 cursor-pointer') : 'border-opacity-20'}
-              `}
-              style={{
-                background: isSelected ? colors.bg : 'rgba(255, 255, 255, 0.02)',
-                borderColor: isSelected ? colors.border : 'rgba(255, 255, 255, 0.08)',
-              }}
-            >
-              {/* Elevation visualization bar */}
-              <div
-                className="absolute top-0 left-0 right-0 transition-all duration-300"
-                style={{
-                  height: isSelected ? '4px' : '2px',
-                  background: isSelected ? colors.gradient : 'rgba(255, 255, 255, 0.1)',
-                }}
-              />
-
-              <div className="flex justify-between items-start mb-4">
-                <div
-                  className="font-outfit text-xl font-semibold transition-colors duration-300"
-                  style={{ color: isSelected ? '#fff' : 'rgba(255, 255, 255, 0.7)' }}
-                >
-                  {distance.name}
-                </div>
-                {isSelected && (
-                  <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs"
-                    style={{ background: colors.gradient }}
-                  >
-                    ✓
-                  </div>
-                )}
-              </div>
-
-              <div
-                className="font-outfit text-5xl font-bold mb-3 transition-colors duration-300"
-                style={{
-                  color: isSelected ? colors.text : 'rgba(255, 255, 255, 0.4)',
-                  letterSpacing: '-0.05em',
-                }}
-              >
-                {distance.distance}
-              </div>
-
-              {/* Stats row */}
-              <div className="flex gap-5 mb-4 pb-4 border-b border-white/5">
-                <div>
-                  <div className="text-xs text-white/30 uppercase tracking-wide mb-1">Elevation</div>
-                  <div className="text-sm text-white/70 font-medium">{distance.elevation}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-white/30 uppercase tracking-wide mb-1">Est. Time</div>
-                  <div className="text-sm text-white/70 font-medium">{distance.time}</div>
-                </div>
-              </div>
-
-              <div className="text-sm text-white/40 leading-relaxed">{distance.description}</div>
-            </div>
-          )
+          return renderCard(distance, actualIndex)
         })}
       </div>
     </div>
