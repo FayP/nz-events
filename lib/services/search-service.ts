@@ -63,12 +63,18 @@ export async function searchEvents(
     must.push({ term: { city } });
   }
 
-  if (startDate || endDate) {
-    const dateRange: any = {};
-    if (startDate) dateRange.gte = startDate;
-    if (endDate) dateRange.lte = endDate;
-    must.push({ range: { startDate: dateRange } });
+  // Default to future events if no date filter specified
+  const dateRange: any = {};
+  if (startDate) {
+    dateRange.gte = startDate;
+  } else {
+    // Only show future events by default
+    dateRange.gte = new Date().toISOString();
   }
+  if (endDate) {
+    dateRange.lte = endDate;
+  }
+  must.push({ range: { startDate: dateRange } });
 
   const query: any = {
     bool: {},

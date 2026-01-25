@@ -7,8 +7,11 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const eventType = searchParams.get('eventType') // Optional: filter by event type
 
-    // Get all published events
-    const where: any = { status: 'PUBLISHED' }
+    // Get all published future events
+    const where: any = {
+      status: 'PUBLISHED',
+      startDate: { gte: new Date() }, // Only show future events
+    }
     if (eventType) {
       where.eventType = eventType
     }

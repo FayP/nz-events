@@ -13,7 +13,9 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get('page') || '1')
     const skip = (page - 1) * limit
 
-    const where: any = {}
+    const where: any = {
+      startDate: { gte: new Date() }, // Only show future events
+    }
     if (eventType) where.eventType = eventType
     if (region) where.region = region
     if (status) where.status = status

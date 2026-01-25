@@ -4,17 +4,17 @@ import { EventDiscoveryService } from '@/lib/services/event-discovery'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { query, eventType } = body
+    const { eventType } = body
 
-    if (!query || !eventType) {
+    if (!eventType) {
       return NextResponse.json(
-        { error: 'Query and eventType are required' },
+        { error: 'eventType is required (RUNNING, BIKING, or TRIATHLON)' },
         { status: 400 }
       )
     }
 
     const discoveryService = new EventDiscoveryService()
-    const events = await discoveryService.discoverEvents(query, eventType)
+    const events = await discoveryService.discoverEventsByType(eventType)
 
     return NextResponse.json({ events, count: events.length })
   } catch (error: any) {
@@ -29,17 +29,20 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const query = searchParams.get('query') || 'running events'
     const eventType = (searchParams.get('eventType') || 'RUNNING') as 'RUNNING' | 'BIKING' | 'TRIATHLON'
 
     const discoveryService = new EventDiscoveryService()
-    const events = await discoveryService.discoverEvents(query, eventType)
+    const events = await discoveryService.discoverEventsByType(eventType)
 
     // Optionally save discovered events
     const save = searchParams.get('save') === 'true'
     if (save) {
-      const saved = await discoveryService.saveDiscoveredEvents(events)
-      return NextResponse.json({ events, saved, count: events.length })
+      let savedCount = 0
+      for (const event of events) {
+        const saved = await discoveryService.saveEvent(event)
+        if (saved) savedCount++
+      }
+      return NextResponse.json({ events, savedCount, count: events.length })
     }
 
     return NextResponse.json({ events, count: events.length })
@@ -51,4 +54,3 @@ export async function GET(request: Request) {
     )
   }
 }
-

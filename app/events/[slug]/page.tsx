@@ -325,11 +325,14 @@ export default async function EventPage({ params }: PageProps) {
   )
 }
 
-// Generate static params for all events
+// Generate static params for all future events
 export async function generateStaticParams() {
   try {
     const events = await prisma.event.findMany({
-      where: { status: 'PUBLISHED' },
+      where: {
+        status: 'PUBLISHED',
+        startDate: { gte: new Date() }, // Only generate pages for future events
+      },
       select: { slug: true },
     })
 
