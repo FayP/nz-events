@@ -84,51 +84,51 @@ export class EventDiscoveryService {
 
     const prompt = `Find all ${eventTypeName} events in New Zealand that take place between ${dateRange.start} and ${dateRange.end}.
 
-Search comprehensively across all regions including: ${NZ_REGIONS.join(', ')}.
+IMPORTANT: Only include events you are CONFIDENT actually exist. Do not make up or guess events. If you're unsure about an event's existence or date, do not include it.
 
-For each event, provide as much detail as possible:
-- name: Full event name
-- startDate: Start date in YYYY-MM-DD format
-- endDate: End date in YYYY-MM-DD format (if multi-day event)
-- location: Specific venue or location name
+Search comprehensively across ALL regions: ${NZ_REGIONS.join(', ')}.
+
+I expect to find 20-40 events across New Zealand. Include:
+${eventType === 'RUNNING' ? `
+- Major city marathons: Auckland Marathon, Wellington Marathon, Christchurch Marathon, Dunedin Marathon, Rotorua Marathon, Queenstown Marathon, Hawke's Bay Marathon
+- Half marathons in each major city
+- Round the Bays events (Auckland, Wellington)
+- Ultra events: Tarawera Ultra, Kepler Challenge, Old Ghost Road, Taupo Ultramarathon
+- Trail runs and fun runs in smaller towns
+- Park runs that have become organized events
+- Charity runs (e.g., Relay for Life runs)` : ''}
+${eventType === 'BIKING' ? `
+- Lake Taupo Cycle Challenge
+- Tour of Southland
+- Gran Fondos (Auckland, Wellington, etc.)
+- Mountain bike events
+- Gravel rides
+- Cycling tours and sportives
+- Criteriums and road races` : ''}
+${eventType === 'TRIATHLON' ? `
+- Ironman New Zealand (Taupo)
+- Ironman 70.3 events
+- Challenge Wanaka
+- Port of Tauranga Half
+- Sprint and Olympic distance triathlons in each region
+- Aquathons and duathlons
+- Xterra off-road triathlons` : ''}
+
+For each event provide:
+- name: Full official event name
+- startDate: Start date in YYYY-MM-DD format (use your best knowledge of when annual events typically occur)
+- endDate: End date if multi-day
+- location: Venue name
 - city: City name
-- region: Region name (e.g., Auckland, Wellington, Canterbury)
-- website: Official event website URL
-- registrationUrl: Direct link to registration page (if different from website)
-- description: Brief description of the event (1-2 sentences)
-- distances: Array of distances/categories
-- organizer: Organizer name
-- organizerWebsite: Organizer's website if different from event website
-- priceRange: Approximate price range (e.g., "$50-$150", "Free")
+- region: Region name
+- website: Official website URL (only if you're confident it's correct)
+- description: Brief 1-2 sentence description
+- distances: Array of distances offered
+- organizer: Organizer name if known
 
-Return a JSON object with this structure:
-{
-  "events": [
-    {
-      "name": "Event Name",
-      "startDate": "2024-01-15",
-      "endDate": "2024-01-15",
-      "location": "Venue Name",
-      "city": "City Name",
-      "region": "Region Name",
-      "website": "https://example.com",
-      "registrationUrl": "https://example.com/register",
-      "description": "Brief event description",
-      "eventType": "${eventType}",
-      "distances": ["5K", "10K"],
-      "organizer": "Organizer Name",
-      "organizerWebsite": "https://organizer.com",
-      "priceRange": "$50-$100"
-    }
-  ]
-}
+Return JSON: { "events": [...] }
 
-Focus on well-known, established events. Include major events like:
-${eventType === 'RUNNING' ? '- Round the Bays, Auckland Marathon, Queenstown Marathon, Rotorua Marathon, Wellington Round the Bays, Christchurch Marathon, Kepler Challenge, etc.' : ''}
-${eventType === 'BIKING' ? '- Tour of Southland, Lake Taupo Cycle Challenge, Tour of New Zealand, various Gran Fondos, etc.' : ''}
-${eventType === 'TRIATHLON' ? '- Ironman New Zealand, Challenge Wanaka, Port of Tauranga Half, various sprint and olympic distance races, etc.' : ''}
-
-Be thorough and include smaller regional events as well.`
+Remember: Quality over quantity. Only include events you're confident are real.`
 
     try {
       console.log(`Discovering ${eventTypeName} events...`)
@@ -138,7 +138,11 @@ Be thorough and include smaller regional events as well.`
         messages: [
           {
             role: 'system',
-            content: `You are an expert on New Zealand sports events with comprehensive knowledge of ${eventTypeName} events across all regions. You have access to current event calendars and can provide accurate information about upcoming events. Return only valid JSON with accurate event information.`,
+            content: `You are an expert on New Zealand ${eventTypeName} events. You have detailed knowledge of established annual events across all NZ regions.
+
+CRITICAL: Only include events you are CERTAIN exist. Do not hallucinate or make up events. If you're unsure whether an event exists or its exact date, omit it. It's better to return fewer accurate events than many questionable ones.
+
+For annual events, use your knowledge of when they typically occur each year. Return only valid JSON.`,
           },
           {
             role: 'user',
