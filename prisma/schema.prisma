@@ -58,6 +58,7 @@ model Event {
   courseTraffic          String? // e.g., "Full Closure", "Partial Closure", "Open Roads"
   cutoffTime             String? // e.g., "6.5 hours", "No cutoff"
   requirements           String[]      @default([]) // Equipment requirements
+  inclusions             String[]      @default([]) // What's included with entry (e.g., "Race t-shirt", "Finisher medal")
   registrationCapacity   Int? // Total spots available
   registrationTaken      Int? // Spots already filled
   fullAddress            String? // Complete street address

@@ -32,6 +32,7 @@ export interface EnrichedEventDetails {
   courseTerrain?: string
   courseSurface?: string
   cutoffTime?: string
+  inclusions?: string[] // What's included with entry fee
 }
 
 // NZ regions to search across
@@ -181,7 +182,8 @@ Date: ${event.startDate}
 Location: ${event.city}, ${event.region}
 ${event.website ? `Website: ${event.website}` : ''}
 
-Search for and provide:
+Search for and provide ONLY information you are CONFIDENT is accurate for this specific event:
+
 1. registrationUrl: Direct link to registration/entry page
 2. priceRange: Entry fee range (e.g., "$50-$150")
 3. organizer: Event organizer name
@@ -189,8 +191,12 @@ Search for and provide:
 5. courseTerrain: Type of terrain (e.g., "Rolling Hills", "Flat", "Mountainous", "Mixed")
 6. courseSurface: Surface type (e.g., "Sealed Roads", "Trail", "Mixed", "Track")
 7. cutoffTime: Time limit if any (e.g., "6 hours", "No cutoff")
+8. inclusions: Array of items included with entry fee (e.g., ["Race t-shirt", "Finisher medal", "Timing chip", "Aid stations", "Post-race refreshments"])
+   - ONLY include items you know this specific event provides
+   - Do NOT guess or assume - if unsure, return empty array
+   - Common inclusions vary greatly between events, so only list what you're confident about
 
-Return a JSON object with these fields. Only include fields you can find reliable information for:
+Return a JSON object. Use null for unknown fields, empty array [] for unknown inclusions:
 {
   "registrationUrl": "url or null",
   "priceRange": "range or null",
@@ -198,7 +204,8 @@ Return a JSON object with these fields. Only include fields you can find reliabl
   "organizerWebsite": "url or null",
   "courseTerrain": "description or null",
   "courseSurface": "description or null",
-  "cutoffTime": "time or null"
+  "cutoffTime": "time or null",
+  "inclusions": ["item1", "item2"] or []
 }`
 
     try {
@@ -351,6 +358,7 @@ Return a JSON object with these fields. Only include fields you can find reliabl
           courseTerrain: enrichedDetails.courseTerrain,
           courseSurface: enrichedDetails.courseSurface,
           cutoffTime: enrichedDetails.cutoffTime,
+          inclusions: enrichedDetails.inclusions || [],
           source: 'AI_GENERATED',
           status: 'PUBLISHED', // Auto-publish discovered events
           seoTitle: seo.title,

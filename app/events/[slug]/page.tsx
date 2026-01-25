@@ -11,6 +11,7 @@ import CourseInfoBar from './CourseInfoBar'
 import EventContent from './EventContent'
 import AddToCalendar from './AddToCalendar'
 import WeatherForecast from './WeatherForecast'
+import RegistrationCard from './RegistrationCard'
 
 interface PageProps {
   params: Promise<{
@@ -80,6 +81,7 @@ export default async function EventPage({ params }: PageProps) {
         price: dbEvent.price as any,
         capacity: dbEvent.registrationCapacity,
         taken: dbEvent.registrationTaken,
+        inclusions: (dbEvent as any).inclusions as string[] | undefined,
       },
       description: dbEvent.description ? [
         {
@@ -316,9 +318,44 @@ export default async function EventPage({ params }: PageProps) {
           </div>
         )}
 
-        {/* Main Content */}
+        {/* Registration Card - Mobile (shows before content on small screens) */}
+        <div className="lg:hidden max-w-7xl mx-auto px-4 pb-8 sm:px-6">
+          <RegistrationCard
+            eventType={event.eventType}
+            eventTitle={event.title}
+            registrationUrl={event.registration?.registrationUrl}
+            website={event.website}
+            price={event.registration?.price}
+            capacity={event.registration?.capacity}
+            taken={event.registration?.taken}
+            inclusions={event.registration?.inclusions}
+          />
+        </div>
+
+        {/* Main Content with Registration Sidebar on Desktop */}
         <div className="max-w-7xl mx-auto px-4 pb-20 sm:px-6 lg:px-8 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-          <EventContent event={event} eventType={event.eventType} />
+          <div className="lg:grid lg:grid-cols-[1fr_380px] lg:gap-10">
+            {/* Event Content */}
+            <div>
+              <EventContent event={event} eventType={event.eventType} />
+            </div>
+
+            {/* Registration Card - Desktop Sidebar (sticky) */}
+            <div className="hidden lg:block">
+              <div className="sticky top-8">
+                <RegistrationCard
+                  eventType={event.eventType}
+                  eventTitle={event.title}
+                  registrationUrl={event.registration?.registrationUrl}
+                  website={event.website}
+                  price={event.registration?.price}
+                  capacity={event.registration?.capacity}
+                  taken={event.registration?.taken}
+                  inclusions={event.registration?.inclusions}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

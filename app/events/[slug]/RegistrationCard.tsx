@@ -1,34 +1,77 @@
 'use client'
 
 import { useEventColors } from '@/lib/hooks/use-event-colors'
-import { DistanceDetail } from '@/types'
-import { Button } from '@/components/ui/button'
-import { Heart, Share2 } from 'lucide-react'
+import { ExternalLink, Check, Share2, Clock, Users } from 'lucide-react'
+
+interface PriceInfo {
+  min?: number
+  max?: number
+  currency?: string
+  note?: string
+}
 
 interface RegistrationCardProps {
   eventType: string
-  selectedDistance?: DistanceDetail
-  price?: string
+  eventTitle: string
   registrationUrl?: string
+  website?: string
+  price?: PriceInfo | null
   capacity?: number
   taken?: number
-  eventTitle: string
+  registrationCloseDate?: string
+  inclusions?: string[] // Real inclusions data from the event
+}
+
+const formatPrice = (price: PriceInfo | null | undefined): string => {
+  if (!price) return 'See website'
+
+  const currency = price.currency === 'NZD' ? '$' : (price.currency || '$')
+
+  if (price.min && price.max && price.min !== price.max) {
+    return `${currency}${price.min} - ${currency}${price.max}`
+  }
+
+  if (price.min) {
+    return `From ${currency}${price.min}`
+  }
+
+  if (price.note) {
+    return price.note
+  }
+
+  return 'See website'
 }
 
 export default function RegistrationCard({
   eventType,
-  selectedDistance,
-  price = '$95',
+  eventTitle,
   registrationUrl,
+  website,
+  price,
   capacity,
   taken,
-  eventTitle,
+  registrationCloseDate,
+  inclusions,
 }: RegistrationCardProps) {
   const colors = useEventColors(eventType)
+
+  const linkUrl = registrationUrl || website
+  const hasLink = !!linkUrl
 
   const spotsRemaining = capacity && taken !== undefined
     ? capacity - taken
     : undefined
+
+  const priceDisplay = formatPrice(price)
+  const hasPrice = price && (price.min || price.max || price.note)
+
+  // Only show inclusions if we have real data
+  const hasInclusions = inclusions && inclusions.length > 0
+
+  // Check if registration is closing soon (within 14 days)
+  const isClosingSoon = registrationCloseDate &&
+    new Date(registrationCloseDate).getTime() - Date.now() < 14 * 24 * 60 * 60 * 1000 &&
+    new Date(registrationCloseDate).getTime() > Date.now()
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -37,109 +80,140 @@ export default function RegistrationCard({
           title: eventTitle,
           url: window.location.href,
         })
-      } catch (err) {
-        // User cancelled or share failed
-        console.log('Share cancelled')
+      } catch {
+        // User cancelled
       }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(window.location.href)
     }
   }
 
   return (
-    <div className="sticky top-10">
-      <div className="relative overflow-hidden bg-white/[0.02] border border-white/[0.06] rounded-3xl p-8">
-        {/* Accent bar */}
-        <div
-          className="absolute top-0 left-0 right-0 h-1"
-          style={{ background: colors.gradient }}
-        />
+    <div className="relative overflow-hidden bg-white/[0.02] border border-white/[0.06] rounded-3xl">
+      {/* Accent bar */}
+      <div
+        className="absolute top-0 left-0 right-0 h-1"
+        style={{ background: colors.gradient }}
+      />
 
-        <h3 className="font-outfit text-xl font-semibold mb-2 text-white">Register Now</h3>
-
-        {selectedDistance && (
-          <p className="text-sm text-white/40 mb-6">
-            {selectedDistance.name} · {selectedDistance.distance}
+      <div className="p-6 sm:p-8">
+        {/* Header */}
+        <div className="mb-6">
+          <h3 className="font-outfit text-xl font-semibold text-white mb-1">
+            Registration
+          </h3>
+          <p className="text-sm text-white/40">
+            Register on the official event website
           </p>
-        )}
+        </div>
 
         {/* Price Display */}
         <div
-          className="p-6 rounded-2xl mb-6 text-center"
+          className="p-5 rounded-2xl mb-6"
           style={{
             background: colors.bg,
             border: `1px solid ${colors.border}`,
           }}
         >
-          <div className="text-sm text-white/50 mb-2">Entry Fee</div>
-          <div
-            className="font-outfit text-5xl font-bold"
-            style={{ color: colors.text, letterSpacing: '-0.05em' }}
-          >
-            {price}
-          </div>
-          {spotsRemaining !== undefined && (
-            <div className="text-xs text-white/40 mt-2">
-              {spotsRemaining.toLocaleString()} spots remaining
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs text-white/50 uppercase tracking-wide mb-1">
+                Entry Fee
+              </div>
+              <div
+                className="font-outfit text-3xl sm:text-4xl font-bold"
+                style={{ color: colors.text, letterSpacing: '-0.03em' }}
+              >
+                {priceDisplay}
+              </div>
+              {price?.note && hasPrice && price.note !== priceDisplay && (
+                <div className="text-xs text-white/40 mt-1">{price.note}</div>
+              )}
             </div>
-          )}
+
+            {/* Urgency indicators */}
+            <div className="text-right">
+              {spotsRemaining !== undefined && spotsRemaining < 100 && (
+                <div className="flex items-center gap-1.5 text-amber-400 text-sm">
+                  <Users className="h-4 w-4" />
+                  <span>{spotsRemaining} spots left</span>
+                </div>
+              )}
+              {isClosingSoon && (
+                <div className="flex items-center gap-1.5 text-amber-400 text-sm mt-1">
+                  <Clock className="h-4 w-4" />
+                  <span>Closing soon</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Route Stats Summary */}
-        {selectedDistance && (
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <div className="p-4 bg-white/[0.02] rounded-xl text-center">
-              <div className="text-xs text-white/40 uppercase mb-1">Elevation</div>
-              <div className="text-lg font-semibold text-white">{selectedDistance.elevation}</div>
-            </div>
-            <div className="p-4 bg-white/[0.02] rounded-xl text-center">
-              <div className="text-xs text-white/40 uppercase mb-1">Est. Time</div>
-              <div className="text-lg font-semibold text-white">{selectedDistance.time}</div>
-            </div>
-          </div>
-        )}
-
         {/* Register Button */}
-        {registrationUrl ? (
-          <a href={registrationUrl} target="_blank" rel="noopener noreferrer" className="block mb-4">
+        {hasLink ? (
+          <a
+            href={linkUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block mb-6"
+          >
             <button
-              className="w-full py-4 px-8 text-base font-semibold text-white rounded-xl transition-all duration-300 hover:shadow-2xl"
+              className="w-full py-4 px-6 text-base font-semibold text-white rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl flex items-center justify-center gap-2"
               style={{
                 background: colors.gradient,
-                boxShadow: `0 8px 32px ${colors.text}40`,
+                boxShadow: `0 8px 32px ${colors.text}30`,
               }}
             >
-              Register for {price}
+              Register on Official Site
+              <ExternalLink className="h-4 w-4" />
             </button>
           </a>
         ) : (
           <button
-            className="w-full py-4 px-8 text-base font-semibold bg-white/10 text-white/50 rounded-xl cursor-not-allowed mb-4"
+            className="w-full py-4 px-6 text-base font-semibold bg-white/10 text-white/50 rounded-xl cursor-not-allowed mb-6"
             disabled
           >
-            Registration Coming Soon
+            Registration Link Coming Soon
           </button>
+        )}
+
+        {/* What's Included - Only show if we have real data */}
+        {hasInclusions && (
+          <div className="mb-6">
+            <h4 className="text-sm font-medium text-white/60 mb-3 uppercase tracking-wide">
+              Entry Includes
+            </h4>
+            <ul className="space-y-2.5">
+              {inclusions.map((item, index) => (
+                <li key={index} className="flex items-start gap-3">
+                  <div
+                    className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                    style={{ background: `${colors.text}20` }}
+                  >
+                    <Check className="h-3 w-3" style={{ color: colors.text }} />
+                  </div>
+                  <span className="text-sm text-white/70">{item}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-white/30 mt-3">
+              Inclusions may vary. Check official website for current details.
+            </p>
+          </div>
         )}
 
         {/* Divider */}
         <div className="h-px bg-white/[0.06] my-5" />
 
-        {/* Share / Save */}
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            className="flex-1 bg-white/[0.03] border-white/[0.08] text-white/60 hover:bg-white/[0.06] hover:text-white"
-          >
-            <Heart className="h-4 w-4 mr-2" />
-            Save
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleShare}
-            className="flex-1 bg-white/[0.03] border-white/[0.08] text-white/60 hover:bg-white/[0.06] hover:text-white"
-          >
-            <Share2 className="h-4 w-4 mr-2" />
-            Share
-          </Button>
-        </div>
+        {/* Share Button */}
+        <button
+          onClick={handleShare}
+          className="w-full py-3 px-4 text-sm font-medium bg-white/[0.03] border border-white/[0.08] text-white/60 hover:bg-white/[0.06] hover:text-white rounded-xl transition-all flex items-center justify-center gap-2"
+        >
+          <Share2 className="h-4 w-4" />
+          Share This Event
+        </button>
       </div>
     </div>
   )
