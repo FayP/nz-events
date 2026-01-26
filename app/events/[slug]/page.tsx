@@ -7,6 +7,7 @@ import { Calendar, MapPin, ArrowLeft } from "lucide-react";
 import { AmbientBackground } from "@/components/ui/ambient-background";
 import { Logo } from "@/components/ui/logo";
 import { Footer } from "@/components/Footer";
+import { EventJsonLd } from "@/components/EventJsonLd";
 import DistanceSelector from "./DistanceSelector";
 import CourseInfoBar from "./CourseInfoBar";
 import EventContent from "./EventContent";
@@ -166,6 +167,25 @@ export default async function EventPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0a0b] to-[#111113] relative overflow-hidden">
+      {/* Structured Data for SEO */}
+      <EventJsonLd
+        name={event.title}
+        description={event.description?.[0]?.children?.[0]?.text}
+        startDate={event.eventDetails?.startDate || new Date().toISOString()}
+        endDate={event.eventDetails?.endDate}
+        location={event.eventDetails?.location || ""}
+        city={event.eventDetails?.city || ""}
+        region={event.eventDetails?.region || ""}
+        address={event.eventDetails?.address}
+        latitude={event.eventDetails?.latitude}
+        longitude={event.eventDetails?.longitude}
+        url={event.website}
+        organizer={event.organizer}
+        eventType={event.eventType}
+        price={event.registration?.price}
+        registrationUrl={event.registration?.registrationUrl}
+      />
+
       {/* Ambient Background Effects */}
       <AmbientBackground eventType={event.eventType} />
 
