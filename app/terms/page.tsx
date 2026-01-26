@@ -14,9 +14,7 @@ export default function TermsOfUse() {
       <div className="flex-1">
         <div className="mx-auto max-w-4xl px-4 py-12">
           <div className="mb-8">
-            <Link href="/">
-              <Logo size="sm" />
-            </Link>
+            <Logo size="sm" />
           </div>
 
           <h1 className="text-4xl font-bold text-foreground mb-8">Terms of Use</h1>
