@@ -6,6 +6,7 @@ import { formatEventType } from "@/lib/utils";
 import { Calendar, MapPin, ArrowLeft } from "lucide-react";
 import { AmbientBackground } from "@/components/ui/ambient-background";
 import { Logo } from "@/components/ui/logo";
+import { Footer } from "@/components/Footer";
 import DistanceSelector from "./DistanceSelector";
 import CourseInfoBar from "./CourseInfoBar";
 import EventContent from "./EventContent";
@@ -390,6 +391,8 @@ export default async function EventPage({ params }: PageProps) {
             </div>
           </div>
         </div>
+
+        <Footer />
       </div>
     </div>
   );

@@ -16,6 +16,7 @@ import {
 import { getEventBadgeVariant, formatEventType } from '@/lib/utils'
 import { Search, Calendar, MapPin, ArrowRight } from 'lucide-react'
 import { Logo } from '@/components/ui/logo'
+import { Footer } from '@/components/Footer'
 
 // Force dynamic rendering for search params
 export const dynamic = 'force-dynamic'
@@ -501,6 +502,8 @@ function HomeContent() {
           </div>
         )}
       </div>
+
+      <Footer />
     </div>
   )
 }
