@@ -23,6 +23,18 @@ export function Footer() {
               Contact
             </Link>
             <Link
+              href="/terms"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Terms of Use
+            </Link>
+            <Link
+              href="/disclaimer"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Disclaimer
+            </Link>
+            <Link
               href="/privacy"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
