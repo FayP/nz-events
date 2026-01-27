@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, DM_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { WebsiteJsonLd } from "@/components/WebsiteJsonLd";
 import "./globals.css";
 
@@ -76,6 +77,7 @@ export default function RootLayout({
         <WebsiteJsonLd />
         {children}
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
