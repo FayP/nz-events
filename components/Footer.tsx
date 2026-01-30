@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Script from "next/script";
 import { Logo } from "@/components/ui/logo";
 
 export function Footer() {
@@ -50,11 +51,37 @@ export function Footer() {
         </div>
 
         <div className="mt-8 pt-8 border-t border-border">
+          <div className="flex justify-center">
+            <iframe
+              src="https://subscribe-forms.beehiiv.com/b92405ac-8533-4b6b-81cd-1efc937edbb1"
+              className="beehiiv-embed"
+              data-test-id="beehiiv-embed"
+              frameBorder="0"
+              scrolling="no"
+              style={{
+                width: "100%",
+                maxWidth: 699,
+                height: 339,
+                margin: 0,
+                borderRadius: 0,
+                backgroundColor: "transparent",
+                boxShadow: "none",
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="mt-8 pt-8 border-t border-border">
           <p className="text-sm text-muted-foreground">
             &copy; {currentYear} GoStride. All rights reserved.
           </p>
         </div>
       </div>
+
+      <Script
+        src="https://subscribe-forms.beehiiv.com/embed.js"
+        strategy="lazyOnload"
+      />
     </footer>
   );
 }
