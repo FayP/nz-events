@@ -5,7 +5,12 @@ import { ChevronRight } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { Footer } from "@/components/Footer";
 import { EventCard } from "../EventCard";
-import { getHalfMarathonEvents, getRegions, regionToSlug } from "../data";
+import {
+  getHalfMarathonEvents,
+  getRegions,
+  regionToSlug,
+  groupEventsByMonth,
+} from "../data";
 
 interface PageProps {
   params: Promise<{ region: string }> | { region: string };
@@ -15,18 +20,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const resolvedParams = params instanceof Promise ? await params : params;
   const regionSlug = resolvedParams.region;
 
-  const events = await getHalfMarathonEvents();
-  const regions = getRegions(events);
+  const allEvents = await getHalfMarathonEvents();
+  const regions = getRegions(allEvents);
   const regionName = regions.find((r) => regionToSlug(r) === regionSlug);
 
   if (!regionName) return {};
 
+  const events = allEvents.filter((e) => e.region === regionName);
+  const year = new Date().getFullYear();
+
+  const description = `Find ${events.length} upcoming half marathon races in ${regionName}, New Zealand for ${year}. Browse 21.1km events with dates, distances, and registration links.`;
+
   return {
     title: `Half Marathon Races in ${regionName}, New Zealand`,
-    description: `Find upcoming half marathon events in ${regionName}. Discover 21.1km races, trail runs, and road courses across the ${regionName} region of New Zealand.`,
+    description,
     openGraph: {
       title: `Half Marathon Races in ${regionName} | GoStride`,
-      description: `Find upcoming half marathon events in ${regionName}, New Zealand. Discover your next 21.1km race.`,
+      description,
       type: "website",
     },
   };
@@ -51,6 +61,8 @@ export default async function RegionHalfMarathonsPage({ params }: PageProps) {
   }
 
   const events = allEvents.filter((e) => e.region === regionName);
+  const monthGroups = groupEventsByMonth(events);
+  const baseUrl = "https://gostride.co.nz";
 
   return (
     <div className="min-h-screen bg-background">
@@ -147,7 +159,7 @@ export default async function RegionHalfMarathonsPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Events Grid */}
+      {/* Events by Month */}
       <div className="mx-auto max-w-7xl px-4 pb-12">
         {events.length === 0 ? (
           <div className="rounded-xl border border-border bg-card p-12 text-center">
@@ -163,15 +175,54 @@ export default async function RegionHalfMarathonsPage({ params }: PageProps) {
             </p>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {events.map((event) => (
-              <EventCard key={event.id} event={event} />
+          <div className="space-y-12">
+            <h2 className="text-3xl font-bold text-foreground tracking-tight">
+              Upcoming Half Marathons in {regionName}
+            </h2>
+            {monthGroups.map((group) => (
+              <section key={group.label}>
+                <h3 className="mb-6 text-xl font-semibold text-foreground">
+                  {group.label}
+                </h3>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {group.events.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
         )}
       </div>
 
-      {/* Breadcrumb JSON-LD */}
+      {/* Internal Links */}
+      <div className="mx-auto max-w-7xl px-4 pb-16">
+        <div className="border-t border-border/40 pt-10">
+          <h2 className="mb-4 text-2xl font-bold text-foreground tracking-tight">
+            Explore More Distances
+          </h2>
+          <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
+            Looking for a shorter race? Browse{" "}
+            <Link
+              href="/"
+              className="text-foreground underline underline-offset-4 hover:no-underline"
+            >
+              all running events in New Zealand
+            </Link>{" "}
+            to find 5K and 10K options near you. Want to see events in other
+            regions? View{" "}
+            <Link
+              href="/races/half-marathons"
+              className="text-foreground underline underline-offset-4 hover:no-underline"
+            >
+              all half marathons across New Zealand
+            </Link>
+            .
+          </p>
+        </div>
+      </div>
+
+      {/* Structured Data: BreadcrumbList */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -183,24 +234,80 @@ export default async function RegionHalfMarathonsPage({ params }: PageProps) {
                 "@type": "ListItem",
                 position: 1,
                 name: "Home",
-                item: "https://gostride.co.nz",
+                item: baseUrl,
               },
               {
                 "@type": "ListItem",
                 position: 2,
                 name: "Half Marathons",
-                item: "https://gostride.co.nz/races/half-marathons",
+                item: `${baseUrl}/races/half-marathons`,
               },
               {
                 "@type": "ListItem",
                 position: 3,
                 name: regionName,
-                item: `https://gostride.co.nz/races/half-marathons/${regionToSlug(regionName)}`,
+                item: `${baseUrl}/races/half-marathons/${regionToSlug(regionName)}`,
               },
             ],
           }),
         }}
       />
+
+      {/* Structured Data: ItemList + Event schema */}
+      {events.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "ItemList",
+              name: `Half Marathon Races in ${regionName}`,
+              numberOfItems: events.length,
+              itemListElement: events.map((event, index) => ({
+                "@type": "ListItem",
+                position: index + 1,
+                item: {
+                  "@type": "SportsEvent",
+                  name: event.name,
+                  startDate: event.startDate.toISOString(),
+                  ...(event.endDate && {
+                    endDate: event.endDate.toISOString(),
+                  }),
+                  location: {
+                    "@type": "Place",
+                    name: event.location,
+                    address: {
+                      "@type": "PostalAddress",
+                      addressLocality: event.city,
+                      addressRegion: event.region,
+                      addressCountry: "NZ",
+                    },
+                    ...(event.latitude &&
+                      event.longitude && {
+                        geo: {
+                          "@type": "GeoCoordinates",
+                          latitude: event.latitude,
+                          longitude: event.longitude,
+                        },
+                      }),
+                  },
+                  sport: "Running",
+                  url: `${baseUrl}/events/${event.slug}`,
+                  ...(event.website && {
+                    sameAs: event.website,
+                  }),
+                  ...(event.organizer && {
+                    organizer: {
+                      "@type": "Organization",
+                      name: event.organizer,
+                    },
+                  }),
+                },
+              })),
+            }),
+          }}
+        />
+      )}
 
       <Footer />
     </div>
