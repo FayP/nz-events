@@ -40,6 +40,11 @@ const nextConfig: NextConfig = {
       { hostname: "lirp.cdn-website.com" },
       { hostname: "godzoneadventure.com" },
       { hostname: "triathlon.kiwi" },
+      { hostname: "k2cycle.co.nz" },
+      { hostname: "sp-ao.shortpixel.ai" },
+      { hostname: "www.lovetaupo.com" },
+      { hostname: "nzmtbrally.com" },
+      { hostname: "www.trailchallengewaihi.co.nz" },
     ],
   },
 };
