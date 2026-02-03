@@ -50,8 +50,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Dynamic event pages
+  // Dynamic event pages and region pages
   let eventPages: MetadataRoute.Sitemap = [];
+  let regionPages: MetadataRoute.Sitemap = [];
 
   try {
     const events = await prisma.event.findMany({
@@ -62,6 +63,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         slug: true,
         updatedAt: true,
         startDate: true,
+        region: true,
+        eventType: true,
+        distances: true,
       },
     });
 
@@ -71,12 +75,43 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         url: `${baseUrl}/events/${event.slug}`,
         lastModified: event.updatedAt,
         changeFrequency: "weekly" as const,
-        // Higher priority for upcoming events
         priority: event.startDate > new Date() ? 0.9 : 0.6,
       }));
+
+    // Half marathon region pages
+    const halfMarathonPatterns = [
+      "half marathon",
+      "half-marathon",
+      "21km",
+      "21.1km",
+      "21k",
+    ];
+    const halfMarathonRegions = [
+      ...new Set(
+        events
+          .filter(
+            (e) =>
+              e.eventType === "RUNNING" &&
+              e.startDate > new Date() &&
+              e.distances &&
+              Array.isArray(e.distances) &&
+              (e.distances as string[]).some((d) =>
+                halfMarathonPatterns.some((p) => d.toLowerCase().includes(p))
+              )
+          )
+          .map((e) => e.region)
+      ),
+    ];
+
+    regionPages = halfMarathonRegions.map((region) => ({
+      url: `${baseUrl}/races/half-marathons/${region.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }));
   } catch (error) {
     console.error("Error fetching events for sitemap:", error);
   }
 
-  return [...staticPages, ...eventPages];
+  return [...staticPages, ...eventPages, ...regionPages];
 }

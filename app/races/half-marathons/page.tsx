@@ -1,10 +1,10 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
-import { getEventBadgeVariant, formatEventType } from "@/lib/utils";
-import { Calendar, MapPin, ArrowRight, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { Footer } from "@/components/Footer";
+import { EventCard } from "./EventCard";
+import { getHalfMarathonEvents, getRegions, regionToSlug } from "./data";
 
 export const metadata: Metadata = {
   title: "Half Marathon Races in New Zealand",
@@ -18,45 +18,9 @@ export const metadata: Metadata = {
   },
 };
 
-interface PageProps {
-  searchParams: Promise<{ region?: string }> | { region?: string };
-}
-
-export default async function HalfMarathonsPage({ searchParams }: PageProps) {
-  const resolvedSearchParams =
-    searchParams instanceof Promise ? await searchParams : searchParams;
-  const activeRegion = resolvedSearchParams?.region || null;
-  const allRunningEvents = await prisma.event.findMany({
-    where: {
-      status: "PUBLISHED",
-      eventType: "RUNNING",
-      startDate: { gte: new Date() },
-    },
-    orderBy: { startDate: "asc" },
-  });
-
-  // Filter to events that include a half marathon distance
-  const halfMarathonPatterns = [
-    "half marathon",
-    "half-marathon",
-    "21km",
-    "21.1km",
-    "21k",
-  ];
-  const events = allRunningEvents.filter((event) => {
-    if (!event.distances || !Array.isArray(event.distances)) return false;
-    return (event.distances as string[]).some((d) =>
-      halfMarathonPatterns.some((p) => d.toLowerCase().includes(p))
-    );
-  });
-
-  // Get unique regions from all events (before filtering)
-  const regions = [...new Set(events.map((e) => e.region))].sort();
-
-  // Filter by region if one is selected
-  const filteredEvents = activeRegion
-    ? events.filter((e) => e.region === activeRegion)
-    : events;
+export default async function HalfMarathonsPage() {
+  const events = await getHalfMarathonEvents();
+  const regions = getRegions(events);
 
   return (
     <div className="min-h-screen bg-background">
@@ -105,12 +69,12 @@ export default async function HalfMarathonsPage({ searchParams }: PageProps) {
               runners stepping up from 10K for the first time.
             </p>
             <p>
-              New Zealand's half marathon calendar spans the full length of the country,
-              from the subtropical orchards of Kerikeri's famously fast downhill course
+              New Zealand&apos;s half marathon calendar spans the full length of the country,
+              from the subtropical orchards of Kerikeri&apos;s famously fast downhill course
               to the alpine scenery of Queenstown and the rugged coastlines of the South
               Island. Whether you prefer a flat, fast city course through Wellington or
               Christchurch, a trail run through native bush, or a scenic coastal route
-              with ocean views, there's a half marathon to match. Most events also offer
+              with ocean views, there&apos;s a half marathon to match. Most events also offer
               shorter distances, making them a great option for a group or family entry
               where everyone races at their own level.
             </p>
@@ -121,29 +85,14 @@ export default async function HalfMarathonsPage({ searchParams }: PageProps) {
         {regions.length > 0 && (
           <div className="mb-6 flex flex-wrap items-center gap-2">
             <span className="text-sm text-muted-foreground">Regions:</span>
-            <Link
-              href="/races/half-marathons"
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                !activeRegion
-                  ? "bg-foreground text-background"
-                  : "bg-transparent border border-border text-foreground hover:bg-muted/50"
-              }`}
-            >
+            <span className="px-3 py-1.5 rounded-full text-sm font-medium bg-foreground text-background">
               All
-            </Link>
+            </span>
             {regions.map((region) => (
               <Link
                 key={region}
-                href={
-                  activeRegion === region
-                    ? "/races/half-marathons"
-                    : `/races/half-marathons?region=${encodeURIComponent(region)}`
-                }
-                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                  activeRegion === region
-                    ? "bg-foreground text-background"
-                    : "bg-transparent border border-border text-foreground hover:bg-muted/50"
-                }`}
+                href={`/races/half-marathons/${regionToSlug(region)}`}
+                className="px-3 py-1.5 rounded-full text-sm font-medium bg-transparent border border-border text-foreground hover:bg-muted/50 transition-colors"
               >
                 {region}
               </Link>
@@ -154,96 +103,24 @@ export default async function HalfMarathonsPage({ searchParams }: PageProps) {
         {/* Event Count */}
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">
-            {filteredEvents.length} upcoming half marathon
-            {filteredEvents.length !== 1 ? "s" : ""}
-            {activeRegion ? ` in ${activeRegion}` : ""}
+            {events.length} upcoming half marathon
+            {events.length !== 1 ? "s" : ""}
           </p>
         </div>
       </div>
 
       {/* Events Grid */}
       <div className="mx-auto max-w-7xl px-4 pb-12">
-        {filteredEvents.length === 0 ? (
+        {events.length === 0 ? (
           <div className="rounded-xl border border-border bg-card p-12 text-center">
             <p className="text-muted-foreground">
-              {activeRegion
-                ? `No upcoming half marathons in ${activeRegion}. Try another region or view all.`
-                : "No upcoming half marathons found. Check back soon for new events!"}
+              No upcoming half marathons found. Check back soon for new events!
             </p>
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredEvents.map((event) => (
-              <Link
-                key={event.id}
-                href={`/events/${event.slug}`}
-                className="group rounded-2xl bg-card border border-border/40 p-6 transition-all duration-200 ease-out hover:border-border hover:shadow-lg"
-              >
-                {/* Event Type Badge */}
-                <div className="mb-6">
-                  <span
-                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide ${
-                      getEventBadgeVariant(event.eventType) === "running"
-                        ? "bg-[var(--event-running)] text-white"
-                        : getEventBadgeVariant(event.eventType) === "cycling"
-                          ? "bg-[var(--event-cycling)] text-white"
-                          : getEventBadgeVariant(event.eventType) ===
-                              "triathlon"
-                            ? "bg-[var(--event-triathlon)] text-white"
-                            : "bg-muted text-foreground"
-                    }`}
-                  >
-                    <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                    {formatEventType(event.eventType)}
-                  </span>
-                </div>
-
-                {/* Event Title */}
-                <h3 className="mb-6 text-2xl font-bold text-foreground tracking-tight">
-                  {event.name}
-                </h3>
-
-                {/* Date */}
-                <div className="mb-3 flex items-center gap-2.5 text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  <span>
-                    {new Date(event.startDate).toLocaleDateString("en-NZ", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </span>
-                </div>
-
-                {/* Location */}
-                <div className="mb-8 flex items-center gap-2.5 text-sm text-muted-foreground">
-                  <MapPin className="h-4 w-4" />
-                  <span>
-                    {event.location}, {event.city}
-                  </span>
-                </div>
-
-                {/* Distances and Arrow */}
-                <div className="flex items-end justify-between">
-                  <div className="flex flex-wrap gap-3">
-                    {event.distances &&
-                      Array.isArray(event.distances) &&
-                      (event.distances as string[])
-                        .slice(0, 3)
-                        .map((dist, i) => (
-                          <span
-                            key={i}
-                            className="text-base font-medium text-foreground/90"
-                          >
-                            {dist}
-                          </span>
-                        ))}
-                  </div>
-                  <div className="flex items-center justify-center rounded-full w-14 h-14 shrink-0 transition-all duration-300 bg-[var(--event-running)]/15 border border-[var(--event-running)]/30 group-hover:bg-[var(--event-running)]/25">
-                    <ArrowRight className="h-5 w-5 transition-all duration-300 group-hover:translate-x-1 text-[var(--event-running)]" />
-                  </div>
-                </div>
-              </Link>
+            {events.map((event) => (
+              <EventCard key={event.id} event={event} />
             ))}
           </div>
         )}
