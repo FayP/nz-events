@@ -1,7 +1,47 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      { hostname: "images.unsplash.com" },
+      { hostname: "images.squarespace-cdn.com" },
+      { hostname: "static1.squarespace.com" },
+      { hostname: "cdn.raceroster.com" },
+      { hostname: "challenge-wanaka.com" },
+      { hostname: "coremedia.fra1.cdn.digitaloceanspaces.com" },
+      { hostname: "dunedinmarathon.co.nz" },
+      { hostname: "hawkesbaymarathon.co.nz" },
+      { hostname: "keplerchallenge.co.nz" },
+      { hostname: "kiwiwalkrun.co.nz" },
+      { hostname: "prodcdn.sporty.co.nz" },
+      { hostname: "res.cloudinary.com" },
+      { hostname: "splashanddash.co.nz" },
+      { hostname: "wellingtonmarathon.co.nz" },
+      { hostname: "www.wellingtonmarathon.co.nz" },
+      { hostname: "www.ironman.com" },
+      { hostname: "www.revcycle.co.nz" },
+      { hostname: "www.tourofsouthland.com" },
+      { hostname: "www.xterraplanet.com" },
+      { hostname: "mountfestival.kiwi" },
+      { hostname: "cdn.prod.website-files.com" },
+      { hostname: "cdn.eventfinda.co.nz" },
+      { hostname: "mynextchallenge.co.nz" },
+      { hostname: "www.motatapu.com" },
+      { hostname: "motatapu.com" },
+      { hostname: "city2surf.co.nz" },
+      { hostname: "thegoat.co.nz" },
+      { hostname: "www.thepioneer.co.nz" },
+      { hostname: "cycletournz.com" },
+      { hostname: "blogger.googleusercontent.com" },
+      { hostname: "2.bp.blogspot.com" },
+      { hostname: "whangamataevents.co.nz" },
+      { hostname: "www.datocms-assets.com" },
+      { hostname: "www.westcoastwildernesstrail.co.nz" },
+      { hostname: "lirp.cdn-website.com" },
+      { hostname: "godzoneadventure.com" },
+      { hostname: "triathlon.kiwi" },
+    ],
+  },
 };
 
 export default nextConfig;

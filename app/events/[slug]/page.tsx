@@ -3,11 +3,12 @@ import { getEventBySlug } from "@/lib/cms";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { formatEventType } from "@/lib/utils";
-import { Calendar, MapPin, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { AmbientBackground } from "@/components/ui/ambient-background";
 import { Logo } from "@/components/ui/logo";
 import { Footer } from "@/components/Footer";
 import { EventJsonLd } from "@/components/EventJsonLd";
+import EventImageGallery from "@/components/EventImageGallery";
 import DistanceSelector from "./DistanceSelector";
 import CourseInfoBar from "./CourseInfoBar";
 import EventContent from "./EventContent";
@@ -56,6 +57,7 @@ export default async function EventPage({ params }: PageProps) {
       title: dbEvent.name,
       eventType: dbEvent.eventType,
       distanceDetails: dbEvent.distanceDetails as any,
+      images: dbEvent.images,
       eventDetails: {
         startDate: dbEvent.startDate.toISOString(),
         endDate: dbEvent.endDate?.toISOString(),
@@ -130,6 +132,7 @@ export default async function EventPage({ params }: PageProps) {
           bg: "rgba(249, 115, 22, 0.15)",
           text: "var(--event-running)",
           border: "rgba(249, 115, 22, 0.3)",
+          gradient: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
         };
       case "BIKING":
       case "CYCLING":
@@ -137,18 +140,21 @@ export default async function EventPage({ params }: PageProps) {
           bg: "rgba(139, 92, 246, 0.15)",
           text: "var(--event-cycling)",
           border: "rgba(139, 92, 246, 0.3)",
+          gradient: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
         };
       case "TRIATHLON":
         return {
           bg: "rgba(16, 185, 129, 0.15)",
           text: "var(--event-triathlon)",
           border: "rgba(16, 185, 129, 0.3)",
+          gradient: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
         };
       default:
         return {
           bg: "rgba(100, 100, 100, 0.15)",
           text: "rgba(255, 255, 255, 0.6)",
           border: "rgba(100, 100, 100, 0.3)",
+          gradient: "linear-gradient(135deg, #666666 0%, #555555 100%)",
         };
     }
   };
@@ -191,10 +197,9 @@ export default async function EventPage({ params }: PageProps) {
 
       {/* Main Content */}
       <div className="relative z-10">
-        {/* Header Section */}
-        <div className="max-w-7xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
-          {/* Logo and Back Button */}
-          <div className="flex items-center justify-between mb-12 animate-fade-in-up">
+        {/* Logo and Back Button */}
+        <div className="max-w-7xl mx-auto px-4 pt-10 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-10 animate-fade-in-up">
             <Logo size="md" />
             <Link
               href="/"
@@ -204,52 +209,51 @@ export default async function EventPage({ params }: PageProps) {
               All Events
             </Link>
           </div>
+        </div>
 
-          {/* Type Badge */}
-          <div
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full mb-8 animate-fade-in-up"
-            style={{
-              background: typeColors.bg,
-              border: `1px solid ${typeColors.border}`,
-              animationDelay: "0.1s",
-            }}
-          >
-            <span
-              className="w-2 h-2 rounded-full"
-              style={{ background: typeColors.text }}
-            />
-            <span
-              className="text-xs font-semibold uppercase tracking-wider"
-              style={{ color: typeColors.text }}
-            >
-              {formatEventType(event.eventType)}
-            </span>
-          </div>
+        {/* ============ Hero: Two-Column Layout ============ */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_480px] gap-10 lg:gap-12">
+            {/* ---- Left Column: Event Info ---- */}
+            <div className="space-y-6">
+              {/* Type Badge */}
+              <div
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full"
+                style={{
+                  background: typeColors.bg,
+                  border: `1px solid ${typeColors.border}`,
+                }}
+              >
+                <span
+                  className="w-2 h-2 rounded-full"
+                  style={{ background: typeColors.text }}
+                />
+                <span
+                  className="text-xs font-semibold uppercase tracking-wider"
+                  style={{ color: typeColors.text }}
+                >
+                  {formatEventType(event.eventType)}
+                </span>
+              </div>
 
-          {/* Header Grid with Organizer on Top Right */}
-          <div
-            className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-10 items-start mb-8 animate-fade-in-up"
-            style={{ animationDelay: "0.15s" }}
-          >
-            {/* Left Column - Event Info */}
-            <div>
               {/* Event Title */}
               <h1
-                className="font-outfit text-5xl md:text-6xl font-semibold leading-tight mb-6 text-white bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent"
+                className="font-outfit text-4xl sm:text-5xl lg:text-6xl font-semibold leading-tight text-white bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent"
                 style={{ letterSpacing: "-0.02em" }}
               >
                 {event.title}
               </h1>
 
-              {/* Quick Info */}
+              {/* Date & Location Cards */}
               {event.eventDetails && (
-                <div className="flex flex-wrap items-start gap-6 text-white/60 mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white/[0.04] flex items-center justify-center">
-                      <Calendar className="h-5 w-5" />
+                <div className="flex flex-col sm:flex-row gap-4">
+                  {/* Date Card */}
+                  <div className="flex items-center gap-4 px-5 py-4 bg-white/[0.03] border border-white/[0.08] rounded-xl flex-1">
+                    <div className="w-11 h-11 rounded-xl bg-white/[0.05] flex items-center justify-center text-xl">
+                      📅
                     </div>
                     <div>
-                      <div className="font-medium text-white">
+                      <div className="font-medium text-white text-sm">
                         {formatDate(event.eventDetails.startDate)}
                       </div>
                       <div className="text-xs text-white/40">
@@ -257,18 +261,51 @@ export default async function EventPage({ params }: PageProps) {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white/[0.04] flex items-center justify-center">
-                      <MapPin className="h-5 w-5" />
+
+                  {/* Location Card */}
+                  <div className="flex items-center gap-4 px-5 py-4 bg-white/[0.03] border border-white/[0.08] rounded-xl flex-1">
+                    <div className="w-11 h-11 rounded-xl bg-white/[0.05] flex items-center justify-center text-xl">
+                      📍
                     </div>
                     <div>
-                      <div className="font-medium text-white">
+                      <div className="font-medium text-white text-sm">
                         {event.eventDetails.location}
                       </div>
                       <div className="text-xs text-white/40">
                         {event.eventDetails.city}, {event.eventDetails.region}
                       </div>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Organizer Card */}
+              {event.organizer?.name && (
+                <div className="p-5 bg-white/[0.03] border border-white/[0.06] rounded-2xl flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white/[0.05] rounded-xl flex items-center justify-center text-2xl">
+                    🏆
+                  </div>
+                  <div>
+                    <div className="text-xs text-white/40 uppercase tracking-wide mb-0.5">
+                      Organised by
+                    </div>
+                    <div className="text-sm font-medium text-white">
+                      {event.organizer.name}
+                    </div>
+                    {event.organizer.website && (
+                      <a
+                        href={event.organizer.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs hover:underline"
+                        style={{ color: typeColors.text }}
+                      >
+                        {new URL(event.organizer.website).hostname.replace(
+                          "www.",
+                          ""
+                        )}
+                      </a>
+                    )}
                   </div>
                 </div>
               )}
@@ -288,65 +325,24 @@ export default async function EventPage({ params }: PageProps) {
               )}
             </div>
 
-            {/* Right Column - Organizer Card */}
-            {event.organizer?.name && (
-              <div className="p-6 bg-white/[0.03] border border-white/[0.06] rounded-2xl flex items-center gap-4 self-start hidden md:flex">
-                <div className="w-12 h-12 bg-white/[0.05] rounded-xl flex items-center justify-center text-2xl">
-                  🏆
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-white">
-                    {event.organizer.name}
-                  </div>
-                  {event.organizer.website && (
-                    <a
-                      href={event.organizer.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs hover:underline"
-                      style={{ color: typeColors.text }}
-                    >
-                      {new URL(event.organizer.website).hostname.replace(
-                        "www.",
-                        ""
-                      )}
-                    </a>
-                  )}
-                </div>
+            {/* ---- Right Column: Image + Organizer ---- */}
+            <div className="space-y-6">
+              {/* Image on mobile appears after title, on desktop in right column */}
+              <div className="order-first lg:order-none">
+                <EventImageGallery
+                  images={event.images}
+                  eventType={event.eventType}
+                  eventName={event.title}
+                />
               </div>
-            )}
-          </div>
 
-          {/* Organizer Card Below (Mobile Only) */}
-          {event.organizer?.name && (
-            <div className="md:hidden p-6 bg-white/[0.03] border border-white/[0.06] rounded-2xl flex items-center gap-4 mb-8">
-              <div className="w-12 h-12 bg-white/[0.05] rounded-xl flex items-center justify-center text-2xl">
-                🏆
-              </div>
-              <div>
-                <div className="text-sm font-medium text-white">
-                  {event.organizer.name}
-                </div>
-                {event.organizer.website && (
-                  <a
-                    href={event.organizer.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs hover:underline"
-                    style={{ color: typeColors.text }}
-                  >
-                    {new URL(event.organizer.website).hostname.replace(
-                      "www.",
-                      ""
-                    )}
-                  </a>
-                )}
-              </div>
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Distance Selector */}
+        {/* ============ Below Hero: Full Width Sections ============ */}
+
+        {/* Distance Details */}
         {event.distanceDetails && event.distanceDetails.length > 0 && (
           <DistanceSelector
             distances={event.distanceDetails}
@@ -369,21 +365,7 @@ export default async function EventPage({ params }: PageProps) {
           </div>
         )}
 
-        {/* Registration Card - Mobile (shows before content on small screens) */}
-        <div className="lg:hidden max-w-7xl mx-auto px-4 pb-8 sm:px-6">
-          <RegistrationCard
-            eventType={event.eventType}
-            eventTitle={event.title}
-            registrationUrl={event.registration?.registrationUrl}
-            website={event.website}
-            price={event.registration?.price}
-            capacity={event.registration?.capacity}
-            taken={event.registration?.taken}
-            inclusions={event.registration?.inclusions}
-          />
-        </div>
-
-        {/* Main Content with Registration Sidebar on Desktop */}
+        {/* Main Content Area */}
         <div
           className="max-w-7xl mx-auto px-4 pb-20 sm:px-6 lg:px-8 animate-fade-in-up"
           style={{ animationDelay: "0.3s" }}
@@ -394,7 +376,7 @@ export default async function EventPage({ params }: PageProps) {
               <EventContent event={event} eventType={event.eventType} />
             </div>
 
-            {/* Registration Card - Desktop Sidebar (sticky) */}
+            {/* Registration Sidebar (desktop) - share, inclusions */}
             <div className="hidden lg:block">
               <div className="sticky top-8">
                 <RegistrationCard
@@ -410,6 +392,20 @@ export default async function EventPage({ params }: PageProps) {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Registration Card - Mobile (below content on small screens) */}
+        <div className="lg:hidden max-w-7xl mx-auto px-4 pb-12 sm:px-6">
+          <RegistrationCard
+            eventType={event.eventType}
+            eventTitle={event.title}
+            registrationUrl={event.registration?.registrationUrl}
+            website={event.website}
+            price={event.registration?.price}
+            capacity={event.registration?.capacity}
+            taken={event.registration?.taken}
+            inclusions={event.registration?.inclusions}
+          />
         </div>
 
         <Footer />

@@ -7,6 +7,8 @@ const { PrismaClient } = require('@prisma/client');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const prisma = new PrismaClient();
 
+const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY;
+
 const NZ_REGIONS = ['Auckland', 'Wellington', 'Canterbury', 'Waikato', 'Bay of Plenty', 'Otago', 'Manawatu-Whanganui', 'Northland', 'Hawkes Bay', 'Taranaki', 'Southland', 'Nelson', 'Marlborough', 'West Coast', 'Gisborne', 'Tasman'];
 
 function getDateRange() {
@@ -103,6 +105,114 @@ function getCoordinates(city) {
   return null;
 }
 
+/**
+ * Scrape event images from a URL
+ */
+async function scrapeImagesFromUrl(url) {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        'Accept': 'text/html,application/xhtml+xml',
+      },
+      redirect: 'follow',
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return [];
+    const html = await res.text();
+
+    const skipPatterns = [
+      'logo', 'icon', 'favicon', 'avatar', 'badge', 'sponsor', 'payment',
+      'visa', 'mastercard', '1x1', 'pixel', 'tracking', 'widget', 'arrow',
+      'button', 'dummy', 'transparent', 'placeholder', 'blank', 'spacer',
+    ];
+
+    function isEventImage(imgUrl, tag) {
+      const lower = imgUrl.toLowerCase();
+      if (skipPatterns.some(p => lower.includes(p))) return false;
+      const sizeInUrl = lower.match(/[-_](\d+)x(\d+)/);
+      if (sizeInUrl && parseInt(sizeInUrl[1]) <= 200 && parseInt(sizeInUrl[2]) <= 200) return false;
+      if (tag) {
+        const wMatch = tag.match(/width=["']?(\d+)/i);
+        const hMatch = tag.match(/height=["']?(\d+)/i);
+        if (wMatch && parseInt(wMatch[1]) < 200) return false;
+        if (hMatch && parseInt(hMatch[1]) < 200) return false;
+      }
+      return true;
+    }
+
+    const metaImages = [];
+    for (const m of html.matchAll(/(?:property|name)=["']og:image(?::url)?["']\s+content=["']([^"']+)["']/gi)) metaImages.push(m[1]);
+    for (const m of html.matchAll(/content=["']([^"']+)["']\s+(?:property|name)=["']og:image(?::url)?["']/gi)) metaImages.push(m[1]);
+
+    const contentImages = [];
+    for (const m of html.matchAll(/<img[^>]+src=["']([^"']+\.(?:jpg|jpeg|png|webp)(?:\?[^"']*)?)["'][^>]*>/gi)) {
+      if (isEventImage(m[1], m[0])) contentImages.push(m[1]);
+    }
+    for (const m of html.matchAll(/<source[^>]+srcset=["']([^"',\s]+\.(?:jpg|jpeg|png|webp)(?:\?[^"',\s]*)?)/gi)) {
+      if (isEventImage(m[1], m[0])) contentImages.push(m[1]);
+    }
+    for (const m of html.matchAll(/background(?:-image)?:\s*url\(["']?([^"')]+\.(?:jpg|jpeg|png|webp)(?:\?[^"')]*)?)/gi)) {
+      if (isEventImage(m[1])) contentImages.push(m[1]);
+    }
+
+    const baseUrl = new URL(url);
+    const seen = new Set();
+    const resolved = [];
+    for (const img of [...metaImages, ...contentImages]) {
+      try {
+        const full = new URL(img, baseUrl).href;
+        if (full.startsWith('data:') || full.endsWith('.svg')) continue;
+        const key = full.split('?')[0];
+        if (seen.has(key)) continue;
+        seen.add(key);
+        resolved.push(full);
+      } catch { continue; }
+    }
+    return resolved;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Source images from event website, falling back to Unsplash
+ */
+async function sourceImages(eventType, city, website, registrationUrl) {
+  // Try scraping the event's own website first
+  const urls = [website, registrationUrl].filter(Boolean);
+  for (const url of urls) {
+    const scraped = await scrapeImagesFromUrl(url);
+    if (scraped.length > 0) return scraped.slice(0, 5);
+  }
+
+  // Fall back to Unsplash if configured
+  if (!UNSPLASH_ACCESS_KEY) return [];
+  const sportName = eventType === 'BIKING' ? 'cycling' : eventType.toLowerCase();
+  const queries = [
+    `${sportName} ${city} New Zealand`,
+    `${sportName} New Zealand`,
+    `${sportName} race`,
+  ];
+  for (const query of queries) {
+    try {
+      const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=5&orientation=landscape&client_id=${UNSPLASH_ACCESS_KEY}`;
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data.results && data.results.length >= 3) {
+        return data.results.map(photo => photo.urls.regular);
+      }
+    } catch {
+      // Continue to next query
+    }
+  }
+  return [];
+}
+
 async function saveEvent(event) {
   try {
     if (await eventExists(event)) {
@@ -112,6 +222,10 @@ async function saveEvent(event) {
 
     const coords = getCoordinates(event.city);
     const slug = event.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now();
+
+    // Source images from event website, falling back to Unsplash
+    console.log('  Sourcing images for: ' + event.name);
+    const images = await sourceImages(event.eventType, event.city, event.website, event.registrationUrl);
 
     await prisma.event.create({
       data: {
@@ -128,12 +242,13 @@ async function saveEvent(event) {
         longitude: coords ? coords.lng : null,
         website: event.website || null,
         distances: event.distances || [],
+        images: images.length > 0 ? images : null,
         source: 'AI_GENERATED',
         status: 'PUBLISHED',
       },
     });
 
-    console.log('  Saved: ' + event.name + ' (' + event.city + ')');
+    console.log('  Saved: ' + event.name + ' (' + event.city + ')' + (images.length > 0 ? ' [' + images.length + ' images]' : ' [fallback]'));
     return true;
   } catch (error) {
     console.log('  Error saving ' + event.name + ': ' + error.message);
@@ -145,7 +260,8 @@ async function main() {
   console.log('='.repeat(50));
   console.log('Starting Full Event Discovery');
   console.log('='.repeat(50));
-  console.log('Date range: ' + getDateRange().start + ' to ' + getDateRange().end + '\n');
+  console.log('Date range: ' + getDateRange().start + ' to ' + getDateRange().end);
+  console.log('Unsplash: ' + (UNSPLASH_ACCESS_KEY ? 'enabled' : 'disabled (no UNSPLASH_ACCESS_KEY)') + '\n');
 
   const eventTypes = ['RUNNING', 'BIKING', 'TRIATHLON'];
   let totalDiscovered = 0;

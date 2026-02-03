@@ -7,6 +7,7 @@ import { DistanceDetail } from '@/types'
 interface DistanceSelectorProps {
   distances?: DistanceDetail[]
   eventType: string
+  compact?: boolean
 }
 
 // Get icon and label for triathlon disciplines
@@ -44,9 +45,26 @@ const getCyclingIcon = (name: string): string => {
   return '🚴'
 }
 
+function getDistanceInfo(distance: DistanceDetail, eventType: string, colors: any) {
+  const isTriathlon = eventType.toUpperCase() === 'TRIATHLON'
+  const isRunning = eventType.toUpperCase() === 'RUNNING'
+  const isCycling = eventType.toUpperCase() === 'BIKING' || eventType.toUpperCase() === 'CYCLING'
+
+  if (isTriathlon) {
+    const discipline = getTriathlonDiscipline(distance.name)
+    return { icon: discipline.icon, label: discipline.label, accentColor: discipline.color }
+  } else if (isRunning) {
+    return { icon: getRunningIcon(distance.name), label: distance.name.toUpperCase(), accentColor: colors.text }
+  } else if (isCycling) {
+    return { icon: getCyclingIcon(distance.name), label: distance.name.toUpperCase(), accentColor: colors.text }
+  }
+  return { icon: '🏅', label: distance.name.toUpperCase(), accentColor: colors.text }
+}
+
 export default function DistanceSelector({
   distances,
   eventType,
+  compact = false,
 }: DistanceSelectorProps) {
   const [currentPage, setCurrentPage] = useState(0)
   const colors = useEventColors(eventType)
@@ -56,12 +74,39 @@ export default function DistanceSelector({
   }
 
   const isTriathlon = eventType.toUpperCase() === 'TRIATHLON'
-  const isRunning = eventType.toUpperCase() === 'RUNNING'
-  const isCycling = eventType.toUpperCase() === 'BIKING' || eventType.toUpperCase() === 'CYCLING'
-
   const sectionTitle = isTriathlon ? 'Race Disciplines' : 'Distance Options'
 
-  // Carousel settings
+  // --- Compact mode: inline horizontal cards for the hero section ---
+  if (compact) {
+    return (
+      <div className="flex flex-wrap gap-3">
+        {distances.map((distance, index) => {
+          const { icon, label, accentColor } = getDistanceInfo(distance, eventType, colors)
+          return (
+            <div
+              key={index}
+              className="flex items-center gap-3 px-4 py-3 bg-white/[0.03] border border-white/[0.08] rounded-xl"
+            >
+              <span className="text-xl">{icon}</span>
+              <div>
+                <div
+                  className="text-[10px] font-semibold uppercase tracking-wider"
+                  style={{ color: accentColor }}
+                >
+                  {label}
+                </div>
+                <div className="font-outfit text-lg font-bold text-white" style={{ letterSpacing: '-0.02em' }}>
+                  {distance.distance}
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  // --- Full mode: detailed cards with carousel ---
   const itemsPerPage = 3
   const totalPages = Math.ceil(distances.length / itemsPerPage)
   const showCarousel = distances.length > 3
@@ -78,30 +123,8 @@ export default function DistanceSelector({
     ? distances.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage)
     : distances
 
-  // Render a single distance card
   const renderCard = (distance: DistanceDetail, index: number) => {
-    let icon: string
-    let label: string
-    let accentColor: string
-
-    if (isTriathlon) {
-      const discipline = getTriathlonDiscipline(distance.name)
-      icon = discipline.icon
-      label = discipline.label
-      accentColor = discipline.color
-    } else if (isRunning) {
-      icon = getRunningIcon(distance.name)
-      label = distance.name.toUpperCase()
-      accentColor = colors.text // Orange for running
-    } else if (isCycling) {
-      icon = getCyclingIcon(distance.name)
-      label = distance.name.toUpperCase()
-      accentColor = colors.text // Purple for cycling
-    } else {
-      icon = '🏅'
-      label = distance.name.toUpperCase()
-      accentColor = colors.text
-    }
+    const { icon, label, accentColor } = getDistanceInfo(distance, eventType, colors)
 
     return (
       <div

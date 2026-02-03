@@ -63,6 +63,128 @@ export class EventDiscoveryService {
   }
 
   /**
+   * Source images for an event by scraping its website, falling back to Unsplash
+   */
+  async sourceImages(eventType: string, city: string, website?: string, registrationUrl?: string): Promise<string[]> {
+    // Try scraping from the event's own website first
+    const urls = [website, registrationUrl].filter(Boolean) as string[]
+    for (const url of urls) {
+      const scraped = await this.scrapeImagesFromUrl(url)
+      if (scraped.length > 0) return scraped.slice(0, 5)
+    }
+
+    // Fall back to Unsplash API if configured
+    const accessKey = process.env.UNSPLASH_ACCESS_KEY
+    if (accessKey) {
+      const sportName = eventType === 'BIKING' ? 'cycling' : eventType.toLowerCase()
+      const queries = [
+        `${sportName} ${city} New Zealand`,
+        `${sportName} New Zealand`,
+        `${sportName} race`,
+      ]
+      for (const query of queries) {
+        try {
+          const apiUrl = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=5&orientation=landscape&client_id=${accessKey}`
+          const res = await fetch(apiUrl)
+          if (!res.ok) continue
+          const data = await res.json()
+          if (data.results && data.results.length >= 3) {
+            return data.results.map((photo: any) => photo.urls.regular)
+          }
+        } catch {
+          // Continue to next query
+        }
+      }
+    }
+
+    return []
+  }
+
+  /**
+   * Scrape event images from a URL by extracting og:image, img tags, and background images
+   */
+  private async scrapeImagesFromUrl(url: string): Promise<string[]> {
+    try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 10000)
+
+      const res = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml',
+        },
+        redirect: 'follow',
+      })
+      clearTimeout(timeout)
+      if (!res.ok) return []
+
+      const html = await res.text()
+      const skipPatterns = [
+        'logo', 'icon', 'favicon', 'avatar', 'badge', 'sponsor', 'payment',
+        'visa', 'mastercard', '1x1', 'pixel', 'tracking', 'widget', 'arrow',
+        'button', 'dummy', 'transparent', 'placeholder', 'blank', 'spacer',
+      ]
+
+      const isEventImage = (imgUrl: string, tag?: string): boolean => {
+        const lower = imgUrl.toLowerCase()
+        if (skipPatterns.some(p => lower.includes(p))) return false
+        const sizeInUrl = lower.match(/[-_](\d+)x(\d+)/)
+        if (sizeInUrl && parseInt(sizeInUrl[1]) <= 200 && parseInt(sizeInUrl[2]) <= 200) return false
+        if (tag) {
+          const wMatch = tag.match(/width=["']?(\d+)/i)
+          const hMatch = tag.match(/height=["']?(\d+)/i)
+          if (wMatch && parseInt(wMatch[1]) < 200) return false
+          if (hMatch && parseInt(hMatch[1]) < 200) return false
+        }
+        return true
+      }
+
+      // Priority 1: og:image / twitter:image
+      const metaImages: string[] = []
+      for (const m of html.matchAll(/(?:property|name)=["']og:image(?::url)?["']\s+content=["']([^"']+)["']/gi)) metaImages.push(m[1])
+      for (const m of html.matchAll(/content=["']([^"']+)["']\s+(?:property|name)=["']og:image(?::url)?["']/gi)) metaImages.push(m[1])
+      for (const m of html.matchAll(/(?:property|name)=["']twitter:image["']\s+content=["']([^"']+)["']/gi)) metaImages.push(m[1])
+      for (const m of html.matchAll(/content=["']([^"']+)["']\s+(?:property|name)=["']twitter:image["']/gi)) metaImages.push(m[1])
+
+      // Priority 2: Large img tags
+      const contentImages: string[] = []
+      for (const m of html.matchAll(/<img[^>]+src=["']([^"']+\.(?:jpg|jpeg|png|webp)(?:\?[^"']*)?)["'][^>]*>/gi)) {
+        if (isEventImage(m[1], m[0])) contentImages.push(m[1])
+      }
+
+      // Priority 3: <source> srcset
+      for (const m of html.matchAll(/<source[^>]+srcset=["']([^"',\s]+\.(?:jpg|jpeg|png|webp)(?:\?[^"',\s]*)?)/gi)) {
+        if (isEventImage(m[1], m[0])) contentImages.push(m[1])
+      }
+
+      // Priority 4: Background images
+      for (const m of html.matchAll(/background(?:-image)?:\s*url\(["']?([^"')]+\.(?:jpg|jpeg|png|webp)(?:\?[^"')]*)?)/gi)) {
+        if (isEventImage(m[1])) contentImages.push(m[1])
+      }
+
+      // Resolve relative URLs and deduplicate
+      const baseUrl = new URL(url)
+      const seen = new Set<string>()
+      const resolved: string[] = []
+      for (const img of [...metaImages, ...contentImages]) {
+        try {
+          const full = new URL(img, baseUrl).href
+          if (full.startsWith('data:') || full.endsWith('.svg')) continue
+          const key = full.split('?')[0]
+          if (seen.has(key)) continue
+          seen.add(key)
+          resolved.push(full)
+        } catch { continue }
+      }
+
+      return resolved
+    } catch {
+      return []
+    }
+  }
+
+  /**
    * Calculate date range for discovery (next 6 months)
    */
   private getDateRange() {
@@ -335,6 +457,15 @@ Return a JSON object. Use null for unknown fields, empty array [] for unknown in
         }
       }
 
+      // Source images from the event website, falling back to Unsplash
+      console.log(`Sourcing images for: ${event.name}`)
+      const images = await this.sourceImages(
+        event.eventType,
+        event.city,
+        event.website,
+        enrichedDetails.registrationUrl || event.registrationUrl,
+      )
+
       // Create event
       const created = await prisma.event.create({
         data: {
@@ -354,6 +485,7 @@ Return a JSON object. Use null for unknown fields, empty array [] for unknown in
           organizer: event.organizer || enrichedDetails.organizer,
           organizerWebsite: enrichedDetails.organizerWebsite || event.organizerWebsite,
           distances: event.distances || [],
+          images: images.length > 0 ? images : undefined,
           price,
           courseTerrain: enrichedDetails.courseTerrain,
           courseSurface: enrichedDetails.courseSurface,

@@ -105,11 +105,8 @@ function PortableText({ blocks }: { blocks: any[] }) {
 export default function EventContent({ event, eventType }: EventContentProps) {
   const colors = useEventColors(eventType)
 
-  // Build tabs array dynamically
+  // Build tabs array dynamically (highlights shown in Overview, not as separate tab)
   const tabs = ['Overview']
-  if (event.highlights && event.highlights.length > 0) {
-    tabs.push('Highlights')
-  }
   if (event.requirements && event.requirements.length > 0) {
     tabs.push('Requirements')
   }
@@ -183,25 +180,6 @@ export default function EventContent({ event, eventType }: EventContentProps) {
                 />
               </div>
             </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'Highlights' && (
-        <div>
-          {event.highlights && event.highlights.length > 0 ? (
-            <ul className="space-y-3">
-              {event.highlights.map((highlight: string, i: number) => (
-                <li key={i} className="flex items-start gap-3 text-white/60 text-base leading-relaxed">
-                  <span className="mt-1 text-lg" style={{ color: colors.text }}>
-                    ✓
-                  </span>
-                  <span>{highlight}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-white/40">Event highlights coming soon.</p>
           )}
         </div>
       )}
