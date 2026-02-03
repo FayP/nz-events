@@ -56,6 +56,7 @@ export interface Event {
   source: EventSource;
   seoTitle?: string;
   seoDescription?: string;
+  previousSlugs: string[];
   tags: string[];
   createdAt: Date;
   updatedAt: Date;
@@ -63,6 +64,7 @@ export interface Event {
 
 export interface SearchResult {
   id: string;
+  slug: string;
   name: string;
   description?: string;
   eventType: EventType;

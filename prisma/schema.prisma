@@ -68,6 +68,7 @@ model Event {
   source                 EventSource   @default(MANUAL)
   seoTitle               String?
   seoDescription         String?
+  previousSlugs          String[]      @default([])
   tags                   String[]      @default([])
   indexedInElasticsearch Boolean       @default(false)
   createdAt              DateTime      @default(now())

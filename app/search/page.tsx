@@ -115,7 +115,7 @@ export default function SearchPage() {
               {results.results.map((event) => (
                 <Link
                   key={event.id}
-                  href={`/events/${event.id}`}
+                  href={`/events/${event.slug}`}
                   className="block rounded-lg border border-zinc-200 bg-white p-6 transition-shadow hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900"
                 >
                   <h2 className="mb-2 text-xl font-semibold text-black dark:text-zinc-50">

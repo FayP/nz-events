@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { indexEvent } from '@/lib/elasticsearch'
+import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slugify'
 
 export async function GET(request: Request) {
   try {
@@ -82,13 +83,8 @@ export async function POST(request: Request) {
       tags,
     } = body
 
-    // Generate slug if not provided
-    const eventSlug =
-      slug ||
-      name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '')
+    // Generate clean slug if not provided
+    const eventSlug = slug || await ensureUniqueSlug(generateSlug(name), prisma)
 
     const event = await prisma.event.create({
       data: {

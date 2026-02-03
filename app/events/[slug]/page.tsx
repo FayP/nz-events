@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { getEventBySlug } from "@/lib/cms";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
@@ -45,8 +45,17 @@ export default async function EventPage({ params }: PageProps) {
     where: { slug },
   });
 
-  // If no event in either place, return 404
+  // If no event in either place, check if this is an old slug that was migrated
   if (!event && !dbEvent) {
+    const redirectEvent = await prisma.event.findFirst({
+      where: { previousSlugs: { has: slug } },
+      select: { slug: true },
+    });
+
+    if (redirectEvent) {
+      permanentRedirect(`/events/${redirectEvent.slug}`);
+    }
+
     notFound();
   }
 

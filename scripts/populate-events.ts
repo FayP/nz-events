@@ -142,11 +142,12 @@ async function saveEvent(event: DiscoveredEvent): Promise<boolean> {
       return false
     }
 
-    // Generate slug
+    // Generate clean slug
     const slug = event.name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
+    // Note: slug is used directly below (no timestamp)
 
       // Generate content if description is missing
       const contentGenerator = new ContentGeneratorService()
@@ -180,7 +181,7 @@ async function saveEvent(event: DiscoveredEvent): Promise<boolean> {
     const created = await prisma.event.create({
       data: {
         name: event.name,
-        slug: `${slug}-${Date.now()}`,
+        slug: slug,
         description: description || undefined,
         eventType: event.eventType,
         startDate: new Date(event.startDate),

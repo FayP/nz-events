@@ -56,25 +56,27 @@ async function discoverEvents(eventType) {
   return data.events || [];
 }
 
-async function eventExists(event) {
-  const existing = await prisma.event.findFirst({
+function generateSlug(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+async function findExistingEvent(event) {
+  const slug = generateSlug(event.name);
+
+  // Primary match: exact slug (same event, possibly different year)
+  const bySlug = await prisma.event.findUnique({ where: { slug } });
+  if (bySlug) return bySlug;
+
+  // Secondary match: fuzzy name + city
+  const byName = await prisma.event.findFirst({
     where: {
-      OR: [
-        {
-          name: { contains: event.name, mode: 'insensitive' },
-          startDate: new Date(event.startDate),
-        },
-        {
-          name: { contains: event.name.split(' ')[0], mode: 'insensitive' },
-          startDate: {
-            gte: new Date(new Date(event.startDate).getTime() - 7 * 24 * 60 * 60 * 1000),
-            lte: new Date(new Date(event.startDate).getTime() + 7 * 24 * 60 * 60 * 1000),
-          },
-        },
-      ],
+      name: { contains: event.name, mode: 'insensitive' },
+      city: { equals: event.city, mode: 'insensitive' },
     },
   });
-  return !!existing;
+  if (byName) return byName;
+
+  return null;
 }
 
 // Known NZ coordinates
@@ -215,13 +217,51 @@ async function sourceImages(eventType, city, website, registrationUrl) {
 
 async function saveEvent(event) {
   try {
-    if (await eventExists(event)) {
-      console.log('  Skipping (exists): ' + event.name);
-      return false;
+    const existing = await findExistingEvent(event);
+
+    if (existing) {
+      // UPDATE existing event with new year's data
+      const updateData = {
+        startDate: new Date(event.startDate),
+        endDate: event.endDate ? new Date(event.endDate) : null,
+      };
+
+      // Only overwrite if new data is more complete
+      if (event.description && event.description.length > 50 && (!existing.description || existing.description.length < event.description.length)) {
+        updateData.description = event.description;
+      }
+      if (event.website && !existing.website) updateData.website = event.website;
+      if (event.distances && event.distances.length && (!existing.distances || existing.distances.length === 0)) {
+        updateData.distances = event.distances;
+      }
+
+      // Source images if existing event has none
+      if (!existing.images) {
+        console.log('  Sourcing images for: ' + event.name);
+        const images = await sourceImages(event.eventType, event.city, event.website, event.registrationUrl);
+        if (images.length > 0) updateData.images = images;
+      }
+
+      await prisma.event.update({
+        where: { id: existing.id },
+        data: updateData,
+      });
+
+      console.log('  Updated: ' + event.name + ' (new date: ' + event.startDate + ')');
+      return true;
     }
 
+    // CREATE new event
     const coords = getCoordinates(event.city);
-    const slug = event.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now();
+    const baseSlug = generateSlug(event.name);
+    let slug = baseSlug;
+    let counter = 2;
+    while (true) {
+      const ex = await prisma.event.findUnique({ where: { slug }, select: { id: true } });
+      if (!ex) break;
+      slug = baseSlug + '-' + counter;
+      counter++;
+    }
 
     // Source images from event website, falling back to Unsplash
     console.log('  Sourcing images for: ' + event.name);

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { indexEvent, initializeElasticsearchIndex } from '@/lib/elasticsearch'
 import { ContentGeneratorService } from './content-generator'
 import { smartGeocode } from './geocoding'
+import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slugify'
 import { Event } from '@/types'
 
 export interface DiscoveredEvent {
@@ -358,43 +359,81 @@ Return a JSON object. Use null for unknown fields, empty array [] for unknown in
   }
 
   /**
-   * Check if an event already exists in the database
+   * Find an existing event that matches this discovered event.
+   * Matches by slug (canonical name) first, then by fuzzy name + city.
+   * Returns the matching event or null.
    */
-  async eventExists(event: DiscoveredEvent): Promise<boolean> {
-    const existing = await prisma.event.findFirst({
+  async findExistingEvent(event: DiscoveredEvent) {
+    const slug = generateSlug(event.name)
+
+    // Primary match: exact slug (same event, possibly different year)
+    const bySlug = await prisma.event.findUnique({ where: { slug } })
+    if (bySlug) return bySlug
+
+    // Secondary match: fuzzy name + city
+    const byName = await prisma.event.findFirst({
       where: {
-        OR: [
-          // Match by name and date
-          {
-            name: { contains: event.name, mode: 'insensitive' },
-            startDate: new Date(event.startDate),
-          },
-          // Match by similar name within 7 days
-          {
-            name: { contains: event.name.split(' ')[0], mode: 'insensitive' },
-            startDate: {
-              gte: new Date(new Date(event.startDate).getTime() - 7 * 24 * 60 * 60 * 1000),
-              lte: new Date(new Date(event.startDate).getTime() + 7 * 24 * 60 * 60 * 1000),
-            },
-          },
-        ],
+        name: { contains: event.name, mode: 'insensitive' },
+        city: { equals: event.city, mode: 'insensitive' },
       },
     })
+    if (byName) return byName
 
-    return !!existing
+    return null
   }
 
   /**
-   * Save a discovered event to the database
+   * Save or update a discovered event in the database.
+   * If the event already exists (matched by slug or name+city), updates it
+   * with new dates and any improved data. Otherwise creates a new event.
    */
   async saveEvent(event: DiscoveredEvent, enrich: boolean = true): Promise<boolean> {
     try {
-      // Check for duplicates
-      if (await this.eventExists(event)) {
-        console.log(`Skipping existing event: ${event.name}`)
-        return false
+      const existing = await this.findExistingEvent(event)
+
+      if (existing) {
+        // UPDATE existing event with new year's data
+        console.log(`Updating existing event: ${event.name} (${existing.slug})`)
+
+        // Source new images if the existing event doesn't have any
+        let images = existing.images as string[] | null
+        if (!images || images.length === 0) {
+          console.log(`Sourcing images for: ${event.name}`)
+          const scraped = await this.sourceImages(
+            event.eventType,
+            event.city,
+            event.website,
+            event.registrationUrl,
+          )
+          if (scraped.length > 0) images = scraped
+        }
+
+        const updateData: Record<string, any> = {
+          startDate: new Date(event.startDate),
+          endDate: event.endDate ? new Date(event.endDate) : null,
+        }
+
+        // Only overwrite fields if the new data is more complete
+        if (event.description && event.description.length > 50 && (!existing.description || existing.description.length < event.description.length)) {
+          updateData.description = event.description
+        }
+        if (event.website && !existing.website) updateData.website = event.website
+        if (event.distances?.length && (!existing.distances || (existing.distances as any[]).length === 0)) {
+          updateData.distances = event.distances
+        }
+        if (images && images !== existing.images) updateData.images = images
+
+        const updated = await prisma.event.update({
+          where: { id: existing.id },
+          data: updateData,
+        })
+
+        await indexEvent(updated)
+        console.log(`Updated: ${event.name} (new date: ${event.startDate})`)
+        return true
       }
 
+      // CREATE new event
       // Enrich with additional details
       let enrichedDetails: EnrichedEventDetails = {}
       if (enrich) {
@@ -414,12 +453,8 @@ Return a JSON object. Use null for unknown fields, empty array [] for unknown in
         }
       }
 
-      // Generate slug
-      const baseSlug = event.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '')
-      const slug = `${baseSlug}-${Date.now()}`
+      // Generate clean, SEO-friendly slug
+      const slug = await ensureUniqueSlug(generateSlug(event.name), prisma)
 
       // Generate content
       console.log(`Generating content for: ${event.name}`)
@@ -492,7 +527,7 @@ Return a JSON object. Use null for unknown fields, empty array [] for unknown in
           cutoffTime: enrichedDetails.cutoffTime,
           inclusions: enrichedDetails.inclusions || [],
           source: 'AI_GENERATED',
-          status: 'PUBLISHED', // Auto-publish discovered events
+          status: 'PUBLISHED',
           seoTitle: seo.title,
           seoDescription: seo.description,
           tags,
