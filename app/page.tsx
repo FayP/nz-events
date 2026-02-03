@@ -503,6 +503,35 @@ function HomeContent() {
         )}
       </div>
 
+      {/* Browse by Distance */}
+      <div className="mx-auto max-w-7xl px-4 pb-16">
+        <div className="border-t border-border/40 pt-12">
+          <h2 className="mb-6 text-2xl font-bold text-foreground tracking-tight">
+            Browse by Distance
+          </h2>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/races/half-marathons"
+              className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-border text-foreground hover:bg-muted/50 hover:border-border transition-all duration-200"
+            >
+              Half Marathon
+            </Link>
+            <span className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-border/40 text-muted-foreground cursor-default">
+              Marathon
+            </span>
+            <span className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-border/40 text-muted-foreground cursor-default">
+              10K
+            </span>
+            <span className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-border/40 text-muted-foreground cursor-default">
+              5K
+            </span>
+            <span className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-border/40 text-muted-foreground cursor-default">
+              Ultra
+            </span>
+          </div>
+        </div>
+      </div>
+
       <Footer />
     </div>
   )
