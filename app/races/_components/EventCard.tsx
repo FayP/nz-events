@@ -11,7 +11,7 @@ interface EventCardProps {
     startDate: Date;
     location: string;
     city: string;
-    distances: unknown;
+    distances?: unknown;
     featured?: boolean;
   };
 }
@@ -79,18 +79,16 @@ export function EventCard({ event }: EventCardProps) {
       {/* Distances and Arrow */}
       <div className="flex items-end justify-between">
         <div className="flex flex-wrap gap-3">
-          {event.distances &&
-            Array.isArray(event.distances) &&
-            (event.distances as string[])
-              .slice(0, 3)
-              .map((dist, i) => (
-                <span
-                  key={i}
-                  className="text-base font-medium text-foreground/90"
-                >
-                  {dist}
-                </span>
-              ))}
+          {(Array.isArray(event.distances) ? (event.distances as string[]) : [])
+            .slice(0, 3)
+            .map((dist, i) => (
+              <span
+                key={i}
+                className="text-base font-medium text-foreground/90"
+              >
+                {dist}
+              </span>
+            ))}
         </div>
         <div className="flex items-center justify-center rounded-full w-14 h-14 shrink-0 transition-all duration-300 bg-[var(--event-running)]/15 border border-[var(--event-running)]/30 group-hover:bg-[var(--event-running)]/25">
           <ArrowRight className="h-5 w-5 transition-all duration-300 group-hover:translate-x-1 text-[var(--event-running)]" />
