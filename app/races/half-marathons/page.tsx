@@ -190,6 +190,61 @@ export default async function HalfMarathonsPage() {
         </div>
       </div>
 
+      {/* FAQ Section */}
+      <div className="mx-auto max-w-7xl px-4 pb-16">
+        <div className="border-t border-border/40 pt-10">
+          <h2 className="mb-8 text-3xl font-bold text-foreground tracking-tight">
+            Half Marathon FAQ
+          </h2>
+          <div className="max-w-3xl space-y-8">
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">
+                How long does it take to train for a half marathon?
+              </h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                Most training plans run between 10 and 16 weeks, depending on your
+                starting fitness. If you can comfortably run 5&ndash;10 kilometres,
+                a 12-week plan is a common choice. Complete beginners should allow
+                closer to 16&ndash;20 weeks to build a safe base. The key is
+                consistency&mdash;three to four runs per week with one longer run on
+                the weekend&mdash;rather than high mileage. Many New Zealand running
+                clubs offer structured half marathon programmes that take the
+                guesswork out of planning.
+              </p>
+            </div>
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">
+                What&apos;s the fastest half marathon course in New Zealand?
+              </h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                The Kerikeri Half Marathon is widely regarded as the fastest course
+                in the country thanks to its net-downhill profile, dropping around
+                200 metres over 21.1 kilometres through Northland orchards and
+                countryside. The Christchurch Marathon half is another fast option
+                with its flat, sea-level course. Auckland&apos;s half marathon also
+                attracts PB-chasers, particularly when conditions are cool. If
+                you&apos;re chasing a time, look for courses described as flat or
+                downhill and avoid trail or multi-terrain events.
+              </p>
+            </div>
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">
+                Do I need to qualify for a half marathon?
+              </h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                No. Almost every half marathon in New Zealand is open-entry&mdash;you
+                simply register and pay the entry fee. There are no qualifying times
+                or previous race requirements. Some popular events like the Auckland
+                Marathon and Queenstown International Marathon can sell out, so
+                entering early is recommended. Most events also have generous cutoff
+                times (typically 3&ndash;3.5 hours), making them welcoming for
+                walkers and run-walkers as well as competitive runners.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Structured Data: BreadcrumbList */}
       <script
         type="application/ld+json"
@@ -265,6 +320,43 @@ export default async function HalfMarathonsPage() {
                 }),
               },
             })),
+          }),
+        }}
+      />
+
+      {/* Structured Data: FAQPage */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: [
+              {
+                "@type": "Question",
+                name: "How long does it take to train for a half marathon?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Most training plans run between 10 and 16 weeks, depending on your starting fitness. If you can comfortably run 5–10 kilometres, a 12-week plan is a common choice. Complete beginners should allow closer to 16–20 weeks to build a safe base.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "What's the fastest half marathon course in New Zealand?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "The Kerikeri Half Marathon is widely regarded as the fastest course in the country thanks to its net-downhill profile, dropping around 200 metres over 21.1 kilometres. The Christchurch Marathon half and Auckland half marathon are also fast, flat options.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Do I need to qualify for a half marathon?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "No. Almost every half marathon in New Zealand is open-entry — you simply register and pay the entry fee. There are no qualifying times or previous race requirements. Some popular events can sell out, so entering early is recommended.",
+                },
+              },
+            ],
           }),
         }}
       />
