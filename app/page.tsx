@@ -516,18 +516,30 @@ function HomeContent() {
             >
               Half Marathon
             </Link>
-            <span className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-border/40 text-muted-foreground cursor-default">
+            <Link
+              href="/races/marathons"
+              className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-border text-foreground hover:bg-muted/50 hover:border-border transition-all duration-200"
+            >
               Marathon
-            </span>
-            <span className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-border/40 text-muted-foreground cursor-default">
+            </Link>
+            <Link
+              href="/races/10k"
+              className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-border text-foreground hover:bg-muted/50 hover:border-border transition-all duration-200"
+            >
               10K
-            </span>
-            <span className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-border/40 text-muted-foreground cursor-default">
+            </Link>
+            <Link
+              href="/races/5k"
+              className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-border text-foreground hover:bg-muted/50 hover:border-border transition-all duration-200"
+            >
               5K
-            </span>
-            <span className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-border/40 text-muted-foreground cursor-default">
+            </Link>
+            <Link
+              href="/races/ultra-marathons"
+              className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-border text-foreground hover:bg-muted/50 hover:border-border transition-all duration-200"
+            >
               Ultra
-            </span>
+            </Link>
           </div>
         </div>
       </div>

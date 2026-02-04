@@ -48,6 +48,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.8,
     },
+    {
+      url: `${baseUrl}/races/marathons`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/races/10k`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/races/5k`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/races/ultra-marathons`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
   ];
 
   // Dynamic event pages and region pages
@@ -78,37 +102,48 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: event.startDate > new Date() ? 0.9 : 0.6,
       }));
 
-    // Half marathon region pages
-    const halfMarathonPatterns = [
-      "half marathon",
-      "half-marathon",
-      "21km",
-      "21.1km",
-      "21k",
-    ];
-    const halfMarathonRegions = [
-      ...new Set(
-        events
-          .filter(
-            (e) =>
-              e.eventType === "RUNNING" &&
-              e.startDate > new Date() &&
-              e.distances &&
-              Array.isArray(e.distances) &&
-              (e.distances as string[]).some((d) =>
-                halfMarathonPatterns.some((p) => d.toLowerCase().includes(p))
-              )
-          )
-          .map((e) => e.region)
-      ),
+    // Region pages for each distance category
+    const slugify = (s: string) =>
+      s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+    const runningEvents = events.filter(
+      (e) =>
+        e.eventType === "RUNNING" &&
+        e.startDate > new Date() &&
+        e.distances &&
+        Array.isArray(e.distances)
+    );
+
+    const distanceCategories: { path: string; patterns: string[] }[] = [
+      { path: "half-marathons", patterns: ["half marathon", "half-marathon", "21km", "21.1km", "21k"] },
+      { path: "marathons", patterns: ["marathon", "42km", "42.2km", "42k"] },
+      { path: "10k", patterns: ["10km", "10k", "10 km"] },
+      { path: "5k", patterns: ["5km", "5k", "5 km"] },
+      { path: "ultra-marathons", patterns: ["ultra", "50km", "50k", "100km", "100k", "60km", "80km", "100 mile", "160km"] },
     ];
 
-    regionPages = halfMarathonRegions.map((region) => ({
-      url: `${baseUrl}/races/half-marathons/${region.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.7,
-    }));
+    for (const cat of distanceCategories) {
+      const matchingRegions = [
+        ...new Set(
+          runningEvents
+            .filter((e) =>
+              (e.distances as string[]).some((d) =>
+                cat.patterns.some((p) => d.toLowerCase().includes(p))
+              )
+            )
+            .map((e) => e.region)
+        ),
+      ];
+
+      for (const region of matchingRegions) {
+        regionPages.push({
+          url: `${baseUrl}/races/${cat.path}/${slugify(region)}`,
+          lastModified: new Date(),
+          changeFrequency: "weekly" as const,
+          priority: 0.7,
+        });
+      }
+    }
   } catch (error) {
     console.error("Error fetching events for sitemap:", error);
   }
