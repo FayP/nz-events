@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { getEventBadgeVariant, formatEventType } from "@/lib/utils";
-import { Calendar, MapPin, ArrowRight } from "lucide-react";
+import { cn, getEventBadgeVariant, formatEventType } from "@/lib/utils";
+import { Calendar, MapPin, ArrowRight, Star } from "lucide-react";
 
 interface EventCardProps {
   event: {
@@ -12,6 +12,7 @@ interface EventCardProps {
     location: string;
     city: string;
     distances: unknown;
+    featured?: boolean;
   };
 }
 
@@ -19,10 +20,15 @@ export function EventCard({ event }: EventCardProps) {
   return (
     <Link
       href={`/events/${event.slug}`}
-      className="group rounded-2xl bg-card border border-border/40 p-6 transition-all duration-200 ease-out hover:border-border hover:shadow-lg"
+      className={cn(
+        "group rounded-2xl bg-card border p-6 transition-all duration-200 ease-out hover:shadow-lg",
+        event.featured
+          ? "border-amber-500/30 hover:border-amber-500/50 shadow-[0_0_20px_-5px] shadow-amber-500/10"
+          : "border-border/40 hover:border-border"
+      )}
     >
-      {/* Event Type Badge */}
-      <div className="mb-6">
+      {/* Badges */}
+      <div className="mb-6 flex items-center gap-2">
         <span
           className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide ${
             getEventBadgeVariant(event.eventType) === "running"
@@ -37,6 +43,12 @@ export function EventCard({ event }: EventCardProps) {
           <span className="h-1.5 w-1.5 rounded-full bg-white" />
           {formatEventType(event.eventType)}
         </span>
+        {event.featured && (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide bg-amber-500/15 text-amber-400 border border-amber-500/25">
+            <Star className="h-3 w-3 fill-amber-400" />
+            Featured
+          </span>
+        )}
       </div>
 
       {/* Event Title */}

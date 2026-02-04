@@ -5,11 +5,13 @@ import { ChevronRight } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { Footer } from "@/components/Footer";
 import { EventCard } from "../EventCard";
+import { FeaturedEventsSection } from "../FeaturedEventsSection";
 import {
   getHalfMarathonEvents,
   getRegions,
   regionToSlug,
   groupEventsByMonth,
+  getFeaturedEvents,
 } from "../data";
 
 interface PageProps {
@@ -61,6 +63,7 @@ export default async function RegionHalfMarathonsPage({ params }: PageProps) {
   }
 
   const events = allEvents.filter((e) => e.region === regionName);
+  const featuredEvents = getFeaturedEvents(events);
   const monthGroups = groupEventsByMonth(events);
   const baseUrl = "https://gostride.co.nz";
 
@@ -157,6 +160,9 @@ export default async function RegionHalfMarathonsPage({ params }: PageProps) {
             {events.length !== 1 ? "s" : ""} in {regionName}
           </p>
         </div>
+
+        {/* Featured Events */}
+        <FeaturedEventsSection events={featuredEvents} />
       </div>
 
       {/* Events by Month */}

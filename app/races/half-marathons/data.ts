@@ -53,6 +53,10 @@ export function getRegions(events: { region: string }[]): string[] {
 
 export type HalfMarathonEvent = Awaited<ReturnType<typeof getHalfMarathonEvents>>[number];
 
+export function getFeaturedEvents(events: HalfMarathonEvent[]) {
+  return events.filter((e) => e.featured);
+}
+
 /** Group events by month, returning entries in chronological order */
 export function groupEventsByMonth(events: HalfMarathonEvent[]) {
   const groups: { label: string; events: HalfMarathonEvent[] }[] = [];
