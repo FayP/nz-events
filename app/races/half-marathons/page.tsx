@@ -13,6 +13,8 @@ import {
   getFeaturedEvents,
 } from "./data";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata(): Promise<Metadata> {
   const events = await getHalfMarathonEvents();
   const regions = getRegions(events);

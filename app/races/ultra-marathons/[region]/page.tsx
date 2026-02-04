@@ -14,6 +14,8 @@ import {
   getFeaturedEvents,
 } from "../data";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: Promise<{ region: string }> | { region: string };
 }
