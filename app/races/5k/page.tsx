@@ -5,6 +5,7 @@ import { Logo } from "@/components/ui/logo";
 import { Footer } from "@/components/Footer";
 import { EventCard } from "../_components/EventCard";
 import { FeaturedEventsSection } from "../_components/FeaturedEventsSection";
+import { DistanceNav } from "../_components/DistanceNav";
 import {
   get5kEvents,
   getRegions,
@@ -61,46 +62,39 @@ export default async function FiveKPage() {
           </ol>
         </nav>
 
-        <div className="mb-12">
+        <div className="mb-8">
           <div className="mb-4">
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide bg-[var(--event-running)] text-white">
               <span className="h-1.5 w-1.5 rounded-full bg-white" />
               Running
             </span>
           </div>
-          <h1 className="mb-5 text-5xl font-bold text-foreground tracking-tight">
+          <h1 className="mb-4 text-4xl sm:text-5xl font-bold text-foreground tracking-tight">
             5K Races in New Zealand
           </h1>
-          <div className="max-w-3xl text-base leading-relaxed text-muted-foreground space-y-4">
-            <p>
-              The 5K is the perfect entry point into the world of running events. At
-              just over three miles, it&apos;s achievable for almost anyone with a few
-              weeks of preparation, yet fast enough to offer a genuine test for
-              experienced runners chasing a personal best. New Zealand hosts 5K events
-              year-round, from community fun runs to competitive road races.
-            </p>
-            <p>
-              Many 5K races in New Zealand are part of larger multi-distance events,
-              meaning you can sign up for the 5km while friends or family tackle a 10K
-              or half marathon at the same venue. You&apos;ll find options in every major
-              city and many smaller towns, with courses ranging from flat waterfront
-              paths to park and trail loops. Most events welcome walkers and joggers
-              alongside runners.
-            </p>
-          </div>
+          <p className="max-w-3xl text-base leading-relaxed text-muted-foreground">
+            Browse {events.length} upcoming 5km events across New Zealand. The 5K is
+            the perfect entry point&mdash;achievable with a few weeks of preparation,
+            yet a genuine test for experienced runners chasing a PB. Most events
+            welcome walkers and joggers alongside runners.
+          </p>
         </div>
 
-        {regions.length > 0 && (
-          <div className="mb-6 flex flex-wrap items-center gap-2">
-            <span className="text-sm text-muted-foreground">Regions:</span>
-            <span className="px-3 py-1.5 rounded-full text-sm font-medium bg-foreground text-background">All</span>
-            {regions.map((region) => (
-              <Link key={region} href={`/races/5k/${regionToSlug(region)}`} className="px-3 py-1.5 rounded-full text-sm font-medium bg-transparent border border-border text-foreground hover:bg-muted/50 transition-colors">
-                {region}
-              </Link>
-            ))}
-          </div>
-        )}
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <DistanceNav current="5k" />
+
+          {regions.length > 0 && (
+            <nav aria-label="Filter by region" className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-muted-foreground">Region:</span>
+              <span className="px-3 py-1.5 rounded-full text-sm font-medium bg-foreground text-background">All</span>
+              {regions.map((region) => (
+                <Link key={region} href={`/races/5k/${regionToSlug(region)}`} className="px-3 py-1.5 rounded-full text-sm font-medium bg-transparent border border-border text-foreground hover:bg-muted/50 transition-colors">
+                  {region}
+                </Link>
+              ))}
+            </nav>
+          )}
+        </div>
 
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">
@@ -131,20 +125,6 @@ export default async function FiveKPage() {
             ))}
           </div>
         ) : null}
-      </div>
-
-      <div className="mx-auto max-w-7xl px-4 pb-16">
-        <div className="border-t border-border/40 pt-10">
-          <h2 className="mb-4 text-2xl font-bold text-foreground tracking-tight">Explore More Distances</h2>
-          <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
-            Ready to go further? Check out{" "}
-            <Link href="/races/10k" className="text-foreground underline underline-offset-4 hover:no-underline">10K races</Link>{" "}
-            as your next step, or jump straight to a{" "}
-            <Link href="/races/half-marathons" className="text-foreground underline underline-offset-4 hover:no-underline">half marathon</Link>.{" "}
-            Browse{" "}
-            <Link href="/" className="text-foreground underline underline-offset-4 hover:no-underline">all running events in New Zealand</Link>.
-          </p>
-        </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-4 pb-16">

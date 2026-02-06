@@ -5,6 +5,7 @@ import { Logo } from "@/components/ui/logo";
 import { Footer } from "@/components/Footer";
 import { EventCard } from "./EventCard";
 import { FeaturedEventsSection } from "./FeaturedEventsSection";
+import { DistanceNav } from "../_components/DistanceNav";
 import {
   getHalfMarathonEvents,
   getRegions,
@@ -74,55 +75,46 @@ export default async function HalfMarathonsPage() {
         </nav>
 
         {/* Hero Section */}
-        <div className="mb-12">
+        <div className="mb-8">
           <div className="mb-4">
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide bg-[var(--event-running)] text-white">
               <span className="h-1.5 w-1.5 rounded-full bg-white" />
               Running
             </span>
           </div>
-          <h1 className="mb-5 text-5xl font-bold text-foreground tracking-tight">
+          <h1 className="mb-4 text-4xl sm:text-5xl font-bold text-foreground tracking-tight">
             Half Marathon Races in New Zealand
           </h1>
-          <div className="max-w-3xl text-base leading-relaxed text-muted-foreground space-y-4">
-            <p>
-              The half marathon is one of the most popular race distances in New Zealand,
-              offering a genuine endurance challenge without the months-long training
-              commitment of a full marathon. At 21.1 kilometres, it sits in a sweet spot
-              that attracts both experienced runners chasing a personal best and newer
-              runners stepping up from 10K for the first time.
-            </p>
-            <p>
-              New Zealand&apos;s half marathon calendar spans the full length of the country,
-              from the subtropical orchards of Kerikeri&apos;s famously fast downhill course
-              to the alpine scenery of Queenstown and the rugged coastlines of the South
-              Island. Whether you prefer a flat, fast city course through Wellington or
-              Christchurch, a trail run through native bush, or a scenic coastal route
-              with ocean views, there&apos;s a half marathon to match. Most events also offer
-              shorter distances, making them a great option for a group or family entry
-              where everyone races at their own level.
-            </p>
-          </div>
+          <p className="max-w-3xl text-base leading-relaxed text-muted-foreground">
+            Browse {events.length} upcoming 21.1km events across New Zealand, from
+            Kerikeri&apos;s famously fast downhill course to the alpine scenery of
+            Queenstown. The half marathon offers a genuine endurance challenge
+            without the months-long training commitment of a full marathon.
+          </p>
         </div>
 
-        {/* Region filters */}
-        {regions.length > 0 && (
-          <div className="mb-6 flex flex-wrap items-center gap-2">
-            <span className="text-sm text-muted-foreground">Regions:</span>
-            <span className="px-3 py-1.5 rounded-full text-sm font-medium bg-foreground text-background">
-              All
-            </span>
-            {regions.map((region) => (
-              <Link
-                key={region}
-                href={`/races/half-marathons/${regionToSlug(region)}`}
-                className="px-3 py-1.5 rounded-full text-sm font-medium bg-transparent border border-border text-foreground hover:bg-muted/50 transition-colors"
-              >
-                {region}
-              </Link>
-            ))}
-          </div>
-        )}
+        {/* Navigation filters */}
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <DistanceNav current="half-marathon" />
+
+          {regions.length > 0 && (
+            <nav aria-label="Filter by region" className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-muted-foreground">Region:</span>
+              <span className="px-3 py-1.5 rounded-full text-sm font-medium bg-foreground text-background">
+                All
+              </span>
+              {regions.map((region) => (
+                <Link
+                  key={region}
+                  href={`/races/half-marathons/${regionToSlug(region)}`}
+                  className="px-3 py-1.5 rounded-full text-sm font-medium bg-transparent border border-border text-foreground hover:bg-muted/50 transition-colors"
+                >
+                  {region}
+                </Link>
+              ))}
+            </nav>
+          )}
+        </div>
 
         {/* Event Count */}
         <div className="mb-6">
@@ -163,34 +155,6 @@ export default async function HalfMarathonsPage() {
             ))}
           </div>
         ) : null}
-      </div>
-
-      {/* Internal Links */}
-      <div className="mx-auto max-w-7xl px-4 pb-16">
-        <div className="border-t border-border/40 pt-10">
-          <h2 className="mb-4 text-2xl font-bold text-foreground tracking-tight">
-            Explore More Distances
-          </h2>
-          <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
-            Looking for a shorter race? Browse{" "}
-            <Link
-              href="/"
-              className="text-foreground underline underline-offset-4 hover:no-underline"
-            >
-              all running events in New Zealand
-            </Link>{" "}
-            to find 5K and 10K options near you. If you&apos;re ready for a bigger
-            challenge, check out full marathon and ultra marathon events across
-            the country on our{" "}
-            <Link
-              href="/"
-              className="text-foreground underline underline-offset-4 hover:no-underline"
-            >
-              homepage
-            </Link>
-            .
-          </p>
-        </div>
       </div>
 
       {/* FAQ Section */}

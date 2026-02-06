@@ -5,6 +5,7 @@ import { Logo } from "@/components/ui/logo";
 import { Footer } from "@/components/Footer";
 import { EventCard } from "../_components/EventCard";
 import { FeaturedEventsSection } from "../_components/FeaturedEventsSection";
+import { DistanceNav } from "../_components/DistanceNav";
 import {
   get10kEvents,
   getRegions,
@@ -61,45 +62,39 @@ export default async function TenKPage() {
           </ol>
         </nav>
 
-        <div className="mb-12">
+        <div className="mb-8">
           <div className="mb-4">
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide bg-[var(--event-running)] text-white">
               <span className="h-1.5 w-1.5 rounded-full bg-white" />
               Running
             </span>
           </div>
-          <h1 className="mb-5 text-5xl font-bold text-foreground tracking-tight">
+          <h1 className="mb-4 text-4xl sm:text-5xl font-bold text-foreground tracking-tight">
             10K Races in New Zealand
           </h1>
-          <div className="max-w-3xl text-base leading-relaxed text-muted-foreground space-y-4">
-            <p>
-              The 10K is one of the most accessible and rewarding race distances in
-              New Zealand. Long enough to feel like a genuine achievement, short enough
-              to fit into a manageable training plan, it&apos;s the go-to distance for
-              runners bridging the gap between a casual 5K and the commitment of a half
-              marathon.
-            </p>
-            <p>
-              New Zealand&apos;s 10K calendar includes standalone races, fun runs, and 10km
-              options within larger multi-distance events. You&apos;ll find flat city courses
-              in Auckland and Wellington, coastal routes around the Bay of Plenty and
-              Nelson, and trail-based 10Ks through native bush. Many events are family
-              friendly, with 5K and kids&apos; distances running alongside.
-            </p>
-          </div>
+          <p className="max-w-3xl text-base leading-relaxed text-muted-foreground">
+            Browse {events.length} upcoming 10km events across New Zealand. The 10K is
+            the ideal stepping stone between a casual 5K and a half marathon&mdash;long
+            enough to feel like an achievement, short enough for a manageable training
+            plan. Find flat city courses, coastal routes, and trail races.
+          </p>
         </div>
 
-        {regions.length > 0 && (
-          <div className="mb-6 flex flex-wrap items-center gap-2">
-            <span className="text-sm text-muted-foreground">Regions:</span>
-            <span className="px-3 py-1.5 rounded-full text-sm font-medium bg-foreground text-background">All</span>
-            {regions.map((region) => (
-              <Link key={region} href={`/races/10k/${regionToSlug(region)}`} className="px-3 py-1.5 rounded-full text-sm font-medium bg-transparent border border-border text-foreground hover:bg-muted/50 transition-colors">
-                {region}
-              </Link>
-            ))}
-          </div>
-        )}
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <DistanceNav current="10k" />
+
+          {regions.length > 0 && (
+            <nav aria-label="Filter by region" className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-muted-foreground">Region:</span>
+              <span className="px-3 py-1.5 rounded-full text-sm font-medium bg-foreground text-background">All</span>
+              {regions.map((region) => (
+                <Link key={region} href={`/races/10k/${regionToSlug(region)}`} className="px-3 py-1.5 rounded-full text-sm font-medium bg-transparent border border-border text-foreground hover:bg-muted/50 transition-colors">
+                  {region}
+                </Link>
+              ))}
+            </nav>
+          )}
+        </div>
 
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">
@@ -130,20 +125,6 @@ export default async function TenKPage() {
             ))}
           </div>
         ) : null}
-      </div>
-
-      <div className="mx-auto max-w-7xl px-4 pb-16">
-        <div className="border-t border-border/40 pt-10">
-          <h2 className="mb-4 text-2xl font-bold text-foreground tracking-tight">Explore More Distances</h2>
-          <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
-            Just getting started? Try a{" "}
-            <Link href="/races/5k" className="text-foreground underline underline-offset-4 hover:no-underline">5K race</Link>.{" "}
-            Ready for more? Step up to a{" "}
-            <Link href="/races/half-marathons" className="text-foreground underline underline-offset-4 hover:no-underline">half marathon</Link>{" "}
-            or browse{" "}
-            <Link href="/" className="text-foreground underline underline-offset-4 hover:no-underline">all running events in New Zealand</Link>.
-          </p>
-        </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-4 pb-16">

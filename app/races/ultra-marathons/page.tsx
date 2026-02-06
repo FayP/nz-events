@@ -5,6 +5,7 @@ import { Logo } from "@/components/ui/logo";
 import { Footer } from "@/components/Footer";
 import { EventCard } from "../_components/EventCard";
 import { FeaturedEventsSection } from "../_components/FeaturedEventsSection";
+import { DistanceNav } from "../_components/DistanceNav";
 import {
   getUltraEvents,
   getRegions,
@@ -61,47 +62,39 @@ export default async function UltraMarathonsPage() {
           </ol>
         </nav>
 
-        <div className="mb-12">
+        <div className="mb-8">
           <div className="mb-4">
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide bg-[var(--event-running)] text-white">
               <span className="h-1.5 w-1.5 rounded-full bg-white" />
               Running
             </span>
           </div>
-          <h1 className="mb-5 text-5xl font-bold text-foreground tracking-tight">
+          <h1 className="mb-4 text-4xl sm:text-5xl font-bold text-foreground tracking-tight">
             Ultra Marathon Races in New Zealand
           </h1>
-          <div className="max-w-3xl text-base leading-relaxed text-muted-foreground space-y-4">
-            <p>
-              New Zealand is one of the best places in the world for ultra running.
-              Any race beyond the standard 42.2km marathon distance counts as an ultra,
-              and NZ&apos;s options range from 50K trail races through native bush to
-              100-mile mountain crossings that test the limits of endurance. The
-              terrain is the main attraction&mdash;rugged coastline, alpine passes,
-              and pristine backcountry that most runners only see in photos.
-            </p>
-            <p>
-              The Tarawera Ultramarathon near Rotorua, the Kepler Challenge in
-              Fiordland, and the Old Ghost Road Ultra on the West Coast are among
-              the most celebrated trail ultras in the Southern Hemisphere. Whether
-              you&apos;re stepping up from a marathon for the first time with a 50K or
-              targeting a multi-day stage race, New Zealand&apos;s ultra calendar has
-              something to push every limit.
-            </p>
-          </div>
+          <p className="max-w-3xl text-base leading-relaxed text-muted-foreground">
+            Browse {events.length} upcoming ultra events across New Zealand, from 50K
+            trail races through native bush to 100-mile mountain crossings. NZ is one
+            of the world&apos;s best destinations for ultra running&mdash;rugged coastline,
+            alpine passes, and pristine backcountry that most runners only see in photos.
+          </p>
         </div>
 
-        {regions.length > 0 && (
-          <div className="mb-6 flex flex-wrap items-center gap-2">
-            <span className="text-sm text-muted-foreground">Regions:</span>
-            <span className="px-3 py-1.5 rounded-full text-sm font-medium bg-foreground text-background">All</span>
-            {regions.map((region) => (
-              <Link key={region} href={`/races/ultra-marathons/${regionToSlug(region)}`} className="px-3 py-1.5 rounded-full text-sm font-medium bg-transparent border border-border text-foreground hover:bg-muted/50 transition-colors">
-                {region}
-              </Link>
-            ))}
-          </div>
-        )}
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <DistanceNav current="ultra" />
+
+          {regions.length > 0 && (
+            <nav aria-label="Filter by region" className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-muted-foreground">Region:</span>
+              <span className="px-3 py-1.5 rounded-full text-sm font-medium bg-foreground text-background">All</span>
+              {regions.map((region) => (
+                <Link key={region} href={`/races/ultra-marathons/${regionToSlug(region)}`} className="px-3 py-1.5 rounded-full text-sm font-medium bg-transparent border border-border text-foreground hover:bg-muted/50 transition-colors">
+                  {region}
+                </Link>
+              ))}
+            </nav>
+          )}
+        </div>
 
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">
@@ -132,20 +125,6 @@ export default async function UltraMarathonsPage() {
             ))}
           </div>
         ) : null}
-      </div>
-
-      <div className="mx-auto max-w-7xl px-4 pb-16">
-        <div className="border-t border-border/40 pt-10">
-          <h2 className="mb-4 text-2xl font-bold text-foreground tracking-tight">Explore More Distances</h2>
-          <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
-            Building towards an ultra? Start with a{" "}
-            <Link href="/races/marathons" className="text-foreground underline underline-offset-4 hover:no-underline">marathon</Link>{" "}
-            or a{" "}
-            <Link href="/races/half-marathons" className="text-foreground underline underline-offset-4 hover:no-underline">half marathon</Link>{" "}
-            to build your endurance base. Browse{" "}
-            <Link href="/" className="text-foreground underline underline-offset-4 hover:no-underline">all running events in New Zealand</Link>.
-          </p>
-        </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-4 pb-16">

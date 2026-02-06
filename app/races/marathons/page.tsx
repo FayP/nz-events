@@ -5,6 +5,7 @@ import { Logo } from "@/components/ui/logo";
 import { Footer } from "@/components/Footer";
 import { EventCard } from "../_components/EventCard";
 import { FeaturedEventsSection } from "../_components/FeaturedEventsSection";
+import { DistanceNav } from "../_components/DistanceNav";
 import {
   getMarathonEvents,
   getRegions,
@@ -63,46 +64,40 @@ export default async function MarathonsPage() {
           </ol>
         </nav>
 
-        <div className="mb-12">
+        <div className="mb-8">
           <div className="mb-4">
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide bg-[var(--event-running)] text-white">
               <span className="h-1.5 w-1.5 rounded-full bg-white" />
               Running
             </span>
           </div>
-          <h1 className="mb-5 text-5xl font-bold text-foreground tracking-tight">
+          <h1 className="mb-4 text-4xl sm:text-5xl font-bold text-foreground tracking-tight">
             Marathon Races in New Zealand
           </h1>
-          <div className="max-w-3xl text-base leading-relaxed text-muted-foreground space-y-4">
-            <p>
-              Running a marathon in New Zealand means 42.2 kilometres through some of the
-              most dramatic scenery in the world. From the urban energy of the Auckland
-              Marathon to the alpine backdrop of the Queenstown International Marathon,
-              there&apos;s a course for every kind of runner&mdash;whether you&apos;re chasing a
-              Boston qualifier or ticking off a bucket-list finish line.
-            </p>
-            <p>
-              New Zealand&apos;s marathon calendar offers flat, fast city courses alongside
-              trail and multi-terrain options in places like Rotorua, Christchurch, and
-              Hawke&apos;s Bay. Most marathon events also include shorter distances like the
-              half marathon and 10K, so friends and family can race on the same day.
-              With mild autumn and spring conditions, NZ marathons are well-suited to
-              strong performances and memorable experiences alike.
-            </p>
-          </div>
+          <p className="max-w-3xl text-base leading-relaxed text-muted-foreground">
+            Browse {events.length} upcoming 42.2km events across New Zealand, from the
+            harbour bridge crossing at the Auckland Marathon to the alpine scenery of
+            Queenstown. The marathon offers flat city courses, trail options, and
+            world-class finish lines for runners chasing a Boston qualifier or a
+            bucket-list experience.
+          </p>
         </div>
 
-        {regions.length > 0 && (
-          <div className="mb-6 flex flex-wrap items-center gap-2">
-            <span className="text-sm text-muted-foreground">Regions:</span>
-            <span className="px-3 py-1.5 rounded-full text-sm font-medium bg-foreground text-background">All</span>
-            {regions.map((region) => (
-              <Link key={region} href={`/races/marathons/${regionToSlug(region)}`} className="px-3 py-1.5 rounded-full text-sm font-medium bg-transparent border border-border text-foreground hover:bg-muted/50 transition-colors">
-                {region}
-              </Link>
-            ))}
-          </div>
-        )}
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <DistanceNav current="marathon" />
+
+          {regions.length > 0 && (
+            <nav aria-label="Filter by region" className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-muted-foreground">Region:</span>
+              <span className="px-3 py-1.5 rounded-full text-sm font-medium bg-foreground text-background">All</span>
+              {regions.map((region) => (
+                <Link key={region} href={`/races/marathons/${regionToSlug(region)}`} className="px-3 py-1.5 rounded-full text-sm font-medium bg-transparent border border-border text-foreground hover:bg-muted/50 transition-colors">
+                  {region}
+                </Link>
+              ))}
+            </nav>
+          )}
+        </div>
 
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">
@@ -133,19 +128,6 @@ export default async function MarathonsPage() {
             ))}
           </div>
         ) : null}
-      </div>
-
-      <div className="mx-auto max-w-7xl px-4 pb-16">
-        <div className="border-t border-border/40 pt-10">
-          <h2 className="mb-4 text-2xl font-bold text-foreground tracking-tight">Explore More Distances</h2>
-          <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
-            Not ready for the full 42.2km? Browse{" "}
-            <Link href="/races/half-marathons" className="text-foreground underline underline-offset-4 hover:no-underline">half marathon races</Link>{" "}
-            for a shorter endurance challenge, or check out{" "}
-            <Link href="/races/ultra-marathons" className="text-foreground underline underline-offset-4 hover:no-underline">ultra marathon events</Link>{" "}
-            if you want to go beyond.
-          </p>
-        </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-4 pb-16">
