@@ -391,6 +391,41 @@ function HomeContent() {
               ))}
             </div>
           )}
+
+          {/* Browse by Distance - Quick Links */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/30">
+            <span className="text-sm text-muted-foreground">Browse races:</span>
+            <Link
+              href="/races/5k"
+              className="px-3 py-1.5 rounded-full text-sm font-medium bg-transparent border border-border/60 text-foreground/80 hover:bg-muted/50 hover:border-border hover:text-foreground transition-all duration-200"
+            >
+              5K
+            </Link>
+            <Link
+              href="/races/10k"
+              className="px-3 py-1.5 rounded-full text-sm font-medium bg-transparent border border-border/60 text-foreground/80 hover:bg-muted/50 hover:border-border hover:text-foreground transition-all duration-200"
+            >
+              10K
+            </Link>
+            <Link
+              href="/races/half-marathons"
+              className="px-3 py-1.5 rounded-full text-sm font-medium bg-transparent border border-border/60 text-foreground/80 hover:bg-muted/50 hover:border-border hover:text-foreground transition-all duration-200"
+            >
+              Half Marathon
+            </Link>
+            <Link
+              href="/races/marathons"
+              className="px-3 py-1.5 rounded-full text-sm font-medium bg-transparent border border-border/60 text-foreground/80 hover:bg-muted/50 hover:border-border hover:text-foreground transition-all duration-200"
+            >
+              Marathon
+            </Link>
+            <Link
+              href="/races/ultra-marathons"
+              className="px-3 py-1.5 rounded-full text-sm font-medium bg-transparent border border-border/60 text-foreground/80 hover:bg-muted/50 hover:border-border hover:text-foreground transition-all duration-200"
+            >
+              Ultra
+            </Link>
+          </div>
         </div>
 
         {/* Event Count */}
@@ -501,47 +536,6 @@ function HomeContent() {
             ))}
           </div>
         )}
-      </div>
-
-      {/* Browse by Distance */}
-      <div className="mx-auto max-w-7xl px-4 pb-16">
-        <div className="border-t border-border/40 pt-12">
-          <h2 className="mb-6 text-2xl font-bold text-foreground tracking-tight">
-            Browse by Distance
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/races/half-marathons"
-              className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-border text-foreground hover:bg-muted/50 hover:border-border transition-all duration-200"
-            >
-              Half Marathon
-            </Link>
-            <Link
-              href="/races/marathons"
-              className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-border text-foreground hover:bg-muted/50 hover:border-border transition-all duration-200"
-            >
-              Marathon
-            </Link>
-            <Link
-              href="/races/10k"
-              className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-border text-foreground hover:bg-muted/50 hover:border-border transition-all duration-200"
-            >
-              10K
-            </Link>
-            <Link
-              href="/races/5k"
-              className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-border text-foreground hover:bg-muted/50 hover:border-border transition-all duration-200"
-            >
-              5K
-            </Link>
-            <Link
-              href="/races/ultra-marathons"
-              className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-border text-foreground hover:bg-muted/50 hover:border-border transition-all duration-200"
-            >
-              Ultra
-            </Link>
-          </div>
-        </div>
       </div>
 
       <Footer />
