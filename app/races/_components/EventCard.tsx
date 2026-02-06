@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cn, getEventBadgeVariant, formatEventType } from "@/lib/utils";
+import { normalizeDistanceLabel } from "@/lib/races";
 import { Calendar, MapPin, ArrowRight, Star } from "lucide-react";
 
 interface EventCardProps {
@@ -86,7 +87,7 @@ export function EventCard({ event }: EventCardProps) {
                 key={i}
                 className="text-base font-medium text-foreground/90"
               >
-                {dist}
+                {normalizeDistanceLabel(dist)}
               </span>
             ))}
         </div>

@@ -12,6 +12,7 @@ import {
   regionToSlug,
   groupEventsByMonth,
   getFeaturedEvents,
+  getRegionIntroCopy,
 } from "../data";
 
 export const dynamic = "force-dynamic";
@@ -66,8 +67,10 @@ export default async function RegionHalfMarathonsPage({ params }: PageProps) {
 
   const events = allEvents.filter((e) => e.region === regionName);
   const featuredEvents = getFeaturedEvents(events);
-  const monthGroups = groupEventsByMonth(events);
+  const featuredIds = new Set(featuredEvents.map((e) => e.id));
+  const monthGroups = groupEventsByMonth(events.filter((e) => !featuredIds.has(e.id)));
   const baseUrl = "https://gostride.co.nz";
+  const regionIntro = getRegionIntroCopy(regionName);
 
   return (
     <div className="min-h-screen bg-background">
@@ -114,19 +117,32 @@ export default async function RegionHalfMarathonsPage({ params }: PageProps) {
             </span>
           </div>
           <h1 className="mb-5 text-5xl font-bold text-foreground tracking-tight">
-            Half Marathons in {regionName}
+            Half Marathon Races in {regionName}
           </h1>
-          <p className="max-w-3xl text-base leading-relaxed text-muted-foreground">
-            Upcoming half marathon races in the {regionName} region of New Zealand.
-            Browse 21.1km events below, or explore{" "}
-            <Link
-              href="/races/half-marathons"
-              className="text-foreground underline underline-offset-4 hover:no-underline"
-            >
-              all half marathons across New Zealand
-            </Link>
-            .
-          </p>
+          <div className="max-w-3xl text-base leading-relaxed text-muted-foreground space-y-4">
+            {regionIntro ? (
+              <p>{regionIntro}</p>
+            ) : (
+              <p>
+                Upcoming half marathon races in the {regionName} region of New
+                Zealand. The 21.1km half marathon is one of NZ&apos;s most popular
+                race distances, offering a genuine endurance challenge that suits
+                both experienced runners chasing a personal best and newcomers
+                stepping up from 10K for the first time.
+              </p>
+            )}
+            <p>
+              Browse events below with dates, distances, and registration details,
+              or explore{" "}
+              <Link
+                href="/races/half-marathons"
+                className="text-foreground underline underline-offset-4 hover:no-underline"
+              >
+                all half marathons across New Zealand
+              </Link>
+              .
+            </p>
+          </div>
         </div>
 
         {/* Region filters */}
@@ -182,7 +198,7 @@ export default async function RegionHalfMarathonsPage({ params }: PageProps) {
               or check back soon.
             </p>
           </div>
-        ) : (
+        ) : monthGroups.length > 0 ? (
           <div className="space-y-12">
             <h2 className="text-3xl font-bold text-foreground tracking-tight">
               Upcoming Half Marathons in {regionName}
@@ -200,7 +216,7 @@ export default async function RegionHalfMarathonsPage({ params }: PageProps) {
               </section>
             ))}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Internal Links */}
@@ -227,6 +243,33 @@ export default async function RegionHalfMarathonsPage({ params }: PageProps) {
             </Link>
             .
           </p>
+        </div>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="mx-auto max-w-7xl px-4 pb-16">
+        <div className="border-t border-border/40 pt-10">
+          <h2 className="mb-8 text-3xl font-bold text-foreground tracking-tight">Half Marathon FAQ</h2>
+          <div className="max-w-3xl space-y-8">
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">How long does it take to train for a half marathon?</h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                Most training plans run between 10 and 16 weeks, depending on your starting fitness. If you can comfortably run 5&ndash;10 kilometres, a 12-week plan is a common choice. Complete beginners should allow closer to 16&ndash;20 weeks to build a safe base. The key is consistency&mdash;three to four runs per week with one longer run on the weekend&mdash;rather than high mileage.
+              </p>
+            </div>
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">What&apos;s the fastest half marathon course in New Zealand?</h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                The Kerikeri Half Marathon is widely regarded as the fastest course in the country thanks to its net-downhill profile, dropping around 200 metres over 21.1 kilometres through Northland orchards and countryside. The Christchurch Marathon half is another fast option with its flat, sea-level course. Auckland&apos;s half marathon also attracts PB-chasers, particularly when conditions are cool.
+              </p>
+            </div>
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">Do I need to qualify for a half marathon?</h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                No. Almost every half marathon in New Zealand is open-entry&mdash;you simply register and pay the entry fee. There are no qualifying times or previous race requirements. Some popular events like the Auckland Marathon and Queenstown International Marathon can sell out, so entering early is recommended.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -281,6 +324,8 @@ export default async function RegionHalfMarathonsPage({ params }: PageProps) {
                   ...(event.endDate && {
                     endDate: event.endDate.toISOString(),
                   }),
+                  eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+                  eventStatus: "https://schema.org/EventScheduled",
                   location: {
                     "@type": "Place",
                     name: event.location,
@@ -316,6 +361,43 @@ export default async function RegionHalfMarathonsPage({ params }: PageProps) {
           }}
         />
       )}
+
+      {/* Structured Data: FAQPage */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: [
+              {
+                "@type": "Question",
+                name: "How long does it take to train for a half marathon?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Most training plans run between 10 and 16 weeks, depending on your starting fitness. If you can comfortably run 5–10 kilometres, a 12-week plan is a common choice. Complete beginners should allow closer to 16–20 weeks to build a safe base.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "What's the fastest half marathon course in New Zealand?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "The Kerikeri Half Marathon is widely regarded as the fastest course in the country thanks to its net-downhill profile, dropping around 200 metres over 21.1 kilometres. The Christchurch Marathon half and Auckland half marathon are also fast, flat options.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Do I need to qualify for a half marathon?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "No. Almost every half marathon in New Zealand is open-entry — you simply register and pay the entry fee. There are no qualifying times or previous race requirements. Some popular events can sell out, so entering early is recommended.",
+                },
+              },
+            ],
+          }),
+        }}
+      />
 
       <Footer />
     </div>

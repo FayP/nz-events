@@ -185,6 +185,7 @@ export default async function EventPage({ params }: PageProps) {
       {/* Structured Data for SEO */}
       <EventJsonLd
         name={event.title}
+        slug={slug}
         description={event.description?.[0]?.children?.[0]?.text}
         startDate={event.eventDetails?.startDate || new Date().toISOString()}
         endDate={event.eventDetails?.endDate}
@@ -199,6 +200,7 @@ export default async function EventPage({ params }: PageProps) {
         eventType={event.eventType}
         price={event.registration?.price}
         registrationUrl={event.registration?.registrationUrl}
+        image={event.images?.[0] ? `https://gostride.co.nz${event.images[0]}` : undefined}
       />
 
       {/* Ambient Background Effects */}

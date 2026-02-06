@@ -42,7 +42,8 @@ export default async function HalfMarathonsPage() {
   const events = await getHalfMarathonEvents();
   const regions = getRegions(events);
   const featuredEvents = getFeaturedEvents(events);
-  const monthGroups = groupEventsByMonth(events);
+  const featuredIds = new Set(featuredEvents.map((e) => e.id));
+  const monthGroups = groupEventsByMonth(events.filter((e) => !featuredIds.has(e.id)));
   const baseUrl = "https://gostride.co.nz";
 
   return (
@@ -143,7 +144,7 @@ export default async function HalfMarathonsPage() {
               No upcoming half marathons found. Check back soon for new events!
             </p>
           </div>
-        ) : (
+        ) : monthGroups.length > 0 ? (
           <div className="space-y-12">
             <h2 className="text-3xl font-bold text-foreground tracking-tight">
               Upcoming Half Marathons
@@ -161,7 +162,7 @@ export default async function HalfMarathonsPage() {
               </section>
             ))}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Internal Links */}
@@ -196,7 +197,7 @@ export default async function HalfMarathonsPage() {
       <div className="mx-auto max-w-7xl px-4 pb-16">
         <div className="border-t border-border/40 pt-10">
           <h2 className="mb-8 text-3xl font-bold text-foreground tracking-tight">
-            Half Marathon FAQ
+            Frequently Asked Questions
           </h2>
           <div className="max-w-3xl space-y-8">
             <div>
@@ -204,29 +205,41 @@ export default async function HalfMarathonsPage() {
                 How long does it take to train for a half marathon?
               </h3>
               <p className="text-base leading-relaxed text-muted-foreground">
-                Most training plans run between 10 and 16 weeks, depending on your
-                starting fitness. If you can comfortably run 5&ndash;10 kilometres,
-                a 12-week plan is a common choice. Complete beginners should allow
-                closer to 16&ndash;20 weeks to build a safe base. The key is
-                consistency&mdash;three to four runs per week with one longer run on
-                the weekend&mdash;rather than high mileage. Many New Zealand running
-                clubs offer structured half marathon programmes that take the
-                guesswork out of planning.
+                It depends on your starting fitness. If you can already run
+                comfortably for 45&ndash;60 minutes, most training plans will have
+                you race-ready in 8&ndash;12 weeks. Complete beginners should allow
+                16&ndash;20 weeks to safely build up the distance. The key is
+                consistency&mdash;three to four runs per week with a longer run on
+                the weekend, gradually increasing distance by no more than 10% per
+                week. Most NZ marathon events publish free training plans on their
+                websites closer to race day.
               </p>
             </div>
             <div>
               <h3 className="mb-3 text-lg font-semibold text-foreground">
-                What&apos;s the fastest half marathon course in New Zealand?
+                What is a good half marathon time?
               </h3>
               <p className="text-base leading-relaxed text-muted-foreground">
-                The Kerikeri Half Marathon is widely regarded as the fastest course
-                in the country thanks to its net-downhill profile, dropping around
-                200 metres over 21.1 kilometres through Northland orchards and
-                countryside. The Christchurch Marathon half is another fast option
-                with its flat, sea-level course. Auckland&apos;s half marathon also
-                attracts PB-chasers, particularly when conditions are cool. If
-                you&apos;re chasing a time, look for courses described as flat or
-                downhill and avoid trail or multi-terrain events.
+                For a first-timer, finishing is the goal&mdash;most people complete
+                their first half marathon in 2:00 to 2:30. An intermediate runner
+                might target 1:45 to 2:00, while competitive club runners often aim
+                for 1:20 to 1:45. The overall average half marathon finish time in
+                New Zealand sits around 2:05 to 2:10. Remember, your first half is
+                about completing the distance. You can chase times once you know the
+                feeling.
+              </p>
+            </div>
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">
+                What is the fastest half marathon course in New Zealand?
+              </h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                The Kerikeri Half Marathon in Northland is widely considered New
+                Zealand&apos;s fastest course. It&apos;s a point-to-point route from
+                Okaihau to Kerikeri with roughly 200 metres of net descent over
+                21.1km. The course is AIMS-certified, making it eligible for record
+                attempts. Mount Maunganui and Christchurch also offer fast, flat
+                courses suited to personal bests.
               </p>
             </div>
             <div>
@@ -234,13 +247,70 @@ export default async function HalfMarathonsPage() {
                 Do I need to qualify for a half marathon?
               </h3>
               <p className="text-base leading-relaxed text-muted-foreground">
-                No. Almost every half marathon in New Zealand is open-entry&mdash;you
-                simply register and pay the entry fee. There are no qualifying times
-                or previous race requirements. Some popular events like the Auckland
-                Marathon and Queenstown International Marathon can sell out, so
-                entering early is recommended. Most events also have generous cutoff
-                times (typically 3&ndash;3.5 hours), making them welcoming for
-                walkers and run-walkers as well as competitive runners.
+                No. Almost all half marathons in New Zealand are open-entry
+                events&mdash;you simply register and pay the entry fee. There are no
+                qualifying times or prerequisites. Some larger events like the
+                Auckland Marathon may have field caps and sell out, so it&apos;s
+                worth entering early. A few events require under-16 runners to
+                complete a dispensation form.
+              </p>
+            </div>
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">
+                What should I eat before a half marathon?
+              </h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                Eat a familiar breakfast 2&ndash;3 hours before your start time.
+                Most runners go with something carbohydrate-rich and easy to
+                digest&mdash;toast with peanut butter and banana, porridge, or a
+                bagel are popular choices. Avoid high-fibre and high-fat foods on
+                race morning. The golden rule is nothing new on race day: practise
+                your pre-race meal during training runs so your stomach knows what
+                to expect.
+              </p>
+            </div>
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">
+                What gear do I need for a half marathon?
+              </h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                At minimum: running shoes you&apos;ve trained in, comfortable running
+                clothes, and your race number. Beyond that, a GPS watch is useful
+                for pacing, and a cap or sunglasses help in New Zealand&apos;s strong
+                UV. For nutrition, most runners carry one or two gels for runs over
+                15km. Body Glide or Vaseline on areas prone to chafing is worth the
+                30 seconds it takes to apply. Check the weather forecast the night
+                before and adjust your clothing&mdash;conditions can vary
+                significantly across NZ regions.
+              </p>
+            </div>
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">
+                Can I walk a half marathon?
+              </h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                Absolutely. Many NZ half marathon events welcome walkers, and some
+                have specific walking categories with prizes. At a brisk walking
+                pace of around 7&ndash;8 minutes per kilometre, you&apos;d finish in
+                approximately 2:30 to 2:50. Most events have generous course cutoff
+                times (typically 3&ndash;3.5 hours) to accommodate walkers. Check the
+                specific event&apos;s cutoff time before entering to make sure it
+                works for your pace.
+              </p>
+            </div>
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">
+                When is half marathon season in New Zealand?
+              </h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                Half marathons run year-round in New Zealand, but the main season is
+                from February to November. The calendar peaks between May and
+                September, when most of the major city marathons (which include half
+                marathon distances) take place. Summer events tend to be in the
+                South Island or at altitude where temperatures are cooler, while
+                autumn and winter events are spread across both islands. There&apos;s
+                no off-season&mdash;you can find a half marathon in most months of
+                the year.
               </p>
             </div>
           </div>
@@ -291,6 +361,8 @@ export default async function HalfMarathonsPage() {
                 ...(event.endDate && {
                   endDate: event.endDate.toISOString(),
                 }),
+                eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+                eventStatus: "https://schema.org/EventScheduled",
                 location: {
                   "@type": "Place",
                   name: event.location,
@@ -339,15 +411,23 @@ export default async function HalfMarathonsPage() {
                 name: "How long does it take to train for a half marathon?",
                 acceptedAnswer: {
                   "@type": "Answer",
-                  text: "Most training plans run between 10 and 16 weeks, depending on your starting fitness. If you can comfortably run 5–10 kilometres, a 12-week plan is a common choice. Complete beginners should allow closer to 16–20 weeks to build a safe base.",
+                  text: "It depends on your starting fitness. If you can already run comfortably for 45–60 minutes, most training plans will have you race-ready in 8–12 weeks. Complete beginners should allow 16–20 weeks to safely build up the distance. The key is consistency — three to four runs per week with a longer run on the weekend, gradually increasing distance by no more than 10% per week.",
                 },
               },
               {
                 "@type": "Question",
-                name: "What's the fastest half marathon course in New Zealand?",
+                name: "What is a good half marathon time?",
                 acceptedAnswer: {
                   "@type": "Answer",
-                  text: "The Kerikeri Half Marathon is widely regarded as the fastest course in the country thanks to its net-downhill profile, dropping around 200 metres over 21.1 kilometres. The Christchurch Marathon half and Auckland half marathon are also fast, flat options.",
+                  text: "For a first-timer, finishing is the goal — most people complete their first half marathon in 2:00 to 2:30. An intermediate runner might target 1:45 to 2:00, while competitive club runners often aim for 1:20 to 1:45. The overall average half marathon finish time in New Zealand sits around 2:05 to 2:10.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "What is the fastest half marathon course in New Zealand?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "The Kerikeri Half Marathon in Northland is widely considered New Zealand's fastest course. It's a point-to-point route from Okaihau to Kerikeri with roughly 200 metres of net descent over 21.1km. The course is AIMS-certified, making it eligible for record attempts. Mount Maunganui and Christchurch also offer fast, flat courses suited to personal bests.",
                 },
               },
               {
@@ -355,7 +435,39 @@ export default async function HalfMarathonsPage() {
                 name: "Do I need to qualify for a half marathon?",
                 acceptedAnswer: {
                   "@type": "Answer",
-                  text: "No. Almost every half marathon in New Zealand is open-entry — you simply register and pay the entry fee. There are no qualifying times or previous race requirements. Some popular events can sell out, so entering early is recommended.",
+                  text: "No. Almost all half marathons in New Zealand are open-entry events — you simply register and pay the entry fee. There are no qualifying times or prerequisites. Some larger events like the Auckland Marathon may have field caps and sell out, so it's worth entering early.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "What should I eat before a half marathon?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Eat a familiar breakfast 2–3 hours before your start time. Most runners go with something carbohydrate-rich and easy to digest — toast with peanut butter and banana, porridge, or a bagel are popular choices. Avoid high-fibre and high-fat foods on race morning. The golden rule is nothing new on race day.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "What gear do I need for a half marathon?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "At minimum: running shoes you've trained in, comfortable running clothes, and your race number. Beyond that, a GPS watch is useful for pacing, and a cap or sunglasses help in New Zealand's strong UV. For nutrition, most runners carry one or two gels for runs over 15km. Body Glide or Vaseline on areas prone to chafing is worth the 30 seconds it takes to apply.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Can I walk a half marathon?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Absolutely. Many NZ half marathon events welcome walkers, and some have specific walking categories with prizes. At a brisk walking pace of around 7–8 minutes per kilometre, you'd finish in approximately 2:30 to 2:50. Most events have generous course cutoff times (typically 3–3.5 hours) to accommodate walkers.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "When is half marathon season in New Zealand?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Half marathons run year-round in New Zealand, but the main season is from February to November. The calendar peaks between May and September, when most of the major city marathons take place. There's no true off-season — you can find a half marathon in most months of the year.",
                 },
               },
             ],

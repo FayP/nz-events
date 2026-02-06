@@ -42,7 +42,8 @@ export default async function TenKPage() {
   const events = await get10kEvents();
   const regions = getRegions(events);
   const featuredEvents = getFeaturedEvents(events);
-  const monthGroups = groupEventsByMonth(events);
+  const featuredIds = new Set(featuredEvents.map((e) => e.id));
+  const monthGroups = groupEventsByMonth(events.filter((e) => !featuredIds.has(e.id)));
   const baseUrl = "https://gostride.co.nz";
 
   return (
@@ -114,7 +115,7 @@ export default async function TenKPage() {
           <div className="rounded-xl border border-border bg-card p-12 text-center">
             <p className="text-muted-foreground">No upcoming 10K races found. Check back soon for new events!</p>
           </div>
-        ) : (
+        ) : monthGroups.length > 0 ? (
           <div className="space-y-12">
             <h2 className="text-3xl font-bold text-foreground tracking-tight">Upcoming 10K Races</h2>
             {monthGroups.map((group) => (
@@ -128,7 +129,7 @@ export default async function TenKPage() {
               </section>
             ))}
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="mx-auto max-w-7xl px-4 pb-16">
@@ -173,7 +174,7 @@ export default async function TenKPage() {
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: baseUrl }, { "@type": "ListItem", position: 2, name: "10K Races", item: `${baseUrl}/races/10k` }] }) }} />
 
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "ItemList", name: "10K Races in New Zealand", numberOfItems: events.length, itemListElement: events.map((event, index) => ({ "@type": "ListItem", position: index + 1, item: { "@type": "SportsEvent", name: event.name, startDate: event.startDate.toISOString(), ...(event.endDate && { endDate: event.endDate.toISOString() }), location: { "@type": "Place", name: event.location, address: { "@type": "PostalAddress", addressLocality: event.city, addressRegion: event.region, addressCountry: "NZ" }, ...(event.latitude && event.longitude && { geo: { "@type": "GeoCoordinates", latitude: event.latitude, longitude: event.longitude } }) }, sport: "Running", url: `${baseUrl}/events/${event.slug}`, ...(event.website && { sameAs: event.website }), ...(event.organizer && { organizer: { "@type": "Organization", name: event.organizer } }) } })) }) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "ItemList", name: "10K Races in New Zealand", numberOfItems: events.length, itemListElement: events.map((event, index) => ({ "@type": "ListItem", position: index + 1, item: { "@type": "SportsEvent", name: event.name, startDate: event.startDate.toISOString(), ...(event.endDate && { endDate: event.endDate.toISOString() }), eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode", eventStatus: "https://schema.org/EventScheduled", location: { "@type": "Place", name: event.location, address: { "@type": "PostalAddress", addressLocality: event.city, addressRegion: event.region, addressCountry: "NZ" }, ...(event.latitude && event.longitude && { geo: { "@type": "GeoCoordinates", latitude: event.latitude, longitude: event.longitude } }) }, sport: "Running", url: `${baseUrl}/events/${event.slug}`, ...(event.website && { sameAs: event.website }), ...(event.organizer && { organizer: { "@type": "Organization", name: event.organizer } }) } })) }) }} />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: [{ "@type": "Question", name: "How long does it take to train for a 10K?", acceptedAnswer: { "@type": "Answer", text: "If you can already run 3–5 kilometres comfortably, most 10K training plans take 8–12 weeks. Complete beginners should allow 12–16 weeks." } }, { "@type": "Question", name: "What is a good 10K time?", acceptedAnswer: { "@type": "Answer", text: "For a first-time 10K runner, finishing in 50–70 minutes is a solid result. Competitive club runners typically aim for under 40 minutes." } }, { "@type": "Question", name: "What should I eat before a 10K?", acceptedAnswer: { "@type": "Answer", text: "Eat a light, carbohydrate-based meal 2–3 hours before the race — toast with banana, porridge, or a bagel are popular choices." } }] }) }} />
 

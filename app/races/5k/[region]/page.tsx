@@ -66,7 +66,8 @@ export default async function Region5kPage({ params }: PageProps) {
 
   const events = allEvents.filter((e) => e.region === regionName);
   const featuredEvents = getFeaturedEvents(events);
-  const monthGroups = groupEventsByMonth(events);
+  const featuredIds = new Set(featuredEvents.map((e) => e.id));
+  const monthGroups = groupEventsByMonth(events.filter((e) => !featuredIds.has(e.id)));
   const baseUrl = "https://gostride.co.nz";
 
   return (
@@ -117,8 +118,12 @@ export default async function Region5kPage({ params }: PageProps) {
             5K Races in {regionName}
           </h1>
           <p className="max-w-3xl text-base leading-relaxed text-muted-foreground">
-            Upcoming 5K races in the {regionName} region of New Zealand.
-            Browse 5km events below, or explore{" "}
+            Upcoming 5K races in the {regionName} region of New Zealand. The
+            5km is the most accessible race distance&mdash;achievable for
+            almost anyone with a few weeks of preparation, yet fast enough to
+            challenge experienced runners chasing a personal best. {regionName}{" "}
+            hosts a variety of 5K events year-round, from community fun runs to
+            competitive road races. Browse events below, or explore{" "}
             <Link
               href="/races/5k"
               className="text-foreground underline underline-offset-4 hover:no-underline"
@@ -182,7 +187,7 @@ export default async function Region5kPage({ params }: PageProps) {
               or check back soon.
             </p>
           </div>
-        ) : (
+        ) : monthGroups.length > 0 ? (
           <div className="space-y-12">
             <h2 className="text-3xl font-bold text-foreground tracking-tight">
               Upcoming 5K Races in {regionName}
@@ -200,7 +205,7 @@ export default async function Region5kPage({ params }: PageProps) {
               </section>
             ))}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Internal Links */}
@@ -233,6 +238,33 @@ export default async function Region5kPage({ params }: PageProps) {
             </Link>
             .
           </p>
+        </div>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="mx-auto max-w-7xl px-4 pb-16">
+        <div className="border-t border-border/40 pt-10">
+          <h2 className="mb-8 text-3xl font-bold text-foreground tracking-tight">5K FAQ</h2>
+          <div className="max-w-3xl space-y-8">
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">How long does it take to train for a 5K?</h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                Most couch-to-5K programmes take 6&ndash;9 weeks, running three times a week. If you&apos;re already active (walking regularly, playing other sports), you may need just 4&ndash;6 weeks to get race-ready. The key is building up running time gradually rather than pushing too hard too soon.
+              </p>
+            </div>
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">What is a good 5K time for a beginner?</h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                For a first-time runner, completing a 5K in 30&ndash;40 minutes is a great achievement. Many people walk portions of their first 5K and still finish in under 45 minutes. With consistent training, most runners can bring their time under 30 minutes within a few months.
+              </p>
+            </div>
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">Can I walk a 5K event?</h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                Yes. The vast majority of 5K events in New Zealand welcome walkers alongside runners. Most events have no cutoff time for the 5km distance. Walking a 5K typically takes 45&ndash;60 minutes depending on your pace, and it&apos;s a great way to experience a race-day atmosphere before committing to a running goal.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -287,6 +319,8 @@ export default async function Region5kPage({ params }: PageProps) {
                   ...(event.endDate && {
                     endDate: event.endDate.toISOString(),
                   }),
+                  eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+                  eventStatus: "https://schema.org/EventScheduled",
                   location: {
                     "@type": "Place",
                     name: event.location,
@@ -322,6 +356,43 @@ export default async function Region5kPage({ params }: PageProps) {
           }}
         />
       )}
+
+      {/* Structured Data: FAQPage */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: [
+              {
+                "@type": "Question",
+                name: "How long does it take to train for a 5K?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Most couch-to-5K programmes take 6–9 weeks, running three times a week. If you're already active, you may need just 4–6 weeks.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "What is a good 5K time for a beginner?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "For a first-time runner, completing a 5K in 30–40 minutes is a great achievement. With consistent training, most runners can get under 30 minutes within a few months.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Can I walk a 5K event?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Yes. The vast majority of 5K events in New Zealand welcome walkers alongside runners. Most events have no cutoff time for the 5km distance.",
+                },
+              },
+            ],
+          }),
+        }}
+      />
 
       <Footer />
     </div>

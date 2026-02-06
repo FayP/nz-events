@@ -42,7 +42,8 @@ export default async function UltraMarathonsPage() {
   const events = await getUltraEvents();
   const regions = getRegions(events);
   const featuredEvents = getFeaturedEvents(events);
-  const monthGroups = groupEventsByMonth(events);
+  const featuredIds = new Set(featuredEvents.map((e) => e.id));
+  const monthGroups = groupEventsByMonth(events.filter((e) => !featuredIds.has(e.id)));
   const baseUrl = "https://gostride.co.nz";
 
   return (
@@ -116,7 +117,7 @@ export default async function UltraMarathonsPage() {
           <div className="rounded-xl border border-border bg-card p-12 text-center">
             <p className="text-muted-foreground">No upcoming ultra marathons found. Check back soon for new events!</p>
           </div>
-        ) : (
+        ) : monthGroups.length > 0 ? (
           <div className="space-y-12">
             <h2 className="text-3xl font-bold text-foreground tracking-tight">Upcoming Ultra Marathons</h2>
             {monthGroups.map((group) => (
@@ -130,7 +131,7 @@ export default async function UltraMarathonsPage() {
               </section>
             ))}
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="mx-auto max-w-7xl px-4 pb-16">
@@ -175,7 +176,7 @@ export default async function UltraMarathonsPage() {
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: baseUrl }, { "@type": "ListItem", position: 2, name: "Ultra Marathons", item: `${baseUrl}/races/ultra-marathons` }] }) }} />
 
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "ItemList", name: "Ultra Marathon Races in New Zealand", numberOfItems: events.length, itemListElement: events.map((event, index) => ({ "@type": "ListItem", position: index + 1, item: { "@type": "SportsEvent", name: event.name, startDate: event.startDate.toISOString(), ...(event.endDate && { endDate: event.endDate.toISOString() }), location: { "@type": "Place", name: event.location, address: { "@type": "PostalAddress", addressLocality: event.city, addressRegion: event.region, addressCountry: "NZ" }, ...(event.latitude && event.longitude && { geo: { "@type": "GeoCoordinates", latitude: event.latitude, longitude: event.longitude } }) }, sport: "Running", url: `${baseUrl}/events/${event.slug}`, ...(event.website && { sameAs: event.website }), ...(event.organizer && { organizer: { "@type": "Organization", name: event.organizer } }) } })) }) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "ItemList", name: "Ultra Marathon Races in New Zealand", numberOfItems: events.length, itemListElement: events.map((event, index) => ({ "@type": "ListItem", position: index + 1, item: { "@type": "SportsEvent", name: event.name, startDate: event.startDate.toISOString(), ...(event.endDate && { endDate: event.endDate.toISOString() }), eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode", eventStatus: "https://schema.org/EventScheduled", location: { "@type": "Place", name: event.location, address: { "@type": "PostalAddress", addressLocality: event.city, addressRegion: event.region, addressCountry: "NZ" }, ...(event.latitude && event.longitude && { geo: { "@type": "GeoCoordinates", latitude: event.latitude, longitude: event.longitude } }) }, sport: "Running", url: `${baseUrl}/events/${event.slug}`, ...(event.website && { sameAs: event.website }), ...(event.organizer && { organizer: { "@type": "Organization", name: event.organizer } }) } })) }) }} />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: [{ "@type": "Question", name: "How do I start training for an ultra marathon?", acceptedAnswer: { "@type": "Answer", text: "Most coaches recommend having at least one marathon under your belt. A typical 50K training plan is 16–24 weeks and peaks at 80–100 kilometres per week, with a focus on time on feet rather than speed." } }, { "@type": "Question", name: "What are the best ultra marathons in New Zealand?", acceptedAnswer: { "@type": "Answer", text: "The Tarawera Ultramarathon, the Kepler Challenge (60K in Fiordland), and the Old Ghost Road Ultra (85K on the West Coast) are widely considered the top three." } }, { "@type": "Question", name: "What gear do I need for a trail ultra?", acceptedAnswer: { "@type": "Answer", text: "Most NZ trail ultras require a waterproof jacket, thermal layer, headlamp, first aid kit, emergency blanket, and enough food and water to reach the next aid station. Trail running shoes with good grip are essential." } }] }) }} />
 

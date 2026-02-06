@@ -1,5 +1,6 @@
 interface EventJsonLdProps {
   name: string;
+  slug?: string;
   description?: string;
   startDate: string;
   endDate?: string;
@@ -21,10 +22,12 @@ interface EventJsonLdProps {
     currency?: string;
   };
   registrationUrl?: string;
+  image?: string;
 }
 
 export function EventJsonLd({
   name,
+  slug,
   description,
   startDate,
   endDate,
@@ -39,27 +42,59 @@ export function EventJsonLd({
   eventType,
   price,
   registrationUrl,
+  image,
 }: EventJsonLdProps) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://gostride.co.nz";
 
-  // Map event type to schema.org type
-  const getEventSchemaType = (type: string) => {
+  // Map event type to sport name
+  const getSportName = (type: string) => {
     const typeUpper = type.toUpperCase();
-    if (typeUpper === "RUNNING") return "SportsEvent";
-    if (typeUpper === "BIKING" || typeUpper === "CYCLING") return "SportsEvent";
-    if (typeUpper === "TRIATHLON") return "SportsEvent";
-    return "SportsEvent";
+    if (typeUpper === "RUNNING") return "Running";
+    if (typeUpper === "BIKING" || typeUpper === "CYCLING") return "Cycling";
+    if (typeUpper === "TRIATHLON") return "Triathlon";
+    return "Running";
+  };
+
+  // Build canonical URL for the event page
+  const eventPageUrl = slug ? `${baseUrl}/events/${slug}` : undefined;
+
+  // Build offers object - use AggregateOffer when we have min/max range
+  const buildOffers = () => {
+    if (price?.min === undefined) return undefined;
+
+    const hasRange = price.max !== undefined && price.max !== price.min;
+
+    if (hasRange) {
+      return {
+        "@type": "AggregateOffer",
+        lowPrice: price.min,
+        highPrice: price.max,
+        priceCurrency: price.currency || "NZD",
+        availability: "https://schema.org/InStock",
+        ...(registrationUrl ? { url: registrationUrl } : {}),
+      };
+    }
+
+    return {
+      "@type": "Offer",
+      price: price.min,
+      priceCurrency: price.currency || "NZD",
+      availability: "https://schema.org/InStock",
+      validFrom: new Date().toISOString(),
+      ...(registrationUrl ? { url: registrationUrl } : {}),
+    };
   };
 
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": getEventSchemaType(eventType),
+    "@type": "SportsEvent",
     name,
     description: description || `${name} - a ${eventType.toLowerCase()} event in ${city}, New Zealand`,
     startDate,
     endDate: endDate || startDate,
     eventStatus: "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    sport: getSportName(eventType),
     location: {
       "@type": "Place",
       name: location,
@@ -89,20 +124,13 @@ export function EventJsonLd({
           },
         }
       : {}),
-    ...(price?.min !== undefined
-      ? {
-          offers: {
-            "@type": "Offer",
-            price: price.min,
-            priceCurrency: price.currency || "NZD",
-            availability: "https://schema.org/InStock",
-            validFrom: new Date().toISOString(),
-            ...(registrationUrl ? { url: registrationUrl } : {}),
-          },
-        }
-      : {}),
-    ...(url ? { url } : {}),
-    image: `${baseUrl}/opengraph-image`,
+    ...(() => {
+      const offers = buildOffers();
+      return offers ? { offers } : {};
+    })(),
+    ...(eventPageUrl ? { url: eventPageUrl } : {}),
+    ...(url ? { sameAs: url } : {}),
+    image: image || `${baseUrl}/opengraph-image`,
   };
 
   return (

@@ -42,7 +42,8 @@ export default async function MarathonsPage() {
   const events = await getMarathonEvents();
   const regions = getRegions(events);
   const featuredEvents = getFeaturedEvents(events);
-  const monthGroups = groupEventsByMonth(events);
+  const featuredIds = new Set(featuredEvents.map((e) => e.id));
+  const monthGroups = groupEventsByMonth(events.filter((e) => !featuredIds.has(e.id)));
   const baseUrl = "https://gostride.co.nz";
 
   return (
@@ -117,7 +118,7 @@ export default async function MarathonsPage() {
           <div className="rounded-xl border border-border bg-card p-12 text-center">
             <p className="text-muted-foreground">No upcoming marathons found. Check back soon for new events!</p>
           </div>
-        ) : (
+        ) : monthGroups.length > 0 ? (
           <div className="space-y-12">
             <h2 className="text-3xl font-bold text-foreground tracking-tight">Upcoming Marathons</h2>
             {monthGroups.map((group) => (
@@ -131,7 +132,7 @@ export default async function MarathonsPage() {
               </section>
             ))}
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="mx-auto max-w-7xl px-4 pb-16">
@@ -175,7 +176,7 @@ export default async function MarathonsPage() {
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: baseUrl }, { "@type": "ListItem", position: 2, name: "Marathons", item: `${baseUrl}/races/marathons` }] }) }} />
 
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "ItemList", name: "Marathon Races in New Zealand", numberOfItems: events.length, itemListElement: events.map((event, index) => ({ "@type": "ListItem", position: index + 1, item: { "@type": "SportsEvent", name: event.name, startDate: event.startDate.toISOString(), ...(event.endDate && { endDate: event.endDate.toISOString() }), location: { "@type": "Place", name: event.location, address: { "@type": "PostalAddress", addressLocality: event.city, addressRegion: event.region, addressCountry: "NZ" }, ...(event.latitude && event.longitude && { geo: { "@type": "GeoCoordinates", latitude: event.latitude, longitude: event.longitude } }) }, sport: "Running", url: `${baseUrl}/events/${event.slug}`, ...(event.website && { sameAs: event.website }), ...(event.organizer && { organizer: { "@type": "Organization", name: event.organizer } }) } })) }) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "ItemList", name: "Marathon Races in New Zealand", numberOfItems: events.length, itemListElement: events.map((event, index) => ({ "@type": "ListItem", position: index + 1, item: { "@type": "SportsEvent", name: event.name, startDate: event.startDate.toISOString(), ...(event.endDate && { endDate: event.endDate.toISOString() }), eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode", eventStatus: "https://schema.org/EventScheduled", location: { "@type": "Place", name: event.location, address: { "@type": "PostalAddress", addressLocality: event.city, addressRegion: event.region, addressCountry: "NZ" }, ...(event.latitude && event.longitude && { geo: { "@type": "GeoCoordinates", latitude: event.latitude, longitude: event.longitude } }) }, sport: "Running", url: `${baseUrl}/events/${event.slug}`, ...(event.website && { sameAs: event.website }), ...(event.organizer && { organizer: { "@type": "Organization", name: event.organizer } }) } })) }) }} />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: [{ "@type": "Question", name: "How long does it take to train for a marathon?", acceptedAnswer: { "@type": "Answer", text: "Most marathon training plans run 16–20 weeks, assuming you already have a solid running base of around 30–40 kilometres per week. Complete beginners should plan for 6–12 months." } }, { "@type": "Question", name: "What is a good marathon time for a first-timer?", acceptedAnswer: { "@type": "Answer", text: "The average finish time for a first marathon in New Zealand is around 4 hours 30 minutes to 5 hours. Anything under 4 hours is a strong result for a first attempt." } }, { "@type": "Question", name: "Which is the best marathon in New Zealand?", acceptedAnswer: { "@type": "Answer", text: "The Auckland Marathon is the largest, Queenstown International Marathon is rated one of the most scenic in the world, and Rotorua Marathon is popular for PB attempts on its flat lakeside course." } }] }) }} />
 

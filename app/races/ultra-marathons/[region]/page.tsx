@@ -66,7 +66,8 @@ export default async function RegionUltraMarathonsPage({ params }: PageProps) {
 
   const events = allEvents.filter((e) => e.region === regionName);
   const featuredEvents = getFeaturedEvents(events);
-  const monthGroups = groupEventsByMonth(events);
+  const featuredIds = new Set(featuredEvents.map((e) => e.id));
+  const monthGroups = groupEventsByMonth(events.filter((e) => !featuredIds.has(e.id)));
   const baseUrl = "https://gostride.co.nz";
 
   return (
@@ -114,11 +115,15 @@ export default async function RegionUltraMarathonsPage({ params }: PageProps) {
             </span>
           </div>
           <h1 className="mb-5 text-5xl font-bold text-foreground tracking-tight">
-            Ultra Marathons in {regionName}
+            Ultra Marathon Races in {regionName}
           </h1>
           <p className="max-w-3xl text-base leading-relaxed text-muted-foreground">
-            Upcoming ultra marathon races in the {regionName} region of New Zealand.
-            Browse ultra distance events below, or explore{" "}
+            Upcoming ultra marathon races in the {regionName} region of New
+            Zealand. Ultra running covers anything beyond the standard 42.2km
+            marathon distance, from 50K trail races through native bush to
+            100-mile endurance events across some of the country&apos;s most
+            remote and spectacular terrain. Browse events below with dates,
+            distances, and registration details, or explore{" "}
             <Link
               href="/races/ultra-marathons"
               className="text-foreground underline underline-offset-4 hover:no-underline"
@@ -182,7 +187,7 @@ export default async function RegionUltraMarathonsPage({ params }: PageProps) {
               or check back soon.
             </p>
           </div>
-        ) : (
+        ) : monthGroups.length > 0 ? (
           <div className="space-y-12">
             <h2 className="text-3xl font-bold text-foreground tracking-tight">
               Upcoming Ultra Marathons in {regionName}
@@ -200,7 +205,7 @@ export default async function RegionUltraMarathonsPage({ params }: PageProps) {
               </section>
             ))}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Internal Links */}
@@ -233,6 +238,33 @@ export default async function RegionUltraMarathonsPage({ params }: PageProps) {
             </Link>
             .
           </p>
+        </div>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="mx-auto max-w-7xl px-4 pb-16">
+        <div className="border-t border-border/40 pt-10">
+          <h2 className="mb-8 text-3xl font-bold text-foreground tracking-tight">Ultra Marathon FAQ</h2>
+          <div className="max-w-3xl space-y-8">
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">How do I start training for an ultra marathon?</h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                Most coaches recommend having at least one marathon under your belt before attempting an ultra. A typical 50K training plan is 16&ndash;24 weeks and peaks at 80&ndash;100 kilometres per week. The focus shifts from speed to time on feet&mdash;long back-to-back weekend runs are a staple of ultra training. Practice your nutrition strategy during training, as fuelling becomes critical beyond marathon distance.
+              </p>
+            </div>
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">What are the best ultra marathons in New Zealand?</h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                The Tarawera Ultramarathon (50K&ndash;100 miles through Rotorua&apos;s geothermal forests), the Kepler Challenge (60K on the Kepler Track in Fiordland), and the Old Ghost Road Ultra (85K on the West Coast) are widely considered the top three. The Northburn 100 in Central Otago and the Tararua Mountain Race near Wellington are also highly regarded for experienced ultra runners.
+              </p>
+            </div>
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">What gear do I need for a trail ultra?</h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                Most NZ trail ultras have mandatory gear lists that typically include a waterproof jacket, thermal layer, headlamp, first aid kit, emergency blanket, and enough food and water to reach the next aid station. Trail running shoes with good grip are essential&mdash;road shoes won&apos;t cut it on NZ&apos;s muddy, rooty trails. Check your specific event&apos;s gear list well before race day, as requirements vary by course and conditions.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -287,6 +319,8 @@ export default async function RegionUltraMarathonsPage({ params }: PageProps) {
                   ...(event.endDate && {
                     endDate: event.endDate.toISOString(),
                   }),
+                  eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+                  eventStatus: "https://schema.org/EventScheduled",
                   location: {
                     "@type": "Place",
                     name: event.location,
@@ -322,6 +356,43 @@ export default async function RegionUltraMarathonsPage({ params }: PageProps) {
           }}
         />
       )}
+
+      {/* Structured Data: FAQPage */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: [
+              {
+                "@type": "Question",
+                name: "How do I start training for an ultra marathon?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Most coaches recommend having at least one marathon under your belt. A typical 50K training plan is 16–24 weeks and peaks at 80–100 kilometres per week, with a focus on time on feet rather than speed.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "What are the best ultra marathons in New Zealand?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "The Tarawera Ultramarathon, the Kepler Challenge (60K in Fiordland), and the Old Ghost Road Ultra (85K on the West Coast) are widely considered the top three.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "What gear do I need for a trail ultra?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Most NZ trail ultras require a waterproof jacket, thermal layer, headlamp, first aid kit, emergency blanket, and enough food and water to reach the next aid station. Trail running shoes with good grip are essential.",
+                },
+              },
+            ],
+          }),
+        }}
+      />
 
       <Footer />
     </div>

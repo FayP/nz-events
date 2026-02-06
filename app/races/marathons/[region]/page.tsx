@@ -66,7 +66,8 @@ export default async function RegionMarathonsPage({ params }: PageProps) {
 
   const events = allEvents.filter((e) => e.region === regionName);
   const featuredEvents = getFeaturedEvents(events);
-  const monthGroups = groupEventsByMonth(events);
+  const featuredIds = new Set(featuredEvents.map((e) => e.id));
+  const monthGroups = groupEventsByMonth(events.filter((e) => !featuredIds.has(e.id)));
   const baseUrl = "https://gostride.co.nz";
 
   return (
@@ -114,11 +115,16 @@ export default async function RegionMarathonsPage({ params }: PageProps) {
             </span>
           </div>
           <h1 className="mb-5 text-5xl font-bold text-foreground tracking-tight">
-            Marathons in {regionName}
+            Marathon Races in {regionName}
           </h1>
           <p className="max-w-3xl text-base leading-relaxed text-muted-foreground">
             Upcoming marathon races in the {regionName} region of New Zealand.
-            Browse 42.2km events below, or explore{" "}
+            Running 42.2 kilometres is the ultimate test for distance runners,
+            and {regionName} offers courses that showcase the best of New
+            Zealand&apos;s scenery&mdash;from flat, fast road routes ideal for
+            PB attempts to scenic options through native bush and along the
+            coast. Browse events below with dates, distances, and registration
+            details, or explore{" "}
             <Link
               href="/races/marathons"
               className="text-foreground underline underline-offset-4 hover:no-underline"
@@ -182,7 +188,7 @@ export default async function RegionMarathonsPage({ params }: PageProps) {
               or check back soon.
             </p>
           </div>
-        ) : (
+        ) : monthGroups.length > 0 ? (
           <div className="space-y-12">
             <h2 className="text-3xl font-bold text-foreground tracking-tight">
               Upcoming Marathons in {regionName}
@@ -200,7 +206,7 @@ export default async function RegionMarathonsPage({ params }: PageProps) {
               </section>
             ))}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Internal Links */}
@@ -233,6 +239,33 @@ export default async function RegionMarathonsPage({ params }: PageProps) {
             </Link>
             .
           </p>
+        </div>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="mx-auto max-w-7xl px-4 pb-16">
+        <div className="border-t border-border/40 pt-10">
+          <h2 className="mb-8 text-3xl font-bold text-foreground tracking-tight">Marathon FAQ</h2>
+          <div className="max-w-3xl space-y-8">
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">How long does it take to train for a marathon?</h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                Most marathon training plans run 16&ndash;20 weeks, assuming you already have a solid running base of around 30&ndash;40 kilometres per week. If you&apos;re coming from a half marathon, 16 weeks is typical. Complete beginners should plan for 6&ndash;12 months to safely build up the distance, often running a half marathon as a stepping stone along the way.
+              </p>
+            </div>
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">What is a good marathon time for a first-timer?</h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                The average finish time for a first marathon in New Zealand is around 4 hours 30 minutes to 5 hours. Anything under 4 hours is a strong result for a first attempt. The most important goal for your first marathon is to finish feeling good&mdash;you can chase a faster time next time. Most NZ marathons have cutoff times between 6 and 7 hours.
+              </p>
+            </div>
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">Which is the best marathon in New Zealand?</h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                The Auckland Marathon is the largest in the country and features an iconic harbour bridge crossing. The Queenstown International Marathon is consistently rated one of the most scenic marathons in the world, with lakeside and mountain views throughout. The Rotorua Marathon, one of NZ&apos;s oldest, is a flat lakeside course popular for PB attempts. The right choice depends on whether you prioritise scenery, speed, or atmosphere.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -287,6 +320,8 @@ export default async function RegionMarathonsPage({ params }: PageProps) {
                   ...(event.endDate && {
                     endDate: event.endDate.toISOString(),
                   }),
+                  eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+                  eventStatus: "https://schema.org/EventScheduled",
                   location: {
                     "@type": "Place",
                     name: event.location,
@@ -322,6 +357,43 @@ export default async function RegionMarathonsPage({ params }: PageProps) {
           }}
         />
       )}
+
+      {/* Structured Data: FAQPage */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: [
+              {
+                "@type": "Question",
+                name: "How long does it take to train for a marathon?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Most marathon training plans run 16–20 weeks, assuming you already have a solid running base of around 30–40 kilometres per week. Complete beginners should plan for 6–12 months.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "What is a good marathon time for a first-timer?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "The average finish time for a first marathon in New Zealand is around 4 hours 30 minutes to 5 hours. Anything under 4 hours is a strong result for a first attempt.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Which is the best marathon in New Zealand?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "The Auckland Marathon is the largest, Queenstown International Marathon is rated one of the most scenic in the world, and Rotorua Marathon is popular for PB attempts on its flat lakeside course.",
+                },
+              },
+            ],
+          }),
+        }}
+      />
 
       <Footer />
     </div>

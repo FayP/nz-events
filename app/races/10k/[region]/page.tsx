@@ -66,7 +66,8 @@ export default async function Region10kPage({ params }: PageProps) {
 
   const events = allEvents.filter((e) => e.region === regionName);
   const featuredEvents = getFeaturedEvents(events);
-  const monthGroups = groupEventsByMonth(events);
+  const featuredIds = new Set(featuredEvents.map((e) => e.id));
+  const monthGroups = groupEventsByMonth(events.filter((e) => !featuredIds.has(e.id)));
   const baseUrl = "https://gostride.co.nz";
 
   return (
@@ -117,8 +118,12 @@ export default async function Region10kPage({ params }: PageProps) {
             10K Races in {regionName}
           </h1>
           <p className="max-w-3xl text-base leading-relaxed text-muted-foreground">
-            Upcoming 10K races in the {regionName} region of New Zealand.
-            Browse 10km events below, or explore{" "}
+            Upcoming 10K races in the {regionName} region of New Zealand. The
+            10km distance bridges the gap between casual fun runs and the half
+            marathon, making it ideal for runners of all experience levels.
+            {regionName} hosts a range of 10K events throughout the year, from
+            standalone road races to 10km options within larger multi-distance
+            events. Browse events below, or explore{" "}
             <Link
               href="/races/10k"
               className="text-foreground underline underline-offset-4 hover:no-underline"
@@ -182,7 +187,7 @@ export default async function Region10kPage({ params }: PageProps) {
               or check back soon.
             </p>
           </div>
-        ) : (
+        ) : monthGroups.length > 0 ? (
           <div className="space-y-12">
             <h2 className="text-3xl font-bold text-foreground tracking-tight">
               Upcoming 10K Races in {regionName}
@@ -200,7 +205,7 @@ export default async function Region10kPage({ params }: PageProps) {
               </section>
             ))}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Internal Links */}
@@ -233,6 +238,33 @@ export default async function Region10kPage({ params }: PageProps) {
             </Link>
             .
           </p>
+        </div>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="mx-auto max-w-7xl px-4 pb-16">
+        <div className="border-t border-border/40 pt-10">
+          <h2 className="mb-8 text-3xl font-bold text-foreground tracking-tight">10K FAQ</h2>
+          <div className="max-w-3xl space-y-8">
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">How long does it take to train for a 10K?</h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                If you can already run 3&ndash;5 kilometres comfortably, most 10K training plans take 8&ndash;12 weeks. Complete beginners who are starting from walking should allow 12&ndash;16 weeks. Three to four runs per week is typical, building gradually to a long run of 10&ndash;12 kilometres before race day.
+              </p>
+            </div>
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">What is a good 10K time?</h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                For a first-time 10K runner, finishing in 50&ndash;70 minutes is a solid result. Competitive club runners typically aim for under 40 minutes, while elite runners finish in 28&ndash;34 minutes. The most important thing for your first 10K is finding a pace you can sustain for the full distance.
+              </p>
+            </div>
+            <div>
+              <h3 className="mb-3 text-lg font-semibold text-foreground">What should I eat before a 10K?</h3>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                Eat a light, carbohydrate-based meal 2&ndash;3 hours before the race&mdash;toast with banana, porridge, or a bagel are popular choices. Avoid high-fibre or high-fat foods that may cause stomach issues during the run. For a 10K you generally don&apos;t need to take on fuel during the race itself, but stay hydrated in the days leading up to it.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -287,6 +319,8 @@ export default async function Region10kPage({ params }: PageProps) {
                   ...(event.endDate && {
                     endDate: event.endDate.toISOString(),
                   }),
+                  eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+                  eventStatus: "https://schema.org/EventScheduled",
                   location: {
                     "@type": "Place",
                     name: event.location,
@@ -322,6 +356,43 @@ export default async function Region10kPage({ params }: PageProps) {
           }}
         />
       )}
+
+      {/* Structured Data: FAQPage */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: [
+              {
+                "@type": "Question",
+                name: "How long does it take to train for a 10K?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "If you can already run 3–5 kilometres comfortably, most 10K training plans take 8–12 weeks. Complete beginners should allow 12–16 weeks.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "What is a good 10K time?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "For a first-time 10K runner, finishing in 50–70 minutes is a solid result. Competitive club runners typically aim for under 40 minutes.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "What should I eat before a 10K?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Eat a light, carbohydrate-based meal 2–3 hours before the race — toast with banana, porridge, or a bagel are popular choices.",
+                },
+              },
+            ],
+          }),
+        }}
+      />
 
       <Footer />
     </div>

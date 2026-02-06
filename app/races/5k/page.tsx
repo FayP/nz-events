@@ -42,7 +42,8 @@ export default async function FiveKPage() {
   const events = await get5kEvents();
   const regions = getRegions(events);
   const featuredEvents = getFeaturedEvents(events);
-  const monthGroups = groupEventsByMonth(events);
+  const featuredIds = new Set(featuredEvents.map((e) => e.id));
+  const monthGroups = groupEventsByMonth(events.filter((e) => !featuredIds.has(e.id)));
   const baseUrl = "https://gostride.co.nz";
 
   return (
@@ -115,7 +116,7 @@ export default async function FiveKPage() {
           <div className="rounded-xl border border-border bg-card p-12 text-center">
             <p className="text-muted-foreground">No upcoming 5K races found. Check back soon for new events!</p>
           </div>
-        ) : (
+        ) : monthGroups.length > 0 ? (
           <div className="space-y-12">
             <h2 className="text-3xl font-bold text-foreground tracking-tight">Upcoming 5K Races</h2>
             {monthGroups.map((group) => (
@@ -129,7 +130,7 @@ export default async function FiveKPage() {
               </section>
             ))}
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="mx-auto max-w-7xl px-4 pb-16">
@@ -174,7 +175,7 @@ export default async function FiveKPage() {
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: baseUrl }, { "@type": "ListItem", position: 2, name: "5K Races", item: `${baseUrl}/races/5k` }] }) }} />
 
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "ItemList", name: "5K Races in New Zealand", numberOfItems: events.length, itemListElement: events.map((event, index) => ({ "@type": "ListItem", position: index + 1, item: { "@type": "SportsEvent", name: event.name, startDate: event.startDate.toISOString(), ...(event.endDate && { endDate: event.endDate.toISOString() }), location: { "@type": "Place", name: event.location, address: { "@type": "PostalAddress", addressLocality: event.city, addressRegion: event.region, addressCountry: "NZ" }, ...(event.latitude && event.longitude && { geo: { "@type": "GeoCoordinates", latitude: event.latitude, longitude: event.longitude } }) }, sport: "Running", url: `${baseUrl}/events/${event.slug}`, ...(event.website && { sameAs: event.website }), ...(event.organizer && { organizer: { "@type": "Organization", name: event.organizer } }) } })) }) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "ItemList", name: "5K Races in New Zealand", numberOfItems: events.length, itemListElement: events.map((event, index) => ({ "@type": "ListItem", position: index + 1, item: { "@type": "SportsEvent", name: event.name, startDate: event.startDate.toISOString(), ...(event.endDate && { endDate: event.endDate.toISOString() }), eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode", eventStatus: "https://schema.org/EventScheduled", location: { "@type": "Place", name: event.location, address: { "@type": "PostalAddress", addressLocality: event.city, addressRegion: event.region, addressCountry: "NZ" }, ...(event.latitude && event.longitude && { geo: { "@type": "GeoCoordinates", latitude: event.latitude, longitude: event.longitude } }) }, sport: "Running", url: `${baseUrl}/events/${event.slug}`, ...(event.website && { sameAs: event.website }), ...(event.organizer && { organizer: { "@type": "Organization", name: event.organizer } }) } })) }) }} />
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: [{ "@type": "Question", name: "How long does it take to train for a 5K?", acceptedAnswer: { "@type": "Answer", text: "Most couch-to-5K programmes take 6–9 weeks, running three times a week. If you're already active, you may need just 4–6 weeks." } }, { "@type": "Question", name: "What is a good 5K time for a beginner?", acceptedAnswer: { "@type": "Answer", text: "For a first-time runner, completing a 5K in 30–40 minutes is a great achievement. With consistent training, most runners can get under 30 minutes within a few months." } }, { "@type": "Question", name: "Can I walk a 5K event?", acceptedAnswer: { "@type": "Answer", text: "Yes. The vast majority of 5K events in New Zealand welcome walkers alongside runners. Most events have no cutoff time for the 5km distance." } }] }) }} />
 
