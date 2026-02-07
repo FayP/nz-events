@@ -494,6 +494,7 @@ function HomeContent() {
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric',
+                      timeZone: 'Pacific/Auckland',
                     })}
                   </span>
                 </div>

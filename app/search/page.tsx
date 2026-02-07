@@ -146,7 +146,7 @@ export default function SearchPage() {
                     <span>{event.location}</span>
                     <span>•</span>
                     <span>
-                      {new Date(event.startDate).toLocaleDateString('en-NZ')}
+                      {new Date(event.startDate).toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland' })}
                     </span>
                   </div>
                 </Link>

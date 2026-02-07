@@ -82,6 +82,7 @@ export default function EventsPage() {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
+                  timeZone: 'Pacific/Auckland',
                 })}
               </p>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">

@@ -112,7 +112,7 @@ export default async function EventPage({ params }: PageProps) {
     };
   }
 
-  // Format date and time
+  // Format date and time in NZ timezone
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-NZ", {
@@ -120,6 +120,7 @@ export default async function EventPage({ params }: PageProps) {
       year: "numeric",
       month: "long",
       day: "numeric",
+      timeZone: "Pacific/Auckland",
     });
   };
 
@@ -129,6 +130,7 @@ export default async function EventPage({ params }: PageProps) {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
+      timeZone: "Pacific/Auckland",
     });
   };
 
