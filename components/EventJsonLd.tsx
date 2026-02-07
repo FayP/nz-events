@@ -130,7 +130,7 @@ export function EventJsonLd({
     })(),
     ...(eventPageUrl ? { url: eventPageUrl } : {}),
     ...(url ? { sameAs: url } : {}),
-    image: image || `${baseUrl}/opengraph-image`,
+    image: image || `${baseUrl}/images/fallback-running.jpg`,
   };
 
   return (

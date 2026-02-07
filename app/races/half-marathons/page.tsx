@@ -321,12 +321,12 @@ export default async function HalfMarathonsPage() {
               item: {
                 "@type": "SportsEvent",
                 name: event.name,
+                description: event.description || `${event.name} - a running event in ${event.city}, New Zealand`,
                 startDate: event.startDate.toISOString(),
-                ...(event.endDate && {
-                  endDate: event.endDate.toISOString(),
-                }),
+                endDate: (event.endDate || event.startDate).toISOString(),
                 eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
                 eventStatus: "https://schema.org/EventScheduled",
+                image: (event.images as string[] | null)?.[0] || `${baseUrl}/images/fallback-running.jpg`,
                 location: {
                   "@type": "Place",
                   name: event.location,
@@ -350,12 +350,10 @@ export default async function HalfMarathonsPage() {
                 ...(event.website && {
                   sameAs: event.website,
                 }),
-                ...(event.organizer && {
-                  organizer: {
-                    "@type": "Organization",
-                    name: event.organizer,
-                  },
-                }),
+                organizer: {
+                  "@type": "Organization",
+                  name: event.organizer || "Event Organizer",
+                },
               },
             })),
           }),
