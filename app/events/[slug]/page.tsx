@@ -15,6 +15,8 @@ import EventContent from "./EventContent";
 import AddToCalendar from "./AddToCalendar";
 import WeatherForecast from "./WeatherForecast";
 import RegistrationCard from "./RegistrationCard";
+import RaceCountdown from "./RaceCountdown";
+import SimilarEvents from "./SimilarEvents";
 
 interface PageProps {
   params:
@@ -292,9 +294,82 @@ export default async function EventPage({ params }: PageProps) {
                 </div>
               )}
 
-              {/* Organizer Card */}
+              {/* Compact Distance Pills (hero preview) */}
+              {event.distanceDetails && event.distanceDetails.length > 0 && (
+                <DistanceSelector
+                  distances={event.distanceDetails}
+                  eventType={event.eventType}
+                  compact
+                />
+              )}
+
+              {/* Add to Calendar */}
+              {event.eventDetails && (
+                <AddToCalendar
+                  eventName={event.title}
+                  startDate={event.eventDetails.startDate}
+                  endDate={event.eventDetails.endDate}
+                  location={event.eventDetails.location}
+                  city={event.eventDetails.city}
+                  region={event.eventDetails.region}
+                  description={event.description?.[0]?.children?.[0]?.text}
+                  url={event.website}
+                />
+              )}
+            </div>
+
+            {/* ---- Right Column: Image ---- */}
+            <div className="space-y-6">
+              {/* Image on mobile appears after title, on desktop in right column */}
+              <div className="order-first lg:order-none">
+                <EventImageGallery
+                  images={event.images}
+                  eventType={event.eventType}
+                  eventName={event.title}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ============ Below Hero: Full Width Sections ============ */}
+
+        {/* Race Countdown & Training Timeline */}
+        {event.eventDetails && (
+          <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
+            <RaceCountdown
+              startDate={event.eventDetails.startDate}
+              eventType={event.eventType}
+            />
+          </div>
+        )}
+
+        {/* Course Info Bar */}
+        {courseInfo && <CourseInfoBar courseInfo={courseInfo} />}
+
+        {/* Weather Forecast */}
+        {event.eventDetails && (
+          <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            <WeatherForecast
+              latitude={event.eventDetails.latitude}
+              longitude={event.eventDetails.longitude}
+              eventDate={event.eventDetails.startDate}
+              eventType={event.eventType}
+            />
+          </div>
+        )}
+
+        {/* Main Content Area */}
+        <div
+          className="max-w-7xl mx-auto px-4 pb-20 sm:px-6 lg:px-8 animate-fade-in-up"
+          style={{ animationDelay: "0.3s" }}
+        >
+          <div className="lg:grid lg:grid-cols-[1fr_380px] lg:gap-10">
+            {/* Event Content */}
+            <div>
+              {/* Organizer Info */}
               {event.organizer?.name && (
-                <div className="p-5 bg-white/[0.03] border border-white/[0.06] rounded-2xl flex items-center gap-4">
+                <div className="p-5 mb-8 bg-white/[0.03] border border-white/[0.06] rounded-2xl flex items-center gap-4">
                   <div className="w-12 h-12 bg-white/[0.05] rounded-xl flex items-center justify-center text-2xl">
                     🏆
                   </div>
@@ -323,69 +398,6 @@ export default async function EventPage({ params }: PageProps) {
                 </div>
               )}
 
-              {/* Add to Calendar */}
-              {event.eventDetails && (
-                <AddToCalendar
-                  eventName={event.title}
-                  startDate={event.eventDetails.startDate}
-                  endDate={event.eventDetails.endDate}
-                  location={event.eventDetails.location}
-                  city={event.eventDetails.city}
-                  region={event.eventDetails.region}
-                  description={event.description?.[0]?.children?.[0]?.text}
-                  url={event.website}
-                />
-              )}
-            </div>
-
-            {/* ---- Right Column: Image + Organizer ---- */}
-            <div className="space-y-6">
-              {/* Image on mobile appears after title, on desktop in right column */}
-              <div className="order-first lg:order-none">
-                <EventImageGallery
-                  images={event.images}
-                  eventType={event.eventType}
-                  eventName={event.title}
-                />
-              </div>
-
-            </div>
-          </div>
-        </div>
-
-        {/* ============ Below Hero: Full Width Sections ============ */}
-
-        {/* Distance Details */}
-        {event.distanceDetails && event.distanceDetails.length > 0 && (
-          <DistanceSelector
-            distances={event.distanceDetails}
-            eventType={event.eventType}
-          />
-        )}
-
-        {/* Course Info Bar */}
-        {courseInfo && <CourseInfoBar courseInfo={courseInfo} />}
-
-        {/* Weather Forecast */}
-        {event.eventDetails && (
-          <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-            <WeatherForecast
-              latitude={event.eventDetails.latitude}
-              longitude={event.eventDetails.longitude}
-              eventDate={event.eventDetails.startDate}
-              eventType={event.eventType}
-            />
-          </div>
-        )}
-
-        {/* Main Content Area */}
-        <div
-          className="max-w-7xl mx-auto px-4 pb-20 sm:px-6 lg:px-8 animate-fade-in-up"
-          style={{ animationDelay: "0.3s" }}
-        >
-          <div className="lg:grid lg:grid-cols-[1fr_380px] lg:gap-10">
-            {/* Event Content */}
-            <div>
               <EventContent event={event} eventType={event.eventType} />
             </div>
 
@@ -420,6 +432,18 @@ export default async function EventPage({ params }: PageProps) {
             inclusions={event.registration?.inclusions}
           />
         </div>
+
+        {/* Similar Events */}
+        {event.eventDetails && (
+          <div className="border-t border-white/[0.06]">
+            <SimilarEvents
+              currentEventSlug={slug}
+              eventType={event.eventType}
+              region={event.eventDetails.region}
+              city={event.eventDetails.city}
+            />
+          </div>
+        )}
 
         <Footer />
       </div>
