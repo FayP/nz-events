@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Outfit, DM_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { WebsiteJsonLd } from "@/components/WebsiteJsonLd";
 import "./globals.css";
 
@@ -78,6 +79,7 @@ export default function RootLayout({
         {children}
         <Analytics />
         <SpeedInsights />
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID!} />
       </body>
     </html>
   );
