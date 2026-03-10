@@ -68,7 +68,7 @@ export default async function EventPage({ params }: PageProps) {
   }
 
   // Convert plain-text descriptions to paragraph blocks for cleaner rendering.
-  const descriptionToBlocks = (description?: string) => {
+  const descriptionToBlocks = (description?: string | null) => {
     if (!description) return undefined;
 
     return description
