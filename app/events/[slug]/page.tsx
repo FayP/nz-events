@@ -184,6 +184,13 @@ export default async function EventPage({ params }: PageProps) {
       }
     : undefined;
 
+  const primaryImage = event.images?.[0];
+  const structuredDataImage = primaryImage
+    ? primaryImage.startsWith("http")
+      ? primaryImage
+      : `https://gostride.co.nz${primaryImage}`
+    : undefined;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0a0b] to-[#111113] relative overflow-hidden">
       {/* Structured Data for SEO */}
@@ -204,7 +211,7 @@ export default async function EventPage({ params }: PageProps) {
         eventType={event.eventType}
         price={event.registration?.price}
         registrationUrl={event.registration?.registrationUrl}
-        image={event.images?.[0] ? `https://gostride.co.nz${event.images[0]}` : undefined}
+        image={structuredDataImage}
       />
 
       {/* Ambient Background Effects */}

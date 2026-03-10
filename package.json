@@ -12,6 +12,7 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "populate:events": "tsx scripts/populate-direct.ts",
+    "populate:kiwiwalkrun": "tsx scripts/upsert-kiwi-walk-run-events-2026.ts",
     "sync:sanity": "tsx scripts/sync-events-to-sanity.ts",
     "index:events": "tsx scripts/index-events.ts",
     "sanity:dev": "sanity dev",
