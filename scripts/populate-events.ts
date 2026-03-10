@@ -37,10 +37,30 @@ interface DiscoveredEvent {
   city: string
   region: string
   website?: string
+  registrationUrl?: string
   description?: string
   eventType: 'RUNNING' | 'BIKING' | 'TRIATHLON'
   distances?: string[]
+  distanceDetails?: Array<{
+    name: string
+    distance: string
+    elevation: string
+    time: string
+    description: string
+  }>
   organizer?: string
+  organizerWebsite?: string
+  highlights?: string[]
+  requirements?: string[]
+  schedule?: Array<{ time: string; description: string }>
+  courseTerrain?: string
+  courseSurface?: string
+  courseTraffic?: string
+  cutoffTime?: string
+  latitude?: number
+  longitude?: number
+  fullAddress?: string
+  inclusions?: string[]
 }
 
 // Calculate date range for next 3 months
@@ -58,38 +78,77 @@ async function discoverEventsWithAI(eventType: 'RUNNING' | 'BIKING' | 'TRIATHLON
   
   const prompt = `Find all ${eventTypeName} events in New Zealand that take place between ${dateRange.start} and ${dateRange.end}.
 
-For each event, provide:
+For each event, provide ALL of the following fields (leave null if genuinely unknown):
 - name: Full event name
 - startDate: Start date in YYYY-MM-DD format
 - endDate: End date in YYYY-MM-DD format (if multi-day event)
-- location: Specific venue or location name
+- location: Specific venue or location name (e.g., "Hagley Park", "Queenstown Bay")
 - city: City name
-- region: Region name (e.g., Auckland, Wellington, Canterbury, etc.)
-- website: Event website URL if known
-- description: Brief description of the event
-- distances: Array of distances/categories (e.g., ["5K", "10K", "Half Marathon"] for running, ["40km", "80km", "160km"] for cycling)
-- organizer: Organizer name if known
+- region: Region name (e.g., Auckland, Wellington, Canterbury, Otago, etc.)
+- fullAddress: Full street address if known (e.g., "Rolleston Avenue, Christchurch 8013")
+- latitude: Latitude coordinate (decimal, e.g., -43.5321)
+- longitude: Longitude coordinate (decimal, e.g., 172.6362)
+- website: Event website URL
+- registrationUrl: Direct registration/entry page URL (may differ from main website)
+- description: Detailed description (2-3 paragraphs) covering what makes this event special, its history, the course, and what participants can expect
+- eventType: "${eventType}"
+- distances: Array of distance categories (e.g., ["5K", "10K", "Half Marathon"])
+- distanceDetails: Array of detailed distance objects, each with:
+    - name: Distance/category name (e.g., "Half Marathon", "Sprint")
+    - distance: Exact distance (e.g., "21.1km", "750m swim / 20km bike / 5km run")
+    - elevation: Elevation gain (e.g., "+320m", "Flat", "Minimal")
+    - time: Expected completion time range (e.g., "1h 30m - 2h 30m")
+    - description: One sentence about the route/course for this distance
+- organizer: Organization or company running the event
+- organizerWebsite: Organizer's main website URL
+- highlights: Array of 4-8 highlight strings — what makes this event worth entering (e.g., "Scenic lakeside course with mountain views", "Finisher medal and race t-shirt included")
+- requirements: Array of equipment/entry requirements (e.g., "Trail running shoes recommended", "Bike helmet mandatory")
+- schedule: Array of race-day schedule items, each with { time: "7:00 AM", description: "Registration opens" }
+- courseTerrain: Terrain type (e.g., "Flat", "Rolling Hills", "Mountainous", "Mixed")
+- courseSurface: Surface type (e.g., "Sealed Roads", "Trail", "Mixed — Trail & Gravel", "Beach & Road")
+- courseTraffic: Road closure info (e.g., "Full Road Closure", "Partial Closure", "Open Roads with Marshals")
+- cutoffTime: Time limit if any (e.g., "6 hours", "No cutoff")
+- inclusions: What's included with entry (e.g., ["Race bib", "Finisher medal", "Event t-shirt", "Post-race food"])
 
 Return a JSON object with this structure:
 {
   "events": [
     {
       "name": "Event Name",
-      "startDate": "2024-01-15",
-      "endDate": "2024-01-15",
+      "startDate": "2026-03-15",
+      "endDate": "2026-03-15",
       "location": "Venue Name",
       "city": "City Name",
       "region": "Region Name",
+      "fullAddress": "123 Street, City 1234",
+      "latitude": -41.2865,
+      "longitude": 174.7762,
       "website": "https://example.com",
-      "description": "Event description",
+      "registrationUrl": "https://example.com/enter",
+      "description": "Detailed multi-paragraph description...",
       "eventType": "${eventType}",
-      "distances": ["5K", "10K"],
-      "organizer": "Organizer Name"
+      "distances": ["5K", "10K", "Half Marathon"],
+      "distanceDetails": [
+        { "name": "Half Marathon", "distance": "21.1km", "elevation": "+180m", "time": "1h 30m - 2h 30m", "description": "Scenic course along the waterfront." }
+      ],
+      "organizer": "Organizer Name",
+      "organizerWebsite": "https://organizer.com",
+      "highlights": ["Scenic waterfront course", "Post-race festival with live music"],
+      "requirements": ["No specific requirements"],
+      "schedule": [
+        { "time": "6:00 AM", "description": "Registration opens" },
+        { "time": "7:30 AM", "description": "Half Marathon start" }
+      ],
+      "courseTerrain": "Flat",
+      "courseSurface": "Sealed Roads",
+      "courseTraffic": "Full Road Closure",
+      "cutoffTime": "3.5 hours",
+      "inclusions": ["Race bib", "Finisher medal", "Event t-shirt"]
     }
   ]
 }
 
-Focus on well-known, established events. Include events from major cities like Auckland, Wellington, Christchurch, Dunedin, Hamilton, Tauranga, and other regions across New Zealand.`
+Focus on well-known, established events. Include events from major cities like Auckland, Wellington, Christchurch, Dunedin, Hamilton, Tauranga, and other regions across New Zealand. Provide as much detail as possible — rich, accurate data is essential.`
 
   try {
     console.log(`🔍 Discovering ${eventTypeName} events...`)
@@ -177,7 +236,7 @@ async function saveEvent(event: DiscoveredEvent): Promise<boolean> {
         tags = await contentGenerator.generateTags(eventData)
       }
 
-    // Create event
+    // Create event with all available fields
     const created = await prisma.event.create({
       data: {
         name: event.name,
@@ -189,11 +248,25 @@ async function saveEvent(event: DiscoveredEvent): Promise<boolean> {
         location: event.location,
         city: event.city,
         region: event.region,
+        fullAddress: event.fullAddress || undefined,
+        latitude: event.latitude || undefined,
+        longitude: event.longitude || undefined,
         website: event.website || undefined,
+        registrationUrl: event.registrationUrl || undefined,
         organizer: event.organizer || undefined,
+        organizerWebsite: event.organizerWebsite || undefined,
         distances: event.distances || [],
+        distanceDetails: event.distanceDetails || undefined,
+        highlights: event.highlights || [],
+        requirements: event.requirements || [],
+        schedule: event.schedule || undefined,
+        courseTerrain: event.courseTerrain || undefined,
+        courseSurface: event.courseSurface || undefined,
+        courseTraffic: event.courseTraffic || undefined,
+        cutoffTime: event.cutoffTime || undefined,
+        inclusions: event.inclusions || [],
         source: 'AI_GENERATED',
-        status: 'PUBLISHED', // Auto-publish discovered events
+        status: 'PUBLISHED',
         seoTitle,
         seoDescription,
         tags,

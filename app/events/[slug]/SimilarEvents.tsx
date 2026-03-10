@@ -1,6 +1,8 @@
 import Link from 'next/link'
+import type { EventType } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { formatEventType } from '@/lib/utils'
+import { getNextOccurrenceDate } from '@/lib/utils/event-dates'
 import { Calendar, MapPin, ArrowRight } from 'lucide-react'
 
 interface SimilarEventsProps {
@@ -16,16 +18,18 @@ export default async function SimilarEvents({
   region,
   city,
 }: SimilarEventsProps) {
+  const now = new Date()
+
   // Query for similar events: same type + same region, excluding current event
-  const similarEvents = await prisma.event.findMany({
+  const similarEventsRaw = await prisma.event.findMany({
     where: {
       status: 'PUBLISHED',
-      startDate: { gte: new Date() },
       slug: { not: currentEventSlug },
-      eventType: eventType as any,
+      eventType: eventType as EventType,
       OR: [{ region }, ...(city ? [{ city }] : [])],
     },
     select: {
+      id: true,
       slug: true,
       name: true,
       eventType: true,
@@ -37,21 +41,30 @@ export default async function SimilarEvents({
       images: true,
     },
     orderBy: { startDate: 'asc' },
-    take: 6,
+    take: 60,
   })
+
+  const similarEvents = similarEventsRaw
+    .map((event) => ({
+      ...event,
+      startDate: getNextOccurrenceDate(event.startDate),
+    }))
+    .filter((event) => event.startDate >= now)
+    .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
+    .slice(0, 6)
 
   // If not enough results in same region, backfill with same type from any region
   let events = similarEvents
   if (events.length < 3) {
-    const backfill = await prisma.event.findMany({
+    const backfillRaw = await prisma.event.findMany({
       where: {
         status: 'PUBLISHED',
-        startDate: { gte: new Date() },
         slug: { not: currentEventSlug },
-        eventType: eventType as any,
-        id: { notIn: events.map((e) => (e as any).id).filter(Boolean) },
+        eventType: eventType as EventType,
+        id: { notIn: events.map((e) => e.id) },
       },
       select: {
+        id: true,
         slug: true,
         name: true,
         eventType: true,
@@ -63,9 +76,17 @@ export default async function SimilarEvents({
         images: true,
       },
       orderBy: { startDate: 'asc' },
-      take: 6 - events.length,
+      take: 100,
     })
-    events = [...events, ...backfill]
+    const backfill = backfillRaw
+      .map((event) => ({
+        ...event,
+        startDate: getNextOccurrenceDate(event.startDate),
+      }))
+      .filter((event) => event.startDate >= now)
+      .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
+
+    events = [...events, ...backfill].slice(0, 6)
   }
 
   if (events.length === 0) return null
@@ -111,7 +132,7 @@ export default async function SimilarEvents({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {events.map((event) => {
           const daysUntil = Math.ceil(
-            (new Date(event.startDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+            (new Date(event.startDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
           )
 
           return (

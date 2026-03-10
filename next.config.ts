@@ -25,6 +25,7 @@ const nextConfig: NextConfig = {
       { hostname: "mountfestival.kiwi" },
       { hostname: "cdn.prod.website-files.com" },
       { hostname: "cdn.eventfinda.co.nz" },
+      { hostname: "d2ohemy4ov0nsr.cloudfront.net" },
       { hostname: "mynextchallenge.co.nz" },
       { hostname: "www.motatapu.com" },
       { hostname: "motatapu.com" },
@@ -45,6 +46,7 @@ const nextConfig: NextConfig = {
       { hostname: "www.lovetaupo.com" },
       { hostname: "nzmtbrally.com" },
       { hostname: "www.trailchallengewaihi.co.nz" },
+      { hostname: "nz.rs-cdn.com" },
     ],
   },
 };

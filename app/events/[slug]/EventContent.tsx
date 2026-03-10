@@ -104,6 +104,7 @@ function PortableText({ blocks }: { blocks: any[] }) {
 
 export default function EventContent({ event, eventType }: EventContentProps) {
   const colors = useEventColors(eventType)
+  const hasSchedule = Array.isArray(event.schedule) && event.schedule.length > 0
 
   // Build tabs array dynamically (highlights shown in Overview, not as separate tab)
   const tabs = ['Overview']
@@ -150,6 +151,26 @@ export default function EventContent({ event, eventType }: EventContentProps) {
             </div>
           )}
 
+          {/* Race-day schedule */}
+          {hasSchedule && (
+            <div>
+              <h3 className="mb-4 text-lg font-outfit font-semibold text-white">Race Day Schedule</h3>
+              <div className="flex flex-col gap-3">
+                {event.schedule.map((item: { time?: string; description?: string }, i: number) => (
+                  <div
+                    key={i}
+                    className="grid grid-cols-[110px_1fr] gap-3 rounded-xl border border-white/[0.05] bg-white/[0.02] p-4"
+                  >
+                    <div className="text-sm font-medium" style={{ color: colors.text }}>
+                      {item.time || 'TBC'}
+                    </div>
+                    <div className="text-sm text-white/70">{item.description || 'Details to be confirmed.'}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Course Map */}
           {event.courseMap && urlFor(event.courseMap)?.url() && (
             <div>
@@ -167,13 +188,16 @@ export default function EventContent({ event, eventType }: EventContentProps) {
           )}
 
           {/* Location & Map Section */}
-          {event.eventDetails?.coordinates?.lat && event.eventDetails?.coordinates?.lng && (
+          {event.eventDetails?.latitude !== null &&
+            event.eventDetails?.latitude !== undefined &&
+            event.eventDetails?.longitude !== null &&
+            event.eventDetails?.longitude !== undefined && (
             <div>
               <h2 className="mb-4 text-2xl font-outfit font-semibold text-white">Location</h2>
               <div className="overflow-hidden rounded-xl border border-white/[0.08]">
                 <EventMap
-                  latitude={event.eventDetails.coordinates.lat}
-                  longitude={event.eventDetails.coordinates.lng}
+                  latitude={event.eventDetails.latitude}
+                  longitude={event.eventDetails.longitude}
                   location={event.eventDetails.location}
                   city={event.eventDetails.city}
                   region={event.eventDetails.region}
@@ -218,4 +242,3 @@ export default function EventContent({ event, eventType }: EventContentProps) {
     </>
   )
 }
-

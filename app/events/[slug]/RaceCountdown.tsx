@@ -106,7 +106,7 @@ export default function RaceCountdown({ startDate, eventType }: RaceCountdownPro
   const activePhaseIndex = TRAINING_PHASES.findIndex((p) => p.id === currentPhase.id)
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-white/[0.02] border border-white/[0.08]">
+    <div className="relative w-full overflow-hidden rounded-2xl bg-white/[0.02] border border-white/[0.08]">
       {/* Accent bar */}
       <div
         className="absolute top-0 left-0 right-0 h-1"

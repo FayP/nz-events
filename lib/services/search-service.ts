@@ -1,5 +1,6 @@
 import { elasticsearchClient, INDEX_NAME } from "@/lib/elasticsearch";
 import { SearchResponse, SearchResult } from "@/types";
+import { getNextOccurrenceDate } from "@/lib/utils/event-dates";
 
 export interface SearchOptions {
   q?: string;
@@ -63,18 +64,16 @@ export async function searchEvents(
     must.push({ term: { city } });
   }
 
-  // Default to future events if no date filter specified
   const dateRange: any = {};
   if (startDate) {
     dateRange.gte = startDate;
-  } else {
-    // Only show future events by default
-    dateRange.gte = new Date().toISOString();
   }
   if (endDate) {
     dateRange.lte = endDate;
   }
-  must.push({ range: { startDate: dateRange } });
+  if (Object.keys(dateRange).length > 0) {
+    must.push({ range: { startDate: dateRange } });
+  }
 
   const query: any = {
     bool: {},
@@ -120,7 +119,7 @@ export async function searchEvents(
     name: hit._source.name,
     description: hit._source.description,
     eventType: hit._source.eventType,
-    startDate: hit._source.startDate,
+    startDate: getNextOccurrenceDate(hit._source.startDate).toISOString(),
     location: hit._source.location,
     city: hit._source.city,
     region: hit._source.region,

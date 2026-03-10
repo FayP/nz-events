@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getNextOccurrenceDate } from "@/lib/utils/event-dates";
 
 /** Canonical spelling for regions with known inconsistencies */
 const REGION_ALIASES: Record<string, string> = {
@@ -9,21 +10,22 @@ function normalizeRegion(region: string): string {
   return REGION_ALIASES[region] || region;
 }
 
-/** Fetch all upcoming published running events, with normalized regions */
+/** Fetch published running events and roll past dates to their next annual occurrence. */
 async function getAllRunningEvents() {
   const events = await prisma.event.findMany({
     where: {
       status: "PUBLISHED",
       eventType: "RUNNING",
-      startDate: { gte: new Date() },
     },
-    orderBy: { startDate: "asc" },
   });
 
-  return events.map((event) => ({
-    ...event,
-    region: normalizeRegion(event.region),
-  }));
+  return events
+    .map((event) => ({
+      ...event,
+      startDate: getNextOccurrenceDate(event.startDate),
+      region: normalizeRegion(event.region),
+    }))
+    .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
 }
 
 export type RunningEvent = Awaited<ReturnType<typeof getAllRunningEvents>>[number];

@@ -8,6 +8,12 @@ interface PriceInfo {
   max?: number
   currency?: string
   note?: string
+  tiers?: PriceTier[]
+}
+
+interface PriceTier {
+  category: string
+  price: string
 }
 
 interface RegistrationCardProps {
@@ -15,15 +21,30 @@ interface RegistrationCardProps {
   eventTitle: string
   registrationUrl?: string
   website?: string
-  price?: PriceInfo | null
+  price?: PriceInfo | PriceTier[] | null
   capacity?: number
   taken?: number
   registrationCloseDate?: string
   inclusions?: string[] // Real inclusions data from the event
 }
 
-const formatPrice = (price: PriceInfo | null | undefined): string => {
+const isPriceTierArray = (price: unknown): price is PriceTier[] => {
+  return (
+    Array.isArray(price) &&
+    price.length > 0 &&
+    price.every(
+      (item) =>
+        item &&
+        typeof item === 'object' &&
+        'category' in item &&
+        'price' in item
+    )
+  )
+}
+
+const formatPrice = (price: PriceInfo | PriceTier[] | null | undefined): string => {
   if (!price) return 'See website'
+  if (isPriceTierArray(price)) return 'See pricing tiers'
 
   const currency = price.currency === 'NZD' ? '$' : (price.currency || '$')
 
@@ -63,7 +84,15 @@ export default function RegistrationCard({
     : undefined
 
   const priceDisplay = formatPrice(price)
-  const hasPrice = price && (price.min || price.max || price.note)
+  const priceTiers = isPriceTierArray(price)
+    ? price
+    : Array.isArray(price?.tiers)
+      ? price.tiers
+      : []
+  const flatPrice = !isPriceTierArray(price) ? price : undefined
+  const hasPrice = isPriceTierArray(price)
+    ? price.length > 0
+    : !!(price && (price.min || price.max || price.note))
 
   // Only show inclusions if we have real data
   const hasInclusions = inclusions && inclusions.length > 0
@@ -127,8 +156,8 @@ export default function RegistrationCard({
               >
                 {priceDisplay}
               </div>
-              {price?.note && hasPrice && price.note !== priceDisplay && (
-                <div className="text-xs text-white/40 mt-1">{price.note}</div>
+              {flatPrice?.note && hasPrice && flatPrice.note !== priceDisplay && (
+                <div className="text-xs text-white/40 mt-1">{flatPrice.note}</div>
               )}
             </div>
 
@@ -149,6 +178,23 @@ export default function RegistrationCard({
             </div>
           </div>
         </div>
+
+        {/* Tiered pricing details */}
+        {priceTiers.length > 0 && (
+          <div className="mb-6 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+            <h4 className="mb-3 text-xs font-medium uppercase tracking-wide text-white/50">
+              Pricing Tiers
+            </h4>
+            <ul className="space-y-2">
+              {priceTiers.slice(0, 6).map((tier, index) => (
+                <li key={index} className="flex items-start justify-between gap-3 text-sm">
+                  <span className="text-white/65">{tier.category}</span>
+                  <span className="font-medium text-white">{tier.price}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Register Button */}
         {hasLink ? (

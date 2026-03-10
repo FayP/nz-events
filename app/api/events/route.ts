@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { indexEvent } from '@/lib/elasticsearch'
 import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slugify'
+import { getNextOccurrenceDate } from '@/lib/utils/event-dates'
 
 export async function GET(request: Request) {
   try {
@@ -14,9 +15,7 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get('page') || '1')
     const skip = (page - 1) * limit
 
-    const where: any = {
-      startDate: { gte: new Date() }, // Only show future events
-    }
+    const where: any = {}
     if (eventType) where.eventType = eventType
     if (region) where.region = region
     if (status) where.status = status
@@ -25,8 +24,15 @@ export async function GET(request: Request) {
       where,
       skip: 0, // Get all matching events first for distance filtering
       take: 1000, // Get enough to filter by distance
-      orderBy: { startDate: 'asc' },
     })
+
+    // Roll past event dates to next annual occurrence, then sort chronologically.
+    events = events
+      .map((event) => ({
+        ...event,
+        startDate: getNextOccurrenceDate(event.startDate),
+      }))
+      .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
 
     // Filter by distance if provided (Prisma doesn't easily filter JSON arrays)
     if (distance) {
@@ -123,4 +129,3 @@ export async function POST(request: Request) {
     )
   }
 }
-

@@ -1,6 +1,8 @@
 import { notFound, permanentRedirect } from "next/navigation";
+import type { Prisma } from "@prisma/client";
 import { getEventBySlug } from "@/lib/cms";
 import { prisma } from "@/lib/prisma";
+import { getNextOccurrenceDate } from "@/lib/utils/event-dates";
 import Link from "next/link";
 import { formatEventType } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
@@ -17,6 +19,10 @@ import WeatherForecast from "./WeatherForecast";
 import RegistrationCard from "./RegistrationCard";
 import RaceCountdown from "./RaceCountdown";
 import SimilarEvents from "./SimilarEvents";
+
+type JsonObject = Record<string, Prisma.JsonValue>;
+type DistanceDetails = Array<Record<string, Prisma.JsonValue>>;
+type ScheduleItems = Array<Record<string, Prisma.JsonValue>>;
 
 interface PageProps {
   params:
@@ -61,23 +67,49 @@ export default async function EventPage({ params }: PageProps) {
     notFound();
   }
 
+  // Convert plain-text descriptions to paragraph blocks for cleaner rendering.
+  const descriptionToBlocks = (description?: string) => {
+    if (!description) return undefined;
+
+    return description
+      .split(/\n\s*\n/)
+      .map((paragraph) => paragraph.trim())
+      .filter(Boolean)
+      .map((paragraph) => ({
+        _type: "block",
+        style: "normal",
+        children: [{ _type: "span", text: paragraph }],
+      }));
+  };
+
   // If database event exists, use it as source of truth for data fields
   // CMS can be used for rich content (descriptions, images) but database has the structured data
   if (dbEvent) {
+    const nextStartDate = getNextOccurrenceDate(dbEvent.startDate);
+    const nextEndDate = dbEvent.endDate
+      ? new Date(
+          nextStartDate.getTime() + (dbEvent.endDate.getTime() - dbEvent.startDate.getTime())
+        )
+      : undefined;
+
     event = {
       title: dbEvent.name,
       eventType: dbEvent.eventType,
-      distanceDetails: dbEvent.distanceDetails as any,
+      distanceDetails: (dbEvent.distanceDetails as DistanceDetails | null) ?? undefined,
       images: dbEvent.images,
       eventDetails: {
-        startDate: dbEvent.startDate.toISOString(),
-        endDate: dbEvent.endDate?.toISOString(),
+        startDate: nextStartDate.toISOString(),
+        endDate: nextEndDate?.toISOString(),
         location: dbEvent.location,
         city: dbEvent.city,
         region: dbEvent.region,
         address: dbEvent.fullAddress,
         latitude: dbEvent.latitude,
         longitude: dbEvent.longitude,
+        coordinates:
+          dbEvent.latitude !== null && dbEvent.longitude !== null
+            ? { lat: dbEvent.latitude, lng: dbEvent.longitude }
+            : undefined,
       },
       website: dbEvent.website,
       organizer: dbEvent.organizer
@@ -92,25 +124,18 @@ export default async function EventPage({ params }: PageProps) {
         traffic: dbEvent.courseTraffic,
         cutoffTime: dbEvent.cutoffTime,
       },
-      schedule: dbEvent.schedule as any,
+      schedule: (dbEvent.schedule as ScheduleItems | null) ?? undefined,
       highlights: dbEvent.highlights,
       requirements: dbEvent.requirements,
       registration: {
         registrationUrl: dbEvent.registrationUrl,
-        price: dbEvent.price as any,
+        price: (dbEvent.price as JsonObject | null) ?? undefined,
         capacity: dbEvent.registrationCapacity,
         taken: dbEvent.registrationTaken,
-        inclusions: (dbEvent as any).inclusions as string[] | undefined,
+        registrationCloseDate: dbEvent.registrationCloseDate?.toISOString(),
+        inclusions: dbEvent.inclusions,
       },
-      description: dbEvent.description
-        ? [
-            {
-              _type: "block",
-              style: "normal",
-              children: [{ _type: "span", text: dbEvent.description }],
-            },
-          ]
-        : undefined,
+      description: descriptionToBlocks(dbEvent.description),
     };
   }
 
@@ -184,6 +209,13 @@ export default async function EventPage({ params }: PageProps) {
       }
     : undefined;
 
+  const firstImage = event.images?.[0];
+  const jsonLdImage = firstImage
+    ? /^https?:\/\//i.test(firstImage)
+      ? firstImage
+      : `https://gostride.co.nz${firstImage.startsWith("/") ? "" : "/"}${firstImage}`
+    : undefined;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0a0b] to-[#111113] relative overflow-hidden">
       {/* Structured Data for SEO */}
@@ -204,7 +236,7 @@ export default async function EventPage({ params }: PageProps) {
         eventType={event.eventType}
         price={event.registration?.price}
         registrationUrl={event.registration?.registrationUrl}
-        image={event.images?.[0] ? `https://gostride.co.nz${event.images[0]}` : undefined}
+        image={jsonLdImage}
       />
 
       {/* Ambient Background Effects */}
@@ -329,20 +361,20 @@ export default async function EventPage({ params }: PageProps) {
                 />
               </div>
             </div>
+
+            {/* Race Countdown & Training Timeline */}
+            {event.eventDetails && (
+              <div className="lg:col-span-2 w-full animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
+                <RaceCountdown
+                  startDate={event.eventDetails.startDate}
+                  eventType={event.eventType}
+                />
+              </div>
+            )}
           </div>
         </div>
 
         {/* ============ Below Hero: Full Width Sections ============ */}
-
-        {/* Race Countdown & Training Timeline */}
-        {event.eventDetails && (
-          <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
-            <RaceCountdown
-              startDate={event.eventDetails.startDate}
-              eventType={event.eventType}
-            />
-          </div>
-        )}
 
         {/* Course Info Bar */}
         {courseInfo && <CourseInfoBar courseInfo={courseInfo} />}
@@ -412,6 +444,9 @@ export default async function EventPage({ params }: PageProps) {
                   price={event.registration?.price}
                   capacity={event.registration?.capacity}
                   taken={event.registration?.taken}
+                  registrationCloseDate={
+                    event.registration?.registrationCloseDate
+                  }
                   inclusions={event.registration?.inclusions}
                 />
               </div>
@@ -429,6 +464,7 @@ export default async function EventPage({ params }: PageProps) {
             price={event.registration?.price}
             capacity={event.registration?.capacity}
             taken={event.registration?.taken}
+            registrationCloseDate={event.registration?.registrationCloseDate}
             inclusions={event.registration?.inclusions}
           />
         </div>
@@ -451,13 +487,12 @@ export default async function EventPage({ params }: PageProps) {
   );
 }
 
-// Generate static params for all future events
+// Generate static params for all published events.
 export async function generateStaticParams() {
   try {
     const events = await prisma.event.findMany({
       where: {
         status: "PUBLISHED",
-        startDate: { gte: new Date() }, // Only generate pages for future events
       },
       select: { slug: true },
     });
