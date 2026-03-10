@@ -127,6 +127,13 @@ export default async function EventPage({ params }: PageProps) {
   };
 
   const formatTime = (dateString: string) => {
+    // Many imported events are date-only and end up as 00:00/12:00 in UTC.
+    // Showing those as an exact local time is misleading, so mark as TBC.
+    const isoTime = new Date(dateString).toISOString().slice(11, 16);
+    if (isoTime === "00:00" || isoTime === "12:00") {
+      return "Time TBC";
+    }
+
     const date = new Date(dateString);
     return date.toLocaleTimeString("en-NZ", {
       hour: "numeric",

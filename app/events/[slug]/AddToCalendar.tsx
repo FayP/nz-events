@@ -26,6 +26,31 @@ export default function AddToCalendar({
 }: AddToCalendarProps) {
   const [showDropdown, setShowDropdown] = useState(false)
 
+  const isLikelyDateOnly = (dateStr: string) => {
+    const isoTime = new Date(dateStr).toISOString().slice(11, 16)
+    return isoTime === '00:00' || isoTime === '12:00'
+  }
+
+  const getNZDateKey = (dateStr: string, addDays = 0) => {
+    const date = new Date(dateStr)
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Pacific/Auckland',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(date)
+
+    const year = Number(parts.find((p) => p.type === 'year')?.value)
+    const month = Number(parts.find((p) => p.type === 'month')?.value)
+    const day = Number(parts.find((p) => p.type === 'day')?.value)
+
+    const utcDate = new Date(Date.UTC(year, month - 1, day + addDays))
+    const y = utcDate.getUTCFullYear().toString()
+    const m = String(utcDate.getUTCMonth() + 1).padStart(2, '0')
+    const d = String(utcDate.getUTCDate()).padStart(2, '0')
+    return `${y}${m}${d}`
+  }
+
   const formatDateForICS = (dateStr: string) => {
     const date = new Date(dateStr)
     return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
@@ -42,18 +67,21 @@ export default function AddToCalendar({
     : url ? `More info: ${url}` : ''
 
   const generateICSFile = () => {
-    const start = formatDateForICS(startDate)
-    const end = endDate ? formatDateForICS(endDate) : formatDateForICS(
-      new Date(new Date(startDate).getTime() + 8 * 60 * 60 * 1000).toISOString()
-    )
+    const dateOnly = isLikelyDateOnly(startDate)
+    const start = dateOnly ? getNZDateKey(startDate) : formatDateForICS(startDate)
+    const end = dateOnly
+      ? getNZDateKey(endDate || startDate, 1)
+      : endDate
+        ? formatDateForICS(endDate)
+        : formatDateForICS(new Date(new Date(startDate).getTime() + 8 * 60 * 60 * 1000).toISOString())
 
     const icsContent = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
       'PRODID:-//GoStride//Event Calendar//EN',
       'BEGIN:VEVENT',
-      `DTSTART:${start}`,
-      `DTEND:${end}`,
+      dateOnly ? `DTSTART;VALUE=DATE:${start}` : `DTSTART:${start}`,
+      dateOnly ? `DTEND;VALUE=DATE:${end}` : `DTEND:${end}`,
       `SUMMARY:${eventName}`,
       `LOCATION:${fullLocation}`,
       `DESCRIPTION:${eventDescription.replace(/\n/g, '\\n')}`,
@@ -73,10 +101,13 @@ export default function AddToCalendar({
   }
 
   const openGoogleCalendar = () => {
-    const start = formatDateForGoogle(startDate)
-    const end = endDate ? formatDateForGoogle(endDate) : formatDateForGoogle(
-      new Date(new Date(startDate).getTime() + 8 * 60 * 60 * 1000).toISOString()
-    )
+    const dateOnly = isLikelyDateOnly(startDate)
+    const start = dateOnly ? getNZDateKey(startDate) : formatDateForGoogle(startDate)
+    const end = dateOnly
+      ? getNZDateKey(endDate || startDate, 1)
+      : endDate
+        ? formatDateForGoogle(endDate)
+        : formatDateForGoogle(new Date(new Date(startDate).getTime() + 8 * 60 * 60 * 1000).toISOString())
 
     const params = new URLSearchParams({
       action: 'TEMPLATE',
