@@ -23,17 +23,12 @@ export async function GET(request: Request) {
     if (region) where.region = region
     if (status) where.status = status
 
-    // Fetch only what's needed — no bulk 1000-row pull
-    // Distance filtering on JSON arrays can't be done in Prisma easily,
-    // so we fetch a reasonable working set and filter in memory only when needed.
-    const needsDistanceFilter = !!distance
-    const fetchLimit = needsDistanceFilter ? limit * 10 : limit  // overfetch only when filtering
-    const fetchSkip = needsDistanceFilter ? 0 : skip
-
+    // Fetch all matching events so we can roll dates forward and sort correctly
+    // before paginating. DB-level ORDER BY startDate is wrong because stored dates
+    // are historical and getNextOccurrenceDate() changes their effective order.
+    // Response is cached (revalidate=60) so the full fetch cost is amortised.
     let events = await prisma.event.findMany({
       where,
-      skip: fetchSkip,
-      take: needsDistanceFilter ? Math.min(fetchLimit, 500) : fetchLimit,
       select: {
         id: true,
         name: true,
@@ -57,23 +52,21 @@ export async function GET(request: Request) {
       }))
       .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
 
-    // Filter by distance if provided (Prisma doesn't easily filter JSON arrays)
+    // Filter by distance in memory (Prisma can't filter JSON arrays)
     if (distance) {
       events = events.filter((event) => {
         if (!event.distances || !Array.isArray(event.distances)) return false
         const distances = event.distances as string[]
-        return distances.some((d) => 
+        return distances.some((d) =>
           d.toLowerCase().includes(distance.toLowerCase()) ||
           distance.toLowerCase().includes(d.toLowerCase())
         )
       })
     }
 
-    // Apply pagination after filtering
-    const total = needsDistanceFilter ? events.length : await prisma.event.count({ where })
-    if (needsDistanceFilter) {
-      events = events.slice(skip, skip + limit)
-    }
+    // Paginate after roll+sort+filter
+    const total = events.length
+    events = events.slice(skip, skip + limit)
 
     return NextResponse.json({
       events,
