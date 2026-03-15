@@ -51,9 +51,14 @@ function HomeContent() {
   // State
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
   const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null)
   const [suggestions, setSuggestions] = useState<string[]>([])
   const [mounted, setMounted] = useState(false)
+
+  const PAGE_SIZE = 12
 
   // Local filter state - initialize with empty values to avoid hydration issues
   const [searchInput, setSearchInput] = useState('')
@@ -100,37 +105,36 @@ function HomeContent() {
     router.push(`/?${params.toString()}`)
   }, [searchInput, selectedEventTypes, selectedDistances, selectedRegion, router])
 
-  // Fetch events with filters
-  const fetchEvents = useCallback(async () => {
-    setLoading(true)
+  // Core fetch — accepts a page number, appends or replaces events
+  const fetchEvents = useCallback(async (pageNum: number, append = false) => {
+    if (append) {
+      setLoadingMore(true)
+    } else {
+      setLoading(true)
+    }
+
     try {
-      // Build query params
       const params = new URLSearchParams()
       params.set('status', 'PUBLISHED')
-      // Use a higher limit so early next-year annual events remain visible.
-      params.set('limit', '200')
+      params.set('limit', String(PAGE_SIZE))
+      params.set('page', String(pageNum))
 
       if (selectedEventTypes.length > 0) {
-        // If multiple event types, we'll need to handle this differently
-        // For now, use the first one (can enhance later)
         params.set('eventType', selectedEventTypes[0])
       }
       if (selectedRegion) params.set('region', selectedRegion)
-      // Add multiple distances as separate params or comma-separated
       if (selectedDistances.length > 0) {
         params.set('distances', selectedDistances.join(','))
       }
 
-      // Use search API if there's a query, otherwise use events API
-      let response
-      let allEvents: Event[] = []
+      let newEvents: Event[] = []
+      let total = 0
 
       if (searchInput.trim()) {
         params.set('q', searchInput)
-        response = await fetch(`/api/search?${params.toString()}`)
+        const response = await fetch(`/api/search?${params.toString()}`)
         const data = await response.json()
-        // Convert search results to event format
-        allEvents = data.results?.map((r: any) => ({
+        newEvents = data.results?.map((r: any) => ({
           id: r.id,
           name: r.name,
           slug: r.slug || r.id,
@@ -141,40 +145,58 @@ function HomeContent() {
           region: r.region,
           distances: r.distances || [],
         })) || []
+        total = data.total || newEvents.length
       } else {
-        response = await fetch(`/api/events?${params.toString()}`)
+        const response = await fetch(`/api/events?${params.toString()}`)
         const data = await response.json()
-        allEvents = data.events || []
+        newEvents = data.events || []
+        total = data.total || 0
       }
 
-      // Client-side filtering for multiple distances if needed
+      // Client-side distance filter
       if (selectedDistances.length > 0) {
-        allEvents = allEvents.filter((event) => {
+        newEvents = newEvents.filter((event) => {
           if (!event.distances || !Array.isArray(event.distances)) return false
-          // Check if event has any of the selected distances
-          return selectedDistances.some((dist) =>
-            event.distances.includes(dist)
-          )
+          return selectedDistances.some((dist) => event.distances.includes(dist))
         })
       }
 
-      setEvents(allEvents)
+      if (append) {
+        setEvents((prev) => [...prev, ...newEvents])
+      } else {
+        setEvents(newEvents)
+      }
+
+      const loadedSoFar = append ? events.length + newEvents.length : newEvents.length
+      setHasMore(loadedSoFar < total && newEvents.length === PAGE_SIZE)
     } catch (error) {
       console.error('Error fetching events:', error)
-      setEvents([])
+      if (!append) setEvents([])
     } finally {
       setLoading(false)
+      setLoadingMore(false)
     }
-  }, [searchInput, selectedEventTypes, selectedRegion, selectedDistances])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput, selectedEventTypes, selectedRegion, selectedDistances, events.length])
 
-  // Fetch events when filters change
+  // Fetch page 1 when filters change — reset pagination
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      fetchEvents()
-    }, 300) // Debounce
+      setPage(1)
+      setHasMore(true)
+      fetchEvents(1, false)
+    }, 300)
 
     return () => clearTimeout(timeoutId)
-  }, [fetchEvents])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput, selectedEventTypes, selectedRegion, selectedDistances])
+
+  // Load more handler
+  const handleLoadMore = useCallback(() => {
+    const nextPage = page + 1
+    setPage(nextPage)
+    fetchEvents(nextPage, true)
+  }, [page, fetchEvents])
 
   // Autocomplete for search
   useEffect(() => {
@@ -432,7 +454,9 @@ function HomeContent() {
         {/* Event Count */}
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">
-            {loading ? 'Loading...' : `${events.length} event${events.length !== 1 ? 's' : ''} found`}
+            {loading
+              ? 'Loading...'
+              : `Showing ${events.length} event${events.length !== 1 ? 's' : ''}${hasMore ? ' — scroll down for more' : ''}`}
           </p>
         </div>
       </div>
@@ -536,6 +560,27 @@ function HomeContent() {
                 </div>
               </Link>
             ))}
+          </div>
+        )}
+
+        {/* Load More */}
+        {!loading && events.length > 0 && hasMore && (
+          <div className="mt-10 flex justify-center">
+            <Button
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+              variant="outline"
+              className="px-8 py-3 text-sm font-medium border-border hover:bg-muted"
+            >
+              {loadingMore ? 'Loading...' : 'Load more events'}
+            </Button>
+          </div>
+        )}
+
+        {/* All loaded indicator */}
+        {!loading && events.length > 0 && !hasMore && page > 1 && (
+          <div className="mt-10 text-center">
+            <p className="text-sm text-muted-foreground">You've seen all {events.length} events</p>
           </div>
         )}
       </div>
