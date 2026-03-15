@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { SearchResponse } from '@/types'
+import { formatEventDate } from '@/lib/utils/format-date'
 
 export default function SearchPage() {
   const [query, setQuery] = useState('')
@@ -146,7 +147,7 @@ export default function SearchPage() {
                     <span>{event.location}</span>
                     <span>•</span>
                     <span>
-                      {new Date(event.startDate).toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland' })}
+                      {formatEventDate(event.startDate, { month: 'short' })}
                     </span>
                   </div>
                 </Link>

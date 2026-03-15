@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getNextOccurrenceDate } from "@/lib/utils/event-dates";
 import Link from "next/link";
 import { formatEventType } from "@/lib/utils";
+import { formatEventDate } from "@/lib/utils/format-date";
 import { ArrowLeft } from "lucide-react";
 import { AmbientBackground } from "@/components/ui/ambient-background";
 import { Logo } from "@/components/ui/logo";
@@ -139,26 +140,26 @@ export default async function EventPage({ params }: PageProps) {
     };
   }
 
-  // Format date and time in NZ timezone
+  // Format date — use UTC components to avoid midnight UTC → next day in NZ
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-NZ", {
-      weekday: "short",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      timeZone: "Pacific/Auckland",
-    });
-  };
+    const date = new Date(dateString)
+    const day = date.getUTCDate()
+    const month = date.toLocaleString('en-NZ', { month: 'long', timeZone: 'UTC' })
+    const year = date.getUTCFullYear()
+    const weekday = date.toLocaleString('en-NZ', { weekday: 'short', timeZone: 'UTC' })
+    return `${weekday}, ${day} ${month} ${year}`
+  }
 
   const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("en-NZ", {
-      hour: "numeric",
-      minute: "2-digit",
+    const date = new Date(dateString)
+    // Only show time if it's not midnight UTC (i.e. a real time was stored)
+    if (date.getUTCHours() === 0 && date.getUTCMinutes() === 0) return null
+    return date.toLocaleTimeString('en-NZ', {
+      hour: 'numeric',
+      minute: '2-digit',
       hour12: true,
-      timeZone: "Pacific/Auckland",
-    });
+      timeZone: 'UTC',
+    })
   };
 
   // Get event type badge colors

@@ -3,6 +3,7 @@ import type { EventType } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { formatEventType } from '@/lib/utils'
 import { getNextOccurrenceDate } from '@/lib/utils/event-dates'
+import { formatEventDate } from '@/lib/utils/format-date'
 import { Calendar, MapPin, ArrowRight } from 'lucide-react'
 
 interface SimilarEventsProps {
@@ -179,12 +180,7 @@ export default async function SimilarEvents({
               <div className="flex items-center gap-2 text-xs text-white/40 mb-2">
                 <Calendar className="h-3.5 w-3.5" />
                 <span>
-                  {new Date(event.startDate).toLocaleDateString('en-NZ', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                    timeZone: 'Pacific/Auckland',
-                  })}
+                  {formatEventDate(event.startDate)}
                 </span>
               </div>
 

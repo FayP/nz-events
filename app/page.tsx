@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { getEventBadgeVariant, formatEventType } from '@/lib/utils'
+import { formatEventDate } from '@/lib/utils/format-date'
 import { Search, Calendar, MapPin, ArrowRight } from 'lucide-react'
 import { Logo } from '@/components/ui/logo'
 import { Footer } from '@/components/Footer'
@@ -527,14 +528,7 @@ function HomeContent() {
                 {/* Date */}
                 <div className="mb-3 flex items-center gap-2.5 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  <span>
-                    {new Date(event.startDate).toLocaleDateString('en-NZ', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                      timeZone: 'Pacific/Auckland',
-                    })}
-                  </span>
+                  <span>{formatEventDate(event.startDate)}</span>
                 </div>
 
                 {/* Location */}

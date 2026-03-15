@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cn, getEventBadgeVariant, formatEventType } from "@/lib/utils";
+import { formatEventDate } from "@/lib/utils/format-date";
 import { normalizeDistanceLabel } from "@/lib/races";
 import { Calendar, MapPin, ArrowRight, Star } from "lucide-react";
 
@@ -61,12 +62,7 @@ export function EventCard({ event }: EventCardProps) {
       <div className="mb-3 flex items-center gap-2.5 text-sm text-muted-foreground">
         <Calendar className="h-4 w-4" />
         <span>
-          {new Date(event.startDate).toLocaleDateString("en-NZ", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-            timeZone: "Pacific/Auckland",
-          })}
+          {formatEventDate(event.startDate)}
         </span>
       </div>
 

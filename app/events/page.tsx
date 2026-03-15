@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { formatEventDate } from '@/lib/utils/format-date'
 
 interface Event {
   id: string
@@ -78,12 +79,7 @@ export default function EventsPage() {
                 {event.name}
               </h2>
               <p className="mb-2 text-sm text-zinc-600 dark:text-zinc-400">
-                {new Date(event.startDate).toLocaleDateString('en-NZ', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  timeZone: 'Pacific/Auckland',
-                })}
+                {formatEventDate(event.startDate)}
               </p>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">
                 {event.location}, {event.region}
