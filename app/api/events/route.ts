@@ -20,10 +20,30 @@ export async function GET(request: Request) {
     if (region) where.region = region
     if (status) where.status = status
 
+    // Fetch only what's needed — no bulk 1000-row pull
+    // Distance filtering on JSON arrays can't be done in Prisma easily,
+    // so we fetch a reasonable working set and filter in memory only when needed.
+    const needsDistanceFilter = !!distance
+    const fetchLimit = needsDistanceFilter ? limit * 10 : limit  // overfetch only when filtering
+    const fetchSkip = needsDistanceFilter ? 0 : skip
+
     let events = await prisma.event.findMany({
       where,
-      skip: 0, // Get all matching events first for distance filtering
-      take: 1000, // Get enough to filter by distance
+      skip: fetchSkip,
+      take: needsDistanceFilter ? Math.min(fetchLimit, 500) : fetchLimit,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        eventType: true,
+        startDate: true,
+        endDate: true,
+        location: true,
+        city: true,
+        region: true,
+        distances: true,
+        status: true,
+      },
     })
 
     // Roll past event dates to next annual occurrence, then sort chronologically.
@@ -47,8 +67,10 @@ export async function GET(request: Request) {
     }
 
     // Apply pagination after filtering
-    const total = events.length
-    events = events.slice(skip, skip + limit)
+    const total = needsDistanceFilter ? events.length : await prisma.event.count({ where })
+    if (needsDistanceFilter) {
+      events = events.slice(skip, skip + limit)
+    }
 
     return NextResponse.json({
       events,

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo, Suspense } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
@@ -59,6 +59,7 @@ function HomeContent() {
   const [mounted, setMounted] = useState(false)
 
   const PAGE_SIZE = 12
+  const sentinelRef = useRef<HTMLDivElement>(null)
 
   // Local filter state - initialize with empty values to avoid hydration issues
   const [searchInput, setSearchInput] = useState('')
@@ -191,12 +192,24 @@ function HomeContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInput, selectedEventTypes, selectedRegion, selectedDistances])
 
-  // Load more handler
-  const handleLoadMore = useCallback(() => {
-    const nextPage = page + 1
-    setPage(nextPage)
-    fetchEvents(nextPage, true)
-  }, [page, fetchEvents])
+  // Infinite scroll — watch sentinel element at bottom of list
+  useEffect(() => {
+    if (!sentinelRef.current) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
+          const nextPage = page + 1
+          setPage(nextPage)
+          fetchEvents(nextPage, true)
+        }
+      },
+      { rootMargin: '200px' } // trigger 200px before hitting the bottom
+    )
+
+    observer.observe(sentinelRef.current)
+    return () => observer.disconnect()
+  }, [hasMore, loadingMore, loading, page, fetchEvents])
 
   // Autocomplete for search
   useEffect(() => {
@@ -563,23 +576,19 @@ function HomeContent() {
           </div>
         )}
 
-        {/* Load More */}
-        {!loading && events.length > 0 && hasMore && (
-          <div className="mt-10 flex justify-center">
-            <Button
-              onClick={handleLoadMore}
-              disabled={loadingMore}
-              variant="outline"
-              className="px-8 py-3 text-sm font-medium border-border hover:bg-muted"
-            >
-              {loadingMore ? 'Loading...' : 'Load more events'}
-            </Button>
-          </div>
-        )}
+        {/* Infinite scroll sentinel */}
+        <div ref={sentinelRef} className="mt-10 flex justify-center h-10">
+          {loadingMore && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-foreground" />
+              Loading more events...
+            </div>
+          )}
+        </div>
 
         {/* All loaded indicator */}
         {!loading && events.length > 0 && !hasMore && page > 1 && (
-          <div className="mt-10 text-center">
+          <div className="mt-4 text-center">
             <p className="text-sm text-muted-foreground">You've seen all {events.length} events</p>
           </div>
         )}
