@@ -107,7 +107,8 @@ function HomeContent() {
       // Build query params
       const params = new URLSearchParams()
       params.set('status', 'PUBLISHED')
-      params.set('limit', '50')
+      // Use a higher limit so early next-year annual events remain visible.
+      params.set('limit', '200')
 
       if (selectedEventTypes.length > 0) {
         // If multiple event types, we'll need to handle this differently

@@ -24,7 +24,7 @@ export default function EventsPage() {
 
   const fetchEvents = async () => {
     try {
-      const response = await fetch('/api/events?status=PUBLISHED&limit=50')
+      const response = await fetch('/api/events?status=PUBLISHED&limit=200')
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
         console.error('API Error:', errorData)
@@ -95,4 +95,3 @@ export default function EventsPage() {
     </div>
   )
 }
-
