@@ -81,6 +81,8 @@ model Event {
   @@index([startDate])
   @@index([status])
   @@index([slug])
+  @@index([status, startDate])          // hot path: published events sorted by date
+  @@index([status, eventType, startDate]) // hot path: filtered by type
 }
 
 model EventContent {

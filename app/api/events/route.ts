@@ -4,6 +4,9 @@ import { indexEvent } from '@/lib/elasticsearch'
 import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slugify'
 import { getNextOccurrenceDate } from '@/lib/utils/event-dates'
 
+// Cache listing responses for 60 seconds — event data doesn't change by the minute
+export const revalidate = 60
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)

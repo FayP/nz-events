@@ -2,6 +2,9 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+// Filter options change rarely — cache for 5 minutes
+export const revalidate = 300
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
