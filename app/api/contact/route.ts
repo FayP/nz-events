@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
+  // 5 submissions per IP per 15 minutes
+  const rateLimited = checkRateLimit(request, {
+    id: "contact",
+    limit: 5,
+    windowSeconds: 900,
+  });
+  if (rateLimited) return rateLimited;
   try {
     const body = await request.json();
     const { name, email, subject, message } = body;
@@ -28,7 +36,7 @@ export async function POST(request: NextRequest) {
     // Send email via Resend
     const { error } = await resend.emails.send({
       from: "GoStride Contact <onboarding@resend.dev>",
-      to: ["faypickering1@gmail.com"],
+      to: [process.env.CONTACT_EMAIL || "faypickering1@gmail.com"],
       replyTo: email,
       subject: `[GoStride Contact] ${subject}`,
       html: `

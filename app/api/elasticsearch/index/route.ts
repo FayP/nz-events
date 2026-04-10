@@ -9,12 +9,11 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const { requireApiKey } = await import('@/lib/api-auth')
+  const authError = requireApiKey(request)
+  if (authError) return authError
+
   try {
-    // Optional: Add authentication check here
-    // const authHeader = request.headers.get('authorization');
-    // if (authHeader !== `Bearer ${process.env.INDEX_API_KEY}`) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
 
     console.log('🚀 Starting to index all events...');
 

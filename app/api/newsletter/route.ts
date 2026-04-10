@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
+  // 3 subscriptions per IP per 15 minutes
+  const rateLimited = checkRateLimit(request, {
+    id: "newsletter",
+    limit: 3,
+    windowSeconds: 900,
+  });
+  if (rateLimited) return rateLimited;
   try {
     const body = await request.json();
     const { email } = body;

@@ -1,8 +1,16 @@
 import { NextResponse } from 'next/server'
 import { searchEvents } from '@/lib/services/search-service'
 import { initializeElasticsearchIndex } from '@/lib/elasticsearch'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function GET(request: Request) {
+  // 60 searches per IP per minute
+  const rateLimited = checkRateLimit(request, {
+    id: 'search',
+    limit: 60,
+    windowSeconds: 60,
+  })
+  if (rateLimited) return rateLimited
   try {
     // Initialize index if it doesn't exist
     await initializeElasticsearchIndex()

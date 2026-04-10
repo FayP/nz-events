@@ -2,8 +2,12 @@ import { NextResponse } from 'next/server'
 import { ContentGeneratorService } from '@/lib/services/content-generator'
 import { prisma } from '@/lib/prisma'
 import { Event, EventType, EventStatus, EventSource } from '@/types'
+import { requireApiKey } from '@/lib/api-auth'
 
 export async function POST(request: Request) {
+  const authError = requireApiKey(request)
+  if (authError) return authError
+
   try {
     const body = await request.json()
     const { eventId, type } = body

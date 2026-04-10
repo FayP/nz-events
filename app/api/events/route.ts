@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { indexEvent } from '@/lib/elasticsearch'
 import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slugify'
 import { getNextOccurrenceDate } from '@/lib/utils/event-dates'
+import { requireApiKey } from '@/lib/api-auth'
 
 // Cache listing responses for 60 seconds — event data doesn't change by the minute
 export const revalidate = 60
@@ -84,6 +85,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const authError = requireApiKey(request)
+  if (authError) return authError
+
   try {
     const body = await request.json()
     const {

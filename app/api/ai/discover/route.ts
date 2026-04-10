@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
 import { EventDiscoveryService } from '@/lib/services/event-discovery'
+import { requireApiKey } from '@/lib/api-auth'
 
 export async function POST(request: Request) {
+  const authError = requireApiKey(request)
+  if (authError) return authError
   try {
     const body = await request.json()
     const { eventType } = body
@@ -27,6 +30,9 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
+  const authError = requireApiKey(request)
+  if (authError) return authError
+
   try {
     const { searchParams } = new URL(request.url)
     const eventType = (searchParams.get('eventType') || 'RUNNING') as 'RUNNING' | 'BIKING' | 'TRIATHLON'
