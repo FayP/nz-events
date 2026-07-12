@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { searchEvents } from '@/lib/services/search-service'
 import { initializeElasticsearchIndex } from '@/lib/elasticsearch'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { getErrorMessage, parseBoundedInt } from '@/lib/api-validation'
 
 export async function GET(request: Request) {
   // 60 searches per IP per minute
@@ -24,19 +25,18 @@ export async function GET(request: Request) {
       startDate: searchParams.get('startDate') || undefined,
       endDate: searchParams.get('endDate') || undefined,
       distance: searchParams.get('distance') || undefined,
-      page: parseInt(searchParams.get('page') || '1'),
-      limit: parseInt(searchParams.get('limit') || '20'),
+      page: parseBoundedInt(searchParams.get('page'), 1, { max: 1000 }),
+      limit: parseBoundedInt(searchParams.get('limit'), 20, { max: 100 }),
     }
 
     const results = await searchEvents(options)
 
     return NextResponse.json(results)
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Search error:', error)
     return NextResponse.json(
-      { error: error.message || 'Search failed' },
+      { error: getErrorMessage(error, 'Search failed') },
       { status: 500 }
     )
   }
 }
-

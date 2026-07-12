@@ -4,6 +4,10 @@ import { indexEvent } from '@/lib/elasticsearch'
 import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slugify'
 import { getNextOccurrenceDate } from '@/lib/utils/event-dates'
 import { requireApiKey } from '@/lib/api-auth'
+import { parseBoundedInt } from '@/lib/api-validation'
+import { getErrorMessage } from '@/lib/api-validation'
+import type { Prisma } from '@prisma/client'
+import { z } from 'zod'
 
 // Cache listing responses for 60 seconds — event data doesn't change by the minute
 export const revalidate = 60
@@ -11,15 +15,26 @@ export const revalidate = 60
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const eventType = searchParams.get('eventType')
+    const filters = z.object({
+      eventType: z.enum(['RUNNING', 'BIKING', 'TRIATHLON']).nullable(),
+      status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']),
+    }).safeParse({
+      eventType: searchParams.get('eventType'),
+      status: searchParams.get('status') || 'PUBLISHED',
+    })
+    if (!filters.success) {
+      return NextResponse.json({ error: 'Invalid event filters' }, { status: 400 })
+    }
+
+    const eventType = filters.data.eventType
     const region = searchParams.get('region')
     const distance = searchParams.get('distance') // New: distance filter
-    const status = searchParams.get('status') || 'PUBLISHED'
-    const limit = parseInt(searchParams.get('limit') || '20')
-    const page = parseInt(searchParams.get('page') || '1')
+    const status = filters.data.status
+    const limit = parseBoundedInt(searchParams.get('limit'), 20, { max: 100 })
+    const page = parseBoundedInt(searchParams.get('page'), 1, { max: 1000 })
     const skip = (page - 1) * limit
 
-    const where: any = {}
+    const where: Prisma.EventWhereInput = {}
     if (eventType) where.eventType = eventType
     if (region) where.region = region
     if (status) where.status = status
@@ -75,10 +90,10 @@ export async function GET(request: Request) {
       page,
       limit,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching events:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch events' },
+      { error: getErrorMessage(error, 'Failed to fetch events') },
       { status: 500 }
     )
   }
@@ -143,10 +158,10 @@ export async function POST(request: Request) {
     await indexEvent(event)
 
     return NextResponse.json({ event }, { status: 201 })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating event:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to create event' },
+      { error: getErrorMessage(error, 'Failed to create event') },
       { status: 500 }
     )
   }
