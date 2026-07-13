@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { indexEvent } from '@/lib/elasticsearch'
 import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slugify'
-import { getNextOccurrenceDate } from '@/lib/utils/event-dates'
 import { requireApiKey } from '@/lib/api-auth'
 import { parseBoundedInt } from '@/lib/api-validation'
 import { getErrorMessage } from '@/lib/api-validation'
@@ -38,39 +37,31 @@ export async function GET(request: Request) {
     if (eventType) where.eventType = eventType
     if (region) where.region = region
     if (status) where.status = status
+    if (status === 'PUBLISHED') where.startDate = { gte: new Date() }
 
-    // Fetch all matching events so we can roll dates forward and sort correctly
-    // before paginating. DB-level ORDER BY startDate is wrong because stored dates
-    // are historical and getNextOccurrenceDate() changes their effective order.
-    // Response is cached (revalidate=60) so the full fetch cost is amortised.
-    let events = await prisma.event.findMany({
-      where,
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        eventType: true,
-        startDate: true,
-        endDate: true,
-        location: true,
-        city: true,
-        region: true,
-        distances: true,
-        status: true,
-      },
-    })
+    const select = {
+      id: true,
+      name: true,
+      slug: true,
+      eventType: true,
+      startDate: true,
+      endDate: true,
+      location: true,
+      city: true,
+      region: true,
+      distances: true,
+      status: true,
+    } satisfies Prisma.EventSelect
 
-    // Roll past event dates to next annual occurrence, then sort chronologically.
-    events = events
-      .map((event) => ({
-        ...event,
-        startDate: getNextOccurrenceDate(event.startDate),
-      }))
-      .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
-
-    // Filter by distance in memory (Prisma can't filter JSON arrays)
+    // Distances are stored as free-form JSON labels, so partial matching still
+    // requires application filtering. The normal listing path stays entirely in
+    // Postgres and uses the existing status/startDate indexes.
     if (distance) {
-      events = events.filter((event) => {
+      const matchingEvents = (await prisma.event.findMany({
+        where,
+        select,
+        orderBy: { startDate: 'asc' },
+      })).filter((event) => {
         if (!event.distances || !Array.isArray(event.distances)) return false
         const distances = event.distances as string[]
         return distances.some((d) =>
@@ -78,11 +69,25 @@ export async function GET(request: Request) {
           distance.toLowerCase().includes(d.toLowerCase())
         )
       })
+
+      return NextResponse.json({
+        events: matchingEvents.slice(skip, skip + limit),
+        total: matchingEvents.length,
+        page,
+        limit,
+      })
     }
 
-    // Paginate after roll+sort+filter
-    const total = events.length
-    events = events.slice(skip, skip + limit)
+    const [events, total] = await prisma.$transaction([
+      prisma.event.findMany({
+        where,
+        select,
+        orderBy: { startDate: 'asc' },
+        skip,
+        take: limit,
+      }),
+      prisma.event.count({ where }),
+    ])
 
     return NextResponse.json({
       events,
