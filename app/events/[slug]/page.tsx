@@ -5,7 +5,6 @@ import { prisma } from "@/lib/prisma";
 import { getNextOccurrenceDate } from "@/lib/utils/event-dates";
 import Link from "next/link";
 import { formatEventType } from "@/lib/utils";
-import { formatEventDate } from "@/lib/utils/format-date";
 import { ArrowLeft } from "lucide-react";
 import { AmbientBackground } from "@/components/ui/ambient-background";
 import { Logo } from "@/components/ui/logo";
@@ -33,6 +32,14 @@ interface PageProps {
     | {
         slug: string;
       };
+}
+
+function isRegistrationClosingSoon(value?: string): boolean {
+  if (!value) return false;
+
+  const closeTime = new Date(value).getTime();
+  const now = Date.now();
+  return closeTime > now && closeTime - now < 14 * 24 * 60 * 60 * 1000;
 }
 
 export default async function EventPage({ params }: PageProps) {
@@ -199,6 +206,9 @@ export default async function EventPage({ params }: PageProps) {
   };
 
   const typeColors = getEventTypeColor(event.eventType);
+  const registrationClosingSoon = isRegistrationClosingSoon(
+    event.registration?.registrationCloseDate
+  );
 
   // Build course info object
   const courseInfo = event.courseInfo
@@ -440,14 +450,13 @@ export default async function EventPage({ params }: PageProps) {
                 <RegistrationCard
                   eventType={event.eventType}
                   eventTitle={event.title}
+                  eventSlug={slug}
                   registrationUrl={event.registration?.registrationUrl}
                   website={event.website}
                   price={event.registration?.price}
                   capacity={event.registration?.capacity}
                   taken={event.registration?.taken}
-                  registrationCloseDate={
-                    event.registration?.registrationCloseDate
-                  }
+                  registrationClosingSoon={registrationClosingSoon}
                   inclusions={event.registration?.inclusions}
                 />
               </div>
@@ -460,12 +469,13 @@ export default async function EventPage({ params }: PageProps) {
           <RegistrationCard
             eventType={event.eventType}
             eventTitle={event.title}
+            eventSlug={slug}
             registrationUrl={event.registration?.registrationUrl}
             website={event.website}
             price={event.registration?.price}
             capacity={event.registration?.capacity}
             taken={event.registration?.taken}
-            registrationCloseDate={event.registration?.registrationCloseDate}
+            registrationClosingSoon={registrationClosingSoon}
             inclusions={event.registration?.inclusions}
           />
         </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEventColors } from '@/lib/hooks/use-event-colors'
+import { track } from '@vercel/analytics'
 import { ExternalLink, Check, Share2, Clock, Users } from 'lucide-react'
 
 interface PriceInfo {
@@ -19,12 +20,13 @@ interface PriceTier {
 interface RegistrationCardProps {
   eventType: string
   eventTitle: string
+  eventSlug: string
   registrationUrl?: string
   website?: string
   price?: PriceInfo | PriceTier[] | null
   capacity?: number
   taken?: number
-  registrationCloseDate?: string
+  registrationClosingSoon?: boolean
   inclusions?: string[] // Real inclusions data from the event
 }
 
@@ -66,12 +68,13 @@ const formatPrice = (price: PriceInfo | PriceTier[] | null | undefined): string 
 export default function RegistrationCard({
   eventType,
   eventTitle,
+  eventSlug,
   registrationUrl,
   website,
   price,
   capacity,
   taken,
-  registrationCloseDate,
+  registrationClosingSoon = false,
   inclusions,
 }: RegistrationCardProps) {
   const colors = useEventColors(eventType)
@@ -97,11 +100,6 @@ export default function RegistrationCard({
   // Only show inclusions if we have real data
   const hasInclusions = inclusions && inclusions.length > 0
 
-  // Check if registration is closing soon (within 14 days)
-  const isClosingSoon = registrationCloseDate &&
-    new Date(registrationCloseDate).getTime() - Date.now() < 14 * 24 * 60 * 60 * 1000 &&
-    new Date(registrationCloseDate).getTime() > Date.now()
-
   const handleShare = async () => {
     if (navigator.share) {
       try {
@@ -115,6 +113,21 @@ export default function RegistrationCard({
     } else {
       // Fallback: copy to clipboard
       navigator.clipboard.writeText(window.location.href)
+    }
+  }
+
+  const handleRegistrationClick = () => {
+    if (!linkUrl) return
+
+    try {
+      track('registration_click', {
+        event_slug: eventSlug,
+        event_type: eventType,
+        link_type: registrationUrl ? 'registration' : 'website_fallback',
+        destination_host: new URL(linkUrl, window.location.origin).hostname,
+      })
+    } catch (error) {
+      console.warn('Unable to track registration click', error)
     }
   }
 
@@ -169,7 +182,7 @@ export default function RegistrationCard({
                   <span>{spotsRemaining} spots left</span>
                 </div>
               )}
-              {isClosingSoon && (
+              {registrationClosingSoon && (
                 <div className="flex items-center gap-1.5 text-amber-400 text-sm mt-1">
                   <Clock className="h-4 w-4" />
                   <span>Closing soon</span>
@@ -202,6 +215,7 @@ export default function RegistrationCard({
             href={linkUrl}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={handleRegistrationClick}
             className="block mb-6"
           >
             <button
