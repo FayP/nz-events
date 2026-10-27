@@ -12,6 +12,10 @@
     {
       "path": "/api/cron/refresh-event-dates",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/verify-events",
+      "schedule": "0 19 * * 0"
     }
   ]
 }
