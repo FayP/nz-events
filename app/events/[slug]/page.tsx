@@ -75,6 +75,11 @@ export default async function EventPage({ params }: PageProps) {
     notFound();
   }
 
+  // Only published events have a public page; archived or draft ones 404.
+  if (dbEvent ? dbEvent.status !== "PUBLISHED" : event?.status !== "published") {
+    notFound();
+  }
+
   // Convert plain-text descriptions to paragraph blocks for cleaner rendering.
   const descriptionToBlocks = (description?: string | null) => {
     if (!description) return undefined;
